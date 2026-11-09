@@ -1,0 +1,9 @@
+.spotify-logo {
+  display: block;
+  width: 80px;
+  min-width: 80px;
+  max-width: none;
+  height: auto;
+  margin: 12px;
+  flex-shrink: 0;
+}

@@ -1,0 +1,155 @@
+import { test, expect } from './test'
+import { signedInPreview, mockPlayers } from './community-fixture'
+
+const result = {
+  id: 'saved-ux-result', analyzedAt: '2026-11-02T00:00:00Z',
+  genres: { vector: { pop: .7, indie: .3 }, tagCount: 2, trackCount: 10, unmappedTags: [] },
+  character: { slug: 'mochi', name: '모찌', description: '아늑한 몽상가', imageUrl: '/characters/mochi.png', score: .92 },
+  profile: { mainstream: 60, obscurity: 40, comment: '팝과 인디의 분위기를 즐기는 취향이에요.' },
+  recommendations: [], recommendationsAvailable: true, warnings: [],
+}
+
+test('saved result shortcuts and metric help explain the existing analysis without starting another', async ({ page }, info) => {
+  await signedInPreview(page)
+  await page.route('**/api/analysis/latest', route => route.fulfill({ json: result }))
+  let analyses = 0
+  await page.route('**/api/analysis', route => { analyses++; return route.abort() })
+  await page.goto('/mypage')
+  await page.getByRole('navigation', { name: '메인 메뉴' }).getByRole('link', { name: '내 취향', exact: true }).click()
+  await expect(page.getByText(result.profile.comment)).toBeVisible()
+  const help = page.getByRole('button', { name: '매칭 점수 안내' })
+  await help.click()
+  await expect(page.getByText(/분석한 장르 비중이/)).toBeVisible()
+  await page.getByRole('button', { name: '도움말 닫기' }).click()
+  await expect(help).toBeFocused()
+  await page.getByRole('button', { name: '대중성 지표 안내' }).click()
+  await expect(page.getByText(/Last.fm에서 확인한 곡별 청취자 수로/)).toBeVisible()
+  await page.screenshot({ path: info.outputPath('result-help-desktop.png'), fullPage: true, animations: 'disabled' })
+  await page.keyboard.press('Escape')
+  await page.goto('/community')
+  await page.getByRole('navigation', { name: '메인 메뉴' }).getByRole('link', { name: '내 취향', exact: true }).click()
+  await expect(page).toHaveURL(/\/result$/)
+  expect(analyses).toBe(0)
+})
+
+test('profile and music list skeletons become real content or an empty state after the request finishes', async ({ page }, info) => {
+  await signedInPreview(page)
+  let releaseProfile!: () => void
+  const profile = new Promise<void>(resolve => { releaseProfile = resolve })
+  await page.route('**/api/me', async route => {
+    await profile
+    await route.fulfill({ json: { id: 1, spotifyId: 'test', email: '', displayName: '음악 친구' } })
+  })
+  let releasePosts!: () => void
+  let posts = new Promise<void>(resolve => { releasePosts = resolve })
+  await page.route('**/api/posts?**', async route => {
+    await posts
+    await route.fulfill({ json: { items: [], page: 0, hasMore: false } })
+  })
+  await page.goto('/mypage')
+  await expect(page.getByRole('status', { name: '프로필을 불러오고 있어요.' })).toBeVisible()
+  await expect(page.getByRole('status', { name: '내 글을 불러오고 있어요.' })).toBeVisible()
+  const avatar = page.locator('.music-skeleton-heading > .seed-skeleton').first()
+  const size = await avatar.boundingBox()
+  expect(Math.abs(size!.width - size!.height)).toBeLessThan(1)
+  await page.screenshot({ path: info.outputPath('mypage-skeleton.png'), animations: 'disabled' })
+  releaseProfile(); releasePosts()
+  await expect(page.getByRole('heading', { name: '음악 친구', exact: true })).toBeVisible()
+  await expect(page.getByText('아직 공유한 음악이 없어요', { exact: true })).toBeVisible()
+  await expect(page.getByRole('link', { name: '내 분석 결과 보기' })).toHaveCount(0)
+  posts = new Promise<void>(resolve => { releasePosts = resolve })
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/community')
+  await expect(page.getByRole('status', { name: '음악을 불러오고 있어요.' })).toBeVisible()
+  await page.screenshot({ path: info.outputPath('feed-skeleton-mobile.png'), animations: 'disabled' })
+  releasePosts()
+  await expect(page.getByRole('status', { name: '음악을 불러오고 있어요.' })).toHaveCount(0)
+  await expect(page.getByText('첫 번째 음악을 들려주세요', { exact: true })).toBeVisible()
+})
+
+test('pet details keep undiscovered pets locked and restore keyboard focus when closed', async ({ page }, info) => {
+  await page.goto('/')
+  const trigger = page.getByRole('button', { name: '모찌 자세히 보기' })
+  await trigger.click()
+  const dialog = page.getByRole('dialog', { name: '모찌', exact: true })
+  await expect(dialog.getByRole('heading', { name: '대표 장르' })).toHaveCount(0)
+  await expect(dialog.getByRole('img', { name: '아직 발견하지 않은 펫' })).toHaveClass(/is-locked/)
+  await dialog.getByRole('button', { name: '닫기', exact: true }).click()
+  await expect(trigger).toBeFocused()
+  await expect(page.getByText(/발견 0\/5/)).toHaveCount(0)
+  await signedInPreview(page)
+  await page.reload()
+  await expect(page.getByText(/총 5마리/)).toHaveCount(0)
+  await page.getByRole('button', { name: '모찌 자세히 보기' }).click()
+  await expect(dialog.getByRole('img', { name: '모찌', exact: true })).not.toHaveClass(/is-locked/)
+  await page.screenshot({ path: info.outputPath('pet-details-desktop.png'), animations: 'disabled' })
+  expect(await page.evaluate(() => !!document.elementFromPoint(20, 20)?.closest('.pet-detail-layer'))).toBe(true)
+})
+
+test.describe('touch screens', () => {
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
+
+  test('floating composer supports adding tags by touch and returns focus after publishing', async ({ page }, info) => {
+    await signedInPreview(page)
+    await page.goto('/community')
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+    const trigger = page.getByRole('button', { name: '빠르게 한 곡 올리기' })
+    await expect(trigger).toBeInViewport()
+    await trigger.click()
+    const dialog = page.getByRole('dialog', { name: '오늘의 한 곡', exact: true })
+    await dialog.getByRole('textbox', { name: '곡 검색', exact: true }).fill('seasons')
+    await dialog.getByRole('button', { name: '검색', exact: true }).click()
+    await dialog.getByRole('button', { name: 'seasons — wave to earth' }).click()
+    await dialog.getByRole('textbox', { name: '이 곡을 나누고 싶은 이유' }).fill('산책하며 듣는 노래')
+    const tags = dialog.getByRole('textbox', { name: '태그', exact: true })
+    await tags.fill('rainy day')
+    await dialog.getByRole('button', { name: '추가', exact: true }).click()
+    await expect(dialog.getByText('태그는 공백이나 # 없이 입력해주세요.')).toBeVisible()
+    await tags.fill('산책')
+    await tags.dispatchEvent('compositionstart')
+    await expect(dialog.getByRole('button', { name: '추가', exact: true })).toBeDisabled()
+    await tags.dispatchEvent('compositionend')
+    await dialog.getByRole('button', { name: '추가', exact: true }).click()
+    await expect(dialog.getByRole('button', { name: '#산책 삭제', exact: true })).toBeInViewport()
+    await expect(dialog.getByText(/1\/5개/)).toBeVisible()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    await page.screenshot({ path: info.outputPath('mobile-tag-entry.png'), animations: 'disabled' })
+    const publish = page.waitForRequest(request => request.method() === 'POST' && new URL(request.url()).pathname === '/api/posts')
+    await dialog.getByRole('button', { name: '공유하기', exact: true }).click()
+    expect((await publish).postDataJSON().tags).toEqual(['산책'])
+    await expect(dialog).toHaveCount(0)
+    await expect(trigger).toBeFocused()
+    await expect(page.getByRole('article').first()).toContainText('산책하며 듣는 노래')
+  })
+
+  test('guest floating action asks for login and can be dismissed', async ({ page }) => {
+    await mockPlayers(page)
+    await page.goto('/community')
+    const trigger = page.getByRole('button', { name: '빠르게 한 곡 올리기' })
+    await trigger.click()
+    await expect(page.getByRole('alertdialog')).toContainText('로그인하고 함께해요')
+    await page.getByRole('button', { name: '계속 둘러보기' }).click()
+    await expect(page.getByRole('alertdialog')).toHaveCount(0)
+    await expect(trigger).toBeFocused()
+  })
+
+  test('touch instructions and metric help fit a phone; pet details use a bottom sheet', async ({ page }, info) => {
+    await signedInPreview(page)
+    await page.route('**/api/analysis/latest', route => route.fulfill({ json: result }))
+    await page.goto('/result')
+    await expect(page.getByRole('heading', { name: '어떤 음악을 들었을까요?' })).toBeVisible()
+    await expect(page.locator('.genre-pointer-hint')).toBeHidden()
+    await page.getByRole('button', { name: '매칭 점수 안내' }).click()
+    await expect(page.getByText(/분석한 장르 비중이/)).toBeInViewport()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    await page.screenshot({ path: info.outputPath('result-help-mobile.png'), animations: 'disabled' })
+    await page.goto('/')
+    await page.getByRole('button', { name: '핍 자세히 보기' }).click()
+    const dialog = page.getByRole('dialog', { name: '핍', exact: true })
+    await expect(dialog).toHaveClass(/seed-bottom-sheet__content/)
+    await expect(dialog.getByRole('button', { name: '닫기', exact: true })).toBeInViewport()
+    await page.screenshot({ path: info.outputPath('pet-details-mobile.png'), animations: 'disabled' })
+    await dialog.getByRole('button', { name: '닫기', exact: true }).click()
+    await expect(page.getByText(/발견 1\/5/)).toHaveCount(0)
+  })
+})

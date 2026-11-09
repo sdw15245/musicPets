@@ -1,0 +1,10 @@
+.analysis-overview.result-skeleton-overview { grid-template-columns: 144px minmax(0, 1fr); min-height: 300px; }
+.result-skeleton-portrait { width: 144px; height: 144px; }
+.result-skeleton-copy { display: grid; align-content: start; gap: var(--seed-dimension-x5); min-width: 0; }
+@media (max-width: 767px) {
+  .analysis-overview.result-skeleton-overview { grid-template-columns: 96px minmax(0, 1fr); gap: var(--seed-dimension-x5); min-height: 360px; }
+  .result-skeleton-portrait { width: 96px; height: 96px; grid-row: 1 / 3; }
+  .result-skeleton-copy { display: contents; }
+  .result-skeleton-copy > :nth-child(-n + 2) { grid-column: 2; max-width: 100%; }
+  .result-skeleton-copy > :nth-child(n + 3) { grid-column: 1 / -1; }
+}

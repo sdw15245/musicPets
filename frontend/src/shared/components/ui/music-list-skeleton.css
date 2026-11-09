@@ -1,0 +1,27 @@
+.music-list-skeleton > div,
+.music-skeleton-card,
+.music-skeleton-copy {
+  display: grid;
+  gap: var(--seed-dimension-x3);
+  min-width: 0;
+}
+.music-list-skeleton > div { gap: var(--seed-dimension-x5); }
+.music-skeleton-card {
+  padding: var(--seed-dimension-x5);
+  border: 1px solid var(--seed-color-stroke-neutral-muted);
+  border-radius: var(--seed-radius-r4);
+  background: var(--seed-color-bg-layer-default);
+}
+.music-skeleton-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--seed-dimension-x3);
+}
+.music-skeleton-copy { flex: 1; }
+.music-skeleton-heading > .seed-skeleton { flex-shrink: 0; }
+.music-list-skeleton.is-compact .music-skeleton-card {
+  padding-inline: 0;
+  border: 0;
+  border-bottom: 1px solid var(--seed-color-stroke-neutral-muted);
+  border-radius: 0;
+}

@@ -1,0 +1,61 @@
+# 루트 공통 무시 규칙
+# (빌드 산출물/의존성 등 세부 규칙은 backend/.gitignore, frontend/.gitignore 가 담당)
+
+# === AI 도구 ===
+.claude/
+.cursor/
+.codex/
+.agents/
+.agent/
+.gemini/
+.aider*
+# 개인 AI 지침/로컬 MCP 설정 (팀 공용 지침은 필요할 때 별도 검토)
+CLAUDE.local.md
+.mcp.json
+.mcp.local.json
+
+# === 환경 변수 / 시크릿 ===
+.env
+.env.*
+!.env.example
+# 로컬 인증서/개인키
+*.key
+*.pem
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+# === 실행 로그 / 캐시 / 개인 백업 ===
+*.log
+*.log.*
+__pycache__/
+*.py[cod]
+.venv/
+.cache/
+_restore_points/
+backups/
+*.bak
+*.tmp
+*.orig
+
+# === IDE ===
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+
+# === OS ===
+.DS_Store
+Thumbs.db
+
+# Temporary upstream design reference
+/carrot/
+
+# Local analysis/reference documents, DB dumps and pre-edit backups.
+# Keep public setup/operations docs in README.md and backend/MIGRATIONS.md.
+/docs/
+
+# Personal upload checklist; not part of the product documentation.
+/REPOSITORY.md

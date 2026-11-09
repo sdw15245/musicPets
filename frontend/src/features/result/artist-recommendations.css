@@ -1,0 +1,15 @@
+.artist-recommendations { list-style: none; margin: var(--seed-dimension-x4) 0 0; padding: 0; }
+.artist-recommendations li + li { border-top: 1px solid var(--seed-color-stroke-neutral-muted); }
+.artist-recommendation { display: grid; grid-template-columns: 80px minmax(0, 1fr) 20px; gap: var(--seed-dimension-x5); align-items: center; padding: var(--seed-dimension-x5) var(--seed-dimension-x2); border-radius: var(--seed-radius-r2); }
+.artist-recommendation:hover { background: var(--seed-color-bg-layer-default-pressed); }
+.artist-recommendation:focus-visible { outline: 2px solid var(--seed-color-stroke-focus-ring); outline-offset: 2px; }
+.artist-portrait { width: 80px; height: 80px; border-radius: 50%; display: grid; place-items: center; overflow: hidden; background: var(--seed-color-bg-neutral-weak); color: var(--seed-color-fg-neutral-muted); }
+.artist-portrait img { width: 100%; height: 100%; object-fit: cover; }
+.artist-recommendation-copy { display: flex; flex-direction: column; min-width: 0; gap: var(--seed-dimension-x1); overflow-wrap: anywhere; }
+.artist-recommendation-copy strong { font: var(--mp-type-label); }
+.artist-recommendation-reason { font: var(--mp-type-caption); color: var(--seed-color-fg-neutral-muted); }
+.artist-recommendation-link { display: flex; align-items: center; gap: var(--seed-dimension-x1); margin-top: var(--seed-dimension-x2); font: var(--mp-type-caption); }
+@media (max-width: 767px) {
+  .artist-recommendation { grid-template-columns: 64px minmax(0, 1fr) 20px; gap: var(--seed-dimension-x3); }
+  .artist-portrait { width: 64px; height: 64px; }
+}

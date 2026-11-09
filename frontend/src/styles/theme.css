@@ -1,0 +1,62 @@
+:root {
+  --surface: var(--seed-color-bg-layer-default);
+  --shadow: var(--seed-shadow-s2);
+}
+
+/* MusicPets brand: SEED green palette. Neutral and status roles keep SEED defaults. */
+:root[data-seed-color-mode="light-only"] {
+  --seed-color-bg-brand-solid: var(--seed-color-palette-green-800);
+  --seed-color-bg-brand-solid-pressed: var(--seed-color-palette-green-900);
+  --seed-color-bg-brand-weak: var(--seed-color-palette-green-100);
+  --seed-color-bg-brand-weak-pressed: var(--seed-color-palette-green-200);
+  --seed-color-fg-brand: var(--seed-color-palette-green-800);
+  --seed-color-fg-brand-contrast: var(--seed-color-palette-green-900);
+  --seed-color-stroke-brand-solid: var(--seed-color-palette-green-800);
+  --seed-color-stroke-brand-weak: var(--seed-color-palette-green-300);
+  --ink: var(--seed-color-fg-neutral);
+  --ink-soft: var(--seed-color-fg-neutral-muted);
+  --paper: var(--seed-color-bg-layer-default);
+  --line: var(--seed-color-stroke-neutral-muted);
+}
+
+:root {
+  --mp-type-screen-title: var(--seed-font-weight-bold) var(--seed-font-size-t10)/var(--seed-line-height-t10) var(--seed-font-family);
+  --mp-type-article-body: var(--seed-font-weight-regular) var(--seed-font-size-t5)/var(--seed-line-height-t6) var(--seed-font-family);
+  --mp-type-section-title: var(--seed-font-weight-bold) var(--seed-font-size-t8)/var(--seed-line-height-t8) var(--seed-font-family);
+  --mp-type-body: var(--seed-font-weight-regular) var(--seed-font-size-t5)/var(--seed-line-height-t5) var(--seed-font-family);
+  --mp-type-label: var(--seed-font-weight-medium) var(--seed-font-size-t5)/var(--seed-line-height-t5) var(--seed-font-family);
+  --mp-type-caption: var(--seed-font-weight-regular) var(--seed-font-size-t4)/var(--seed-line-height-t4) var(--seed-font-family);
+  --mp-type-lead: var(--seed-font-weight-regular) var(--seed-font-size-t6)/var(--seed-line-height-t7) var(--seed-font-family);
+  --mp-shell-width: 1280px;
+  --mp-reading-width: 48rem;
+  --mp-page-gutter: var(--seed-dimension-x3);
+}
+
+@media (min-width: 768px) {
+  :root {
+    --mp-page-gutter: var(--seed-dimension-x6);
+  }
+}
+
+.inline-icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.15em;
+}
+
+.loading-status {
+  display: flex;
+  align-items: center;
+  gap: var(--seed-dimension-x2);
+  padding-block: var(--seed-dimension-x3);
+  color: var(--seed-color-fg-neutral-muted);
+  font: var(--mp-type-label);
+}
+
+.notice-action { margin-top: var(--seed-dimension-x3); }
+
+.app-snackbar-region {
+  max-width: 480px;
+  margin-inline: auto;
+}

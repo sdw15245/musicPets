@@ -1,0 +1,46 @@
+.mypage { min-height: 100dvh; color: var(--seed-color-fg-neutral); background: var(--seed-color-bg-layer-default); }
+.mypage-overview { width: min(var(--mp-shell-width), calc(100% - 2 * var(--mp-page-gutter))); margin-inline: auto; padding-block: var(--seed-dimension-x8) var(--seed-dimension-x10); }
+.mypage-overview h1 { margin: 0; font: var(--mp-type-screen-title); }
+.mypage-overview > h1 { margin-bottom: var(--seed-dimension-x8); }
+.mypage-connected-account { display: flex; align-items: center; gap: var(--seed-dimension-x2); margin-top: var(--seed-dimension-x5); padding-top: var(--seed-dimension-x4); border-top: 1px solid var(--seed-color-stroke-neutral-muted); }
+.mypage-connected-account > div { flex: 1; min-width: 0; font: var(--mp-type-caption); }
+.mypage-connected-account span { color: var(--seed-color-fg-neutral-muted); }
+.mypage-connected-account strong { display: block; font-weight: var(--seed-font-weight-medium); overflow-wrap: anywhere; }
+.mypage-connected-account > a { flex-shrink: 0; }
+.mypage-layout { display: grid; grid-template-columns: minmax(280px, 320px) minmax(0, 1fr); align-items: start; gap: var(--seed-dimension-x10); }
+.mypage-profile-card, .mypage-recent { min-width: 0; }
+.mypage-profile-card { padding: var(--seed-dimension-x5); background: var(--seed-color-bg-neutral-weak); border-radius: var(--seed-radius-r4); }
+.mypage-profile-identity { display: flex; align-items: center; gap: var(--seed-dimension-x4); }
+.mypage-profile-identity > div:last-child { min-width: 0; }
+.mypage-profile-identity h2 { margin: 0; font: var(--mp-type-section-title); overflow-wrap: anywhere; }
+.mypage-profile-description { margin: var(--seed-dimension-x1) 0 0; font: var(--mp-type-caption); color: var(--seed-color-fg-neutral-muted); }
+.mypage-profile-body { margin-top: var(--seed-dimension-x5); }
+.mypage-profile-body > button { width: 100%; }
+.mypage-profile-skeleton { display: grid; gap: var(--seed-dimension-x4); min-height: 128px; margin-top: 0; }
+.profile-editor { display: grid; gap: var(--seed-dimension-x4); margin-top: var(--seed-dimension-x5); padding-top: var(--seed-dimension-x5); border-top: 1px solid var(--seed-color-stroke-neutral-muted); }
+.profile-editor-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--seed-dimension-x2); }
+.mypage-recent-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--seed-dimension-x3); margin-bottom: var(--seed-dimension-x5); }
+.mypage-recent-heading h2 { margin: 0; font: var(--mp-type-section-title); }
+.mypage-post-preview { padding-block: var(--seed-dimension-x5); }
+.mypage-post-preview + .mypage-post-preview { border-top: 1px solid var(--seed-color-stroke-neutral-muted); }
+.mypage-post-preview:first-child { padding-top: 0; }
+.mypage-post-preview:last-child { padding-bottom: 0; }
+.mypage-track { display: flex; align-items: start; gap: var(--seed-dimension-x4); text-decoration: none; border-radius: var(--seed-radius-r2); }
+.mypage-track .community-art { width: 64px; height: 64px; flex-basis: 64px; flex-shrink: 0; }
+.mypage-track .community-art img { object-fit: contain; }
+.mypage-track-info { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.mypage-track-info h3 { margin: 0 0 var(--seed-dimension-x1); font: var(--mp-type-label); }
+.mypage-track-info > span { font: var(--mp-type-caption); color: var(--seed-color-fg-neutral-muted); }
+.mypage-track:hover h3 { text-decoration: underline; text-underline-offset: var(--seed-dimension-x1); }
+.mypage-post-caption { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; white-space: pre-wrap; margin: var(--seed-dimension-x2) 0 0; font: var(--mp-type-body); }
+.mypage-post-meta { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--seed-dimension-x2); margin-top: var(--seed-dimension-x2); padding-left: 80px; font: var(--mp-type-caption); color: var(--seed-color-fg-neutral-muted); }
+.mypage-post-meta > div { display: flex; flex-wrap: wrap; gap: var(--seed-dimension-x3); }
+.mypage-spotify-link { display: inline-flex; align-items: center; gap: var(--seed-dimension-x1); min-height: 44px; }
+.mypage :is(a, button, input):focus-visible { outline: 2px solid var(--seed-color-stroke-focus-ring); outline-offset: 2px; }
+@media (max-width: 1023px) {
+  .mypage-layout { grid-template-columns: minmax(0, 1fr); gap: var(--seed-dimension-x8); }
+}
+@media (max-width: 767px) {
+  .mypage-overview { padding-top: var(--seed-dimension-x5); }
+  .mypage-post-meta { padding-left: 0; }
+}

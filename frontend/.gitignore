@@ -1,0 +1,43 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+test-results
+test-results-*
+playwright-report
+playwright-report-*/
+blob-report/
+coverage/
+.nyc_output/
+playwright/.auth/
+*.tsbuildinfo
+*.local
+
+# 백업/임시
+_restore_points
+.claude
+
+# Local design notes
+/DESIGN.md
+
+# Redistribution permission has not been documented; keep the local font only.
+/public/fonts/FunkyBird_PERSONAL_USE_ONLY.woff
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

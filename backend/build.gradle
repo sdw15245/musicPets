@@ -1,0 +1,111 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.5.16'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+sourceSets {
+	migration {
+		compileClasspath += sourceSets.main.output + configurations.runtimeClasspath
+		runtimeClasspath += output + compileClasspath
+	}
+	test {
+		compileClasspath += sourceSets.migration.output
+		runtimeClasspath += sourceSets.migration.output
+	}
+}
+
+tasks.register('baselineExisting', JavaExec) {
+	description = 'Checks existing MySQL schema against V1, then explicitly baselines when -PbaselineBackup is supplied.'
+	group = 'database'
+	classpath = sourceSets.migration.runtimeClasspath
+	mainClass = 'com.example.demo.migration.ExistingDatabaseBaseline'
+	if (providers.gradleProperty('baselineBackup').isPresent()) {
+		args providers.gradleProperty('baselineBackup').get()
+	}
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	runtimeOnly    'com.mysql:mysql-connector-j'
+	implementation 'org.flywaydb:flyway-core'
+	runtimeOnly 'org.flywaydb:flyway-mysql'
+
+	implementation 'me.paulschwarz:spring-dotenv:4.0.0'
+
+	implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
+	runtimeOnly    'io.jsonwebtoken:jjwt-impl:0.13.0'
+	runtimeOnly    'io.jsonwebtoken:jjwt-jackson:0.13.0'
+
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.security:spring-security-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	testRuntimeOnly 'com.h2database:h2'
+	testImplementation 'org.testcontainers:mysql'
+	testImplementation 'org.testcontainers:junit-jupiter'
+}
+
+tasks.named('test') {
+	useJUnitPlatform { excludeTags 'redis', 'mysql', 'backup', 'live-cache' }
+}
+
+tasks.register('migrationTest', Test) {
+	description = 'Verifies Flyway against an isolated MySQL 8.0 container (Docker required).'
+	group = 'verification'
+	testClassesDirs = sourceSets.test.output.classesDirs
+	classpath = sourceSets.test.runtimeClasspath
+	useJUnitPlatform { includeTags 'mysql' }
+}
+
+tasks.register('restoreTest', Test) {
+	description = 'Restores a specified private SQL backup into a disposable MySQL container and checks adoption preserves every retained value.'
+	group = 'verification'
+	testClassesDirs = sourceSets.test.output.classesDirs
+	classpath = sourceSets.test.runtimeClasspath
+	useJUnitPlatform { includeTags 'backup' }
+	if (providers.gradleProperty('backup').isPresent()) systemProperty 'migration.backup', providers.gradleProperty('backup').get()
+}
+
+tasks.register('redisTest', Test) {
+	description = 'Tests the real Redis cache; start docker compose up -d redis first.'
+	group = 'verification'
+	testClassesDirs = sourceSets.test.output.classesDirs
+	classpath = sourceSets.test.runtimeClasspath
+	useJUnitPlatform { includeTags 'redis' }
+	systemProperty 'redis.test.port', System.getProperty('redis.test.port', '6379')
+}
+
+// Explicit opt-in: real Last.fm requests; isolated Redis DB 15 keys, no user analysis.
+tasks.register('cacheBenchmark', Test) {
+	description = 'Measures real Last.fm cache misses/hits and writes build/reports/cache-benchmark/results.json.'
+	group = 'verification'
+	testClassesDirs = sourceSets.test.output.classesDirs
+	classpath = sourceSets.test.runtimeClasspath
+	useJUnitPlatform { includeTags 'live-cache' }
+	systemProperty 'redis.test.port', System.getProperty('redis.test.port', '6379')
+	outputs.upToDateWhen { false }
+}
+
+// 프론트 도감과 동일한 원본을 jar에 포함한다.
+tasks.named('processResources') {
+	from('../shared') {
+		include 'characters.json'
+	}
+}

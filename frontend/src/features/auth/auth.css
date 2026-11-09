@@ -1,0 +1,21 @@
+.login-page { min-height: 100dvh; background: var(--seed-color-bg-layer-default); }
+.login-layout { width: min(400px, calc(100% - 2 * var(--mp-page-gutter))); margin: clamp(48px, 12vh, 112px) auto var(--seed-dimension-x12); }
+.login-heading { text-align: center; margin-bottom: var(--seed-dimension-x8); }
+.login-heading h1 { margin: 0; font: var(--mp-type-section-title); }
+.login-heading p { margin: var(--seed-dimension-x3) 0 0; font: var(--mp-type-body); color: var(--seed-color-fg-neutral-muted); }
+.login-copy > .seed-action-button { width: 100%; }
+.spotify-sign-in .spotify-logo { filter: invert(1); }
+.login-secondary { display: flex; justify-content: center; margin-top: var(--seed-dimension-x4); }
+.login-secondary a { display: inline-flex; min-height: 44px; align-items: center; padding-inline: var(--seed-dimension-x3); font: var(--mp-type-caption); color: var(--seed-color-fg-neutral-muted); text-decoration: underline; text-underline-offset: 4px; }
+.login-secondary a:hover { color: var(--seed-color-fg-neutral); }
+.account-switch .login-heading { text-align: left; }
+.account-switch-current { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--seed-dimension-x2); margin: 0 0 var(--seed-dimension-x6); padding-bottom: var(--seed-dimension-x4); border-bottom: 1px solid var(--seed-color-stroke-neutral-muted); font: var(--mp-type-caption); color: var(--seed-color-fg-neutral-muted); }
+.account-switch-current strong { color: var(--seed-color-fg-neutral); overflow-wrap: anywhere; min-width: 0; }
+.account-switch-steps { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--seed-dimension-x8); }
+.account-switch-steps li { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: var(--seed-dimension-x3); align-items: start; }
+.account-step-number { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--seed-color-bg-neutral-weak); color: var(--seed-color-fg-neutral-muted); font: var(--mp-type-label); }
+.account-switch-steps h2 { margin: 0; font: var(--mp-type-label); line-height: 28px; }
+.account-switch-steps p { margin: var(--seed-dimension-x2) 0 var(--seed-dimension-x4); font: var(--mp-type-caption); color: var(--seed-color-fg-neutral-muted); word-break: keep-all; }
+.account-switch-steps .seed-action-button { width: 100%; }
+.login-copy [role="alert"] { margin-block: var(--seed-dimension-x4); }
+@media (max-width: 767px) { .login-layout { margin-top: var(--seed-dimension-x12); } }

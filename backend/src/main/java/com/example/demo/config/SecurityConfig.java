@@ -82,6 +82,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/posts", "/api/posts/{id}", "/api/posts/{postId}/comments").permitAll()
                 .requestMatchers(
                     "/api/auth/csrf", "/api/auth/refresh", "/api/auth/logout",
+                    "/actuator/health/readiness",
                     "/oauth2/**",
                     "/login/**"
                 ).permitAll()

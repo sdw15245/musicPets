@@ -1,0 +1,6 @@
+# Local image verification only; EC2 pulls the tested image from Docker Hub.
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile

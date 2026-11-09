@@ -1,0 +1,6 @@
+# Local smoke tests only: never add this override to an EC2 deployment.
+services:
+  backend:
+    environment:
+      AUTH_COOKIE_SECURE: "false"
+      SERVER_SERVLET_SESSION_COOKIE_SECURE: "false"

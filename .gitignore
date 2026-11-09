@@ -59,3 +59,11 @@ Thumbs.db
 
 # Personal upload checklist; not part of the product documentation.
 /REPOSITORY.md
+
+# Local Vercel project metadata
+.vercel/
+/deploy/.tls-smoke/
+
+/AGENTS.md
+/CLAUDE.md
+/GEMINI.md

@@ -1,0 +1,16 @@
+# Requires Docker Compose 2.24.4+ and a certificate issued for DOMAIN.
+services:
+  nginx:
+    ports: !override
+      - "80:8080"
+      - "443:8443"
+    environment:
+      DOMAIN: ${DOMAIN:?Set DOMAIN to the backend hostname}
+      NGINX_ENVSUBST_FILTER: "^DOMAIN$"
+    # Replace the HTTP-only mount so envsubst can write default.conf.
+    volumes: !override
+      - ./deploy/nginx/logging.conf:/etc/nginx/conf.d/logging.conf:ro
+      - ./deploy/nginx/routes.conf:/etc/nginx/musicpets/routes.conf:ro
+      - ./deploy/nginx/https.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ${TLS_CERT_DIR:?Set TLS_CERT_DIR to the certificate directory}:/etc/letsencrypt:ro
+      - ${ACME_WEBROOT:-/var/www/letsencrypt}:/var/www/letsencrypt:ro

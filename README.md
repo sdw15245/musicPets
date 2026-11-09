@@ -30,7 +30,7 @@ MySQL 데이터는 `mysql-data` 이름의 Compose 볼륨에 저장합니다. `do
 
 루트 `.env`와 `backend/.env`는 Git에서 제외됩니다. 이미 DB가 초기화된 후에는 `.env`의 비밀번호만 바꿔도 DB 계정 비밀번호가 바뀌지 않습니다. 기존 DB의 비밀번호를 바꾸려면 DB 계정 변경과 환경 설정을 함께 갱신해야 합니다. 비밀번호를 바꾸려고 볼륨을 삭제하지 않습니다.
 
-두 PC에서 같은 Compose 파일을 사용해도 DB 데이터와 `.env`는 동기화되지 않습니다. 기존 데이터가 필요하면 별도로 백업·복원합니다. 이 Compose는 로컬 개발용이며 Railway 운영 DB와 분리합니다.
+두 PC에서 같은 Compose 파일을 사용해도 DB 데이터와 `.env`는 동기화되지 않습니다. 기존 데이터가 필요하면 별도로 백업·복원합니다. 이 Compose는 로컬 개발용이며 AWS 운영 DB와 분리합니다.
 
 ## 로컬 인증키 설정
 
@@ -95,3 +95,8 @@ docker compose exec -T redis redis-cli ping
 위 API는 모두 로그인한 계정을 기준으로 동작합니다. 저장소 구조는 Flyway 마이그레이션으로 관리하고 Hibernate는 `ddl-auto=validate`로 검사합니다. 기존 DB는 최초 도입 절차가 필요합니다. 최신 분석 기록을 삭제하면 `/api/analysis/latest`도 비워지지만 수집한 펫은 유지됩니다.
 
 검증은 `backend`에서 `./gradlew.bat test`, `frontend`에서 `npm run lint`와 `npm run test:e2e:preview -- --workers=2`로 실행합니다. 백엔드 테스트는 H2(MySQL 모드)를 사용하며, 브라우저 테스트는 외부 Spotify 호출을 모의 응답으로 대체합니다.
+
+## AWS·Vercel 배포
+
+프론트는 Vercel, 백엔드는 EC2의 Docker Compose, 이미지는 Docker Hub를 사용합니다.
+주소·환경변수·CI 설정과 검증 절차는 [배포 안내](deploy/README.md)를 참고합니다.

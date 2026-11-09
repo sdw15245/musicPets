@@ -1,0 +1,18 @@
+# Allow only backend build inputs; no .env, history, frontend or local artifacts.
+**
+!backend/
+!backend/gradlew
+!backend/gradle/
+!backend/gradle/**
+!backend/build.gradle
+!backend/settings.gradle
+!backend/src/
+!backend/src/**
+!shared/
+!shared/characters.json
+**/.env
+**/.env.*
+**/*.pem
+**/*.key
+**/*.p12
+**/*.jks

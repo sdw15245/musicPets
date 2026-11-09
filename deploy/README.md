@@ -8,7 +8,7 @@
 
 | 설정 | 값 |
 | --- | --- |
-| Vercel `BACKEND_ORIGIN` | `https://musicpets.duckdns.org` |
+| Vercel API/OAuth 프록시 목적지 | `https://musicpets.duckdns.org` |
 | EC2 `DOMAIN` | `musicpets.duckdns.org` |
 | EC2 `APP_ORIGIN` | `https://music-pets-lilac.vercel.app` |
 | Spotify 운영 Redirect URI | `https://music-pets-lilac.vercel.app/login/oauth2/code/spotify` |
@@ -25,12 +25,14 @@ DuckDNS로 OAuth 콜백을 직접 받으면 세션 쿠키가 Vercel 주소와 �
 2. Root Directory: `frontend`; **Include source files outside of the Root Directory in the Build Step**을 켭니다.
    `shared/characters.json`을 빌드에서 읽기 때문입니다.
 3. Node 22.x, Install `npm ci`, Build `npm run build`, Output `dist`.
-4. 환경변수 `BACKEND_ORIGIN=https://musicpets.duckdns.org`를 설정합니다.
+4. `frontend/vercel.json`의 API/OAuth 목적지는 `https://musicpets.duckdns.org`입니다.
+   별도 `BACKEND_ORIGIN` 환경변수는 사용하지 않습니다. 기존 값이 남아 있어도 동작에는 영향이 없습니다.
 5. Production의 고정 도메인을 정한 뒤 Spotify와 EC2의 APP_ORIGIN을 맞춥니다.
    Preview마다 바뀌는 주소에서 운영 OAuth 로그인은 지원하지 않습니다.
 6. 백엔드 .env, JWT 키, Spotify client secret, DB 비밀번호는 Vercel에 입력하지 않습니다.
 
-`frontend/vercel.mjs`가 환경변수로 API/OAuth rewrites를 생성합니다.
+`frontend/vercel.json`에 API/OAuth rewrites를 정적으로 정의합니다.
+백엔드 도메인이 바뀌면 이 파일의 세 프록시 목적지를 함께 변경합니다.
 이는 Vercel의 내장 프록시 설정이며 별도 서버를 만들지 않습니다.
 로컬 `npm run dev`는 기존대로 127.0.0.1:8080을 사용하고, 배포 빌드는 상대 URL을 사용합니다.
 `vite preview`는 Vercel 프록시를 실행하지 않습니다. E2E는 API를 모의 응답으로 검증합니다.
@@ -119,7 +121,7 @@ Certbot은 호스트에 설치하고 인증서는 `/etc/letsencrypt`에 보관�
 sudo certbot certonly --webroot -w /var/www/letsencrypt -d musicpets.duckdns.org --cert-name musicpets.duckdns.org --non-interactive --agree-tos --register-unsafely-without-email --keep-until-expiring
 sudo install -m 0755 deploy/renew-nginx.sh /etc/letsencrypt/renewal-hooks/deploy/musicpets-nginx
 sudo systemctl enable --now certbot.timer
-sudo certbot renew --cert-name musicpets.duckdns.org --dry-run --run-deploy-hooks
+sudo certbot renew --cert-name musicpets.duckdns.org --dry-run --run-deploy-hooks --no-random-sleep-on-renew
 ```
 
 갱신 후 hook은 `musicpets-production` 프로젝트의 Nginx 설정을 검사하고 reload합니다.

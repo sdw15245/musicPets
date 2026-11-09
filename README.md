@@ -11,6 +11,27 @@ Spotify에서 최근 듣는 음악으로 나를 닮은 음악 펫을 발견하�
 
 프론트와 백엔드는 각각 실행하되 빌드 시 `shared/`의 상대 경로를 유지합니다. 실제 서버 실행에는 DB 및 Spotify·Last.fm·Gemini 환경 설정이 필요합니다.
 
+## 로컬 MySQL·Redis 실행
+
+Docker Desktop을 실행하고 저장소 루트에서 준비합니다. 프론트와 백엔드는 기존처럼 PC에서 별도로 실행합니다.
+
+1. 새 PC에서는 `.env.example`을 루트 `.env`로 복사하고 `MYSQL_PASSWORD`, `MYSQL_ROOT_PASSWORD`에 서로 다른 난수 비밀번호를 입력합니다. 이미 `.env`가 있다면 덮어쓰지 않습니다. 예시 파일 주석의 Node 명령으로 생성할 수 있습니다.
+2. `backend/.env.example`을 참고해 `backend/.env`를 준비합니다. `DB_URL=jdbc:mysql://127.0.0.1:3307/musicpets`, `DB_USERNAME=musicpets`, `DB_PASSWORD`는 루트 `.env`의 `MYSQL_PASSWORD`와 동일하게 설정합니다. API 키와 JWT 키도 별도로 설정합니다. Compose는 루트 `.env`를, 백엔드는 `backend/.env`를 사용합니다.
+3. 아래 명령으로 시작하고 두 서비스가 `healthy`인지 확인합니다.
+
+```powershell
+docker compose up -d --wait
+docker compose ps
+```
+
+MySQL 이미지는 마이그레이션 검사와 같은 `8.0.43`으로 고정합니다. 기존 PC MySQL(3306)과 충돌하지 않도록 Docker MySQL은 `127.0.0.1:3307`, Redis는 `127.0.0.1:6379`에서만 접근할 수 있습니다. MySQL에는 빈 `musicpets` DB와 앱 계정이 생성되며, 테이블은 백엔드 첫 실행 시 Flyway가 생성합니다. 기존 노트북 DB 데이터는 자동으로 옮기지 않습니다.
+
+MySQL 데이터는 `mysql-data` 이름의 Compose 볼륨에 저장합니다. `docker compose stop`이나 `docker compose down` 후에도 유지되지만 **`docker compose down -v`는 DB 볼륨을 삭제하므로 실행하지 않습니다.** Redis는 재생성 가능한 캐시라 영구 저장하지 않습니다.
+
+루트 `.env`와 `backend/.env`는 Git에서 제외됩니다. 이미 DB가 초기화된 후에는 `.env`의 비밀번호만 바꿔도 DB 계정 비밀번호가 바뀌지 않습니다. 기존 DB의 비밀번호를 바꾸려면 DB 계정 변경과 환경 설정을 함께 갱신해야 합니다. 비밀번호를 바꾸려고 볼륨을 삭제하지 않습니다.
+
+두 PC에서 같은 Compose 파일을 사용해도 DB 데이터와 `.env`는 동기화되지 않습니다. 기존 데이터가 필요하면 별도로 백업·복원합니다. 이 Compose는 로컬 개발용이며 Railway 운영 DB와 분리합니다.
+
 ## 로컬 인증키 설정
 
 `backend/.env.example`을 참고해 `backend/.env`를 준비합니다. `JWT_SECRET`은 필수이며 기본키나 빈 값으로 실행할 수 없습니다. 다음 명령으로 64바이트 난수 키를 생성해 `.env`의 `JWT_SECRET`에 설정합니다.
@@ -43,7 +64,7 @@ Access 토큰은 앱 메모리에, refresh 토큰은 HttpOnly 쿠키에 보관�
 
 요청 오류는 캐시하지 않습니다. 동일 서버의 동시 요청은 하나로 모으고, 여러 서버는 Redis에 저장된 결과를 재사용합니다. 서로 다른 서버에서 동시에 처음 요청하는 경우까지 잠그는 분산 락은 적용하지 않습니다. Redis 연결 실패 시 30초 동안 직접 조회로 우회한 뒤 다시 연결을 시도합니다. 조회 제한·인증·Gemini 생성은 이 캐시의 대상이 아닙니다.
 
-저장소 루트에서 로컬 Redis를 실행합니다.
+위의 루트 `.env` 준비 후 저장소 루트에서 로컬 Redis만 실행할 수도 있습니다.
 
 ```powershell
 docker compose up -d redis

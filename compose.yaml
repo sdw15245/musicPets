@@ -1,5 +1,25 @@
 name: musicpets
 services:
+  mysql:
+    # Match the MySQL version used by the migration integration tests.
+    image: mysql:8.0.43
+    ports:
+      - "127.0.0.1:3307:3306"
+    environment:
+      MYSQL_DATABASE: musicpets
+      MYSQL_USER: musicpets
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in the root .env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in the root .env}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", 'MYSQL_PWD="$${MYSQL_PASSWORD}" mysql --protocol=TCP -h 127.0.0.1 -u musicpets -D musicpets -e "SELECT 1" >/dev/null 2>&1']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
   redis:
     image: redis:7.4-alpine
     ports:
@@ -12,3 +32,6 @@ services:
       interval: 10s
       timeout: 3s
       retries: 3
+
+volumes:
+  mysql-data:

@@ -31,8 +31,9 @@ test('visitors can browse public pages without a login notice when the session s
   await expect(page.getByText('로그인 정보를 확인하고 있어요.')).toHaveCount(0)
 
   await request.abort('connectionrefused')
-  await page.locator('.music-hero-actions').getByRole('link', { name: '내 음악 취향 분석하기' }).click()
-  await expect(page).toHaveURL(/\/analyze$/)
+  // An unavailable session is unknown, not a confirmed guest with no result.
+  await page.locator('.music-hero-actions').getByRole('link', { name: '내 취향 확인하기' }).click()
+  await expect(page).toHaveURL(/\/result$/)
   await expect(page.getByText(unavailable)).toBeVisible()
 
   await page.goBack()

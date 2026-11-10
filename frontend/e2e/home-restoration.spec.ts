@@ -39,21 +39,24 @@ test('home reload never presents guest actions or example pets while restoring a
   await page.reload()
   const authRequest = await auth
   await expect(page.locator('.music-hero')).toBeVisible()
-  await expect(page.locator('.music-hero h1')).toContainText('좋아하는 음악 속에')
-  await expect(page.locator('.music-hero-copy > p').first()).toContainText('최근 4주')
-  await expect(page.locator('.music-hero-actions').getByRole('link', { name: '내 취향 확인하기' })).toHaveAttribute('href', '/result')
-  await expect(page.locator('.cta-section h2')).toContainText('지금 듣는 음악으로')
-  await expect(page.locator('.cta-section').getByRole('link', { name: '내 취향 확인하기' })).toHaveAttribute('href', '/result')
+  await expect(page.locator('.music-hero h1')).toContainText('음악으로 발견한')
+  await expect(page.locator('.music-hero-copy > p').first()).toContainText('최근 분석한 음악 취향')
+  await expect(page.locator('.music-hero-actions').getByRole('link', { name: '내 취향 보기', exact: true })).toHaveAttribute('href', '/result')
+  await expect(page.locator('.cta-section h2')).toContainText('나의 펫을 다시 만나보세요')
+  await expect(page.locator('.cta-section').getByRole('link', { name: '내 취향 보기', exact: true })).toHaveAttribute('href', '/result')
   await expect(page.getByRole('link', { name: '내 음악 취향 분석하기', exact: true })).toHaveCount(0)
   await expect(page.getByRole('region', { name: '음악 펫 결과 예시' })).toHaveCount(0)
   await expect(page.getByRole('banner').getByRole('link', { name: '로그인', exact: true })).toHaveCount(0)
   await page.screenshot({ path: info.outputPath('home-restoring-session.png') })
 
+  await expect(page.getByText(result.profile.comment, { exact: true })).toHaveCount(0)
   await authRequest.fulfill({ json: { access } })
   const resultRequest = await latest
   await expect(page.getByRole('button', { name: '프로필', exact: true })).toBeVisible()
   await expect(page.getByRole('link', { name: '내 음악 취향 분석하기', exact: true })).toHaveCount(0)
   await expect(page.getByRole('region', { name: '음악 펫 결과 예시' })).toHaveCount(0)
+  await expect(page.getByText(result.profile.comment, { exact: true })).toHaveCount(0)
+  await expect(page.locator('.music-hero h1')).toContainText('음악으로 발견한')
   await page.setViewportSize({ width: 390, height: 844 })
   await page.screenshot({ path: info.outputPath('home-restoring-result-mobile.png') })
 
@@ -111,3 +114,96 @@ for (const member of [false, true]) {
     expect(analyses).toBe(0)
   })
 }
+
+
+test('guest reload keeps its copy, action, footnote and examples while auth is pending', async ({ page }) => {
+  await mockAuth(page, null)
+  await page.goto('/')
+  await expect(page.locator('.hero-footnote')).toHaveText('Spotify 계정 연결이 필요해요.')
+  const copy = await page.locator('.music-hero-copy').innerText()
+  let receive!: (route: Route) => void
+  const auth = new Promise<Route>(resolve => { receive = resolve })
+  await page.route('**/api/auth/refresh', route => { receive(route) }, { times: 1 })
+  await page.reload()
+  const request = await auth
+  await expect(page.locator('.music-hero-copy')).toHaveText(copy.replace(/\s+/g, ' '), { useInnerText: true })
+  await expect(page.getByRole('region', { name: '음악 펫 결과 예시' })).toBeVisible()
+  await expect(page.locator('.music-hero-actions').getByRole('link', { name: '내 음악 취향 분석하기' })).toHaveAttribute('href', '/result')
+  await request.fulfill({ status: 401 })
+  await expect(page.locator('.music-hero-actions').getByRole('link', { name: '내 음악 취향 분석하기' })).toHaveAttribute('href', '/analyze')
+})
+
+
+test('the tab remembers only generic view selection and clears it on logout away from home', async ({ page }) => {
+  await page.route('**/api/posts?**', route => route.fulfill({ json: { items: [], page: 0, hasMore: false } }))
+  await page.goto('/')
+  await expect(page.locator('.music-hero h1')).toContainText('음악으로 발견한')
+  const remembered = await page.evaluate(() => JSON.parse(sessionStorage.getItem('musicpets-home-view-v1')!))
+  expect(Object.keys(remembered).sort()).toEqual(['kind', 'savedAt', 'userId'])
+  expect(remembered).toMatchObject({ kind: 'result', userId: '1' })
+  await page.getByRole('link', { name: '커뮤니티', exact: true }).first().click()
+  await expect(page.getByRole('heading', { name: '오늘, 어떤 음악 들었어요?' })).toBeVisible()
+  await page.getByRole('button', { name: '프로필', exact: true }).click()
+  await page.getByRole('menuitem', { name: '로그아웃', exact: true }).click()
+  await expect(page.getByRole('banner').getByRole('link', { name: '로그인', exact: true })).toBeVisible()
+  expect(await page.evaluate(() => JSON.parse(sessionStorage.getItem('musicpets-home-view-v1')!))).toMatchObject({ kind: 'guest', userId: null })
+  await page.goto('/')
+  await expect(page.locator('.hero-footnote')).toHaveText('Spotify 계정 연결이 필요해요.')
+  await expect(page.getByText(result.profile.comment, { exact: true })).toHaveCount(0)
+})
+
+test('switching accounts discards the previous account view before fetching its result', async ({ page }) => {
+  await page.goto('/')
+  await expect(page.locator('.music-hero h1')).toContainText('음악으로 발견한')
+  const other = `header.${Buffer.from(JSON.stringify({ sub: '2' })).toString('base64url')}.signature`
+  await mockAuth(page, other)
+  let receive!: (route: Route) => void
+  const latest = new Promise<Route>(resolve => { receive = resolve })
+  await page.route('**/api/analysis/latest', route => { receive(route) }, { times: 1 })
+  await page.reload()
+  const request = await latest
+  await expect(page.locator('.music-hero h1')).not.toContainText('음악으로 발견한')
+  await expect(page.getByText(result.profile.comment, { exact: true })).toHaveCount(0)
+  await expect(page.locator('.music-hero-actions').getByRole('link', { name: '내 취향 확인하기' })).toHaveAttribute('href', '/result')
+  await request.fulfill({ status: 204 })
+  await expect(page.locator('.music-hero-actions').getByRole('link', { name: '내 음악 취향 분석하기' })).toHaveAttribute('href', '/analyze')
+})
+
+for (const saved of ['expired', 'malformed', 'future']) {
+  test(`an ${saved} view hint cannot suppress session restoration`, async ({ page }) => {
+    await page.goto('/')
+    await expect(page.locator('.music-hero h1')).toContainText('음악으로 발견한')
+    await page.evaluate(saved => sessionStorage.setItem('musicpets-home-view-v1', saved === 'malformed' ? '{' : JSON.stringify({
+      kind: 'result', userId: '1', savedAt: Date.now() + (saved === 'expired' ? -31 : 31) * 60_000,
+    })), saved)
+    let receive!: (route: Route) => void
+    const auth = new Promise<Route>(resolve => { receive = resolve })
+    await page.route('**/api/auth/refresh', route => { receive(route) }, { times: 1 })
+    await page.reload()
+    const request = await auth
+    await expect(page.locator('.music-hero-actions').getByRole('link', { name: '내 취향 확인하기' })).toBeVisible()
+    await expect(page.getByText(result.profile.comment, { exact: true })).toHaveCount(0)
+    await request.fulfill({ status: 401 })
+    await expect(page.locator('.hero-footnote')).toHaveText('Spotify 계정 연결이 필요해요.')
+  })
+}
+
+test('a failed session check displays an error instead of guest examples or saved result data', async ({ page }) => {
+  await page.goto('/')
+  await expect(page.locator('.music-hero h1')).toContainText('음악으로 발견한')
+  await page.route('**/api/auth/refresh', route => route.fulfill({ status: 503 }))
+  await page.reload()
+  await expect(page.locator('.hero-footnote')).toContainText('로그인 상태를 확인하지 못했어요')
+  await expect(page.getByRole('region', { name: '음악 펫 결과 예시' })).toHaveCount(0)
+  await expect(page.getByText(result.profile.comment, { exact: true })).toHaveCount(0)
+})
+
+test('blocked browser storage still renders the verified server result', async ({ page }) => {
+  await page.addInitScript(() => {
+    Storage.prototype.getItem = () => { throw new Error('Storage disabled') }
+    Storage.prototype.setItem = () => { throw new Error('Storage disabled') }
+    Storage.prototype.removeItem = () => { throw new Error('Storage disabled') }
+  })
+  await page.goto('/')
+  await expect(page.getByRole('region', { name: '나의 음악 취향 요약' })).toContainText(result.profile.comment)
+})

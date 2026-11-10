@@ -1,0 +1,12 @@
+[Unit]
+Description=MusicPets successful-main deployment check
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /usr/local/lib/musicpets/ops.py poll
+UMask=0077
+PrivateTmp=true
+TimeoutStartSec=30min

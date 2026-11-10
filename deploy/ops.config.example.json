@@ -1,0 +1,6 @@
+{
+  "app_dir": "/opt/musicpets",
+  "state_dir": "/var/lib/musicpets",
+  "region": "ap-southeast-2",
+  "backup_bucket": "musicpets-backups-100828721049-ap-southeast-2"
+}

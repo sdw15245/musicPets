@@ -32,7 +32,8 @@ class GeminiClientTest {
 
     @Test
     void tasteCommentDisablesThinkingWithoutLimitingOutputOrChangingDefaultCalls() {
-        server.expect(requestTo("https://gemini.test/models/gemini-2.5-flash:generateContent?key=test-key"))
+        server.expect(requestTo("https://gemini.test/models/gemini-2.5-flash:generateContent"))
+                .andExpect(header("x-goog-api-key", "test-key"))
                 .andExpect(jsonPath("$.generationConfig.thinkingConfig.thinkingBudget").value(0))
                 .andExpect(jsonPath("$.generationConfig.maxOutputTokens").doesNotExist())
                 .andRespond(withSuccess(RESPONSE, MediaType.APPLICATION_JSON));

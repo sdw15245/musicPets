@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
+@org.junit.jupiter.api.extension.ExtendWith(org.springframework.boot.test.system.OutputCaptureExtension.class)
 class TasteCommentServiceTest {
     @Test
     void samePetReceivesItsFixedStoryAndEachUsersDifferentGenreEvidence() {
@@ -52,6 +53,27 @@ class TasteCommentServiceTest {
         verify(gemini, times(2)).generateWithoutThinking(prompts.capture());
         assertThat(prompts.getAllValues().get(0)).contains("pop 90.0%, indie 10.0%").doesNotContain("jazz");
         assertThat(prompts.getAllValues().get(1)).contains("pop 51.0%, indie 49.0%");
+    }
+
+    @Test
+    void fallbackLogsHttpStatusWithoutSecretsOrPrompt(org.springframework.boot.test.system.CapturedOutput output) {
+        GeminiClient gemini = mock(GeminiClient.class);
+        when(gemini.generateWithoutThinking(anyString())).thenThrow(
+                new org.springframework.web.client.RestClientResponseException(
+                        "secret-key-in-url", 429, "Too Many Requests", null,
+                        "private-response-body".getBytes(java.nio.charset.StandardCharsets.UTF_8), null));
+        String result = new TasteCommentService(gemini).comment(Map.of("jazz", 1.0), null, null);
+        assertThat(result).contains("장르 요약");
+        assertThat(output.getOut()).contains("taste_comment_fallback", "status=429");
+        assertThat(output.getAll()).doesNotContain("secret-key-in-url", "private-response-body", "jazz 100.0%");
+    }
+
+    @Test
+    void emptyResponseRecordsDistinctReason(org.springframework.boot.test.system.CapturedOutput output) {
+        GeminiClient gemini = mock(GeminiClient.class);
+        when(gemini.generateWithoutThinking(anyString())).thenReturn(" ");
+        new TasteCommentService(gemini).comment(Map.of("pop", 1.0), null, null);
+        assertThat(output.getOut()).contains("taste_comment_fallback", "reason=empty_response");
     }
 
     @Test

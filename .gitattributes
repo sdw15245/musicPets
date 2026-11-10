@@ -14,3 +14,4 @@ backend/gradlew linguist-detectable=false
 backend/gradlew.bat linguist-detectable=false
 deploy/*.mjs linguist-detectable=false
 deploy/*.sh linguist-detectable=false
+deploy/*.py linguist-detectable=false

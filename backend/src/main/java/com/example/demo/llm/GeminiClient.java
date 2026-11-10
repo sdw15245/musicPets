@@ -39,7 +39,8 @@ public class GeminiClient {
         if (!generationConfig.isEmpty()) body.put("generationConfig", generationConfig);
 
         Map<String, Object> response = restClient.post()
-                .uri("/models/{model}:generateContent?key={key}", props.getModel(), props.getApiKey())
+                .uri("/models/{model}:generateContent", props.getModel())
+                .header("x-goog-api-key", props.getApiKey())
                 .body(body)
                 .retrieve()
                 .body(Map.class);

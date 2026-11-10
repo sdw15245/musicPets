@@ -3,6 +3,9 @@ package com.example.demo.taste;
 import com.example.demo.llm.GeminiClient;
 import com.example.demo.character.Character;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientResponseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -16,6 +19,7 @@ import java.util.stream.Collectors;
  */
 @Service
 public class TasteCommentService {
+    private static final Logger log = LoggerFactory.getLogger(TasteCommentService.class);
 
     private static final String PROMPT = """
             MusicPets의 음악 취향 해설을 작성하세요. 실제 분석 근거와 펫의 설정을 연결해
@@ -84,9 +88,17 @@ public class TasteCommentService {
                     .findFirst().map(pet -> pet.name() + " — " + pet.story())
                     .orElse("펫 연결 없이 장르만 설명하세요. 매칭된 펫 설정을 확인할 수 없어요.");
             String out = gemini.generateWithoutThinking(PROMPT.formatted(distribution, mainstreamLabel(mainstream), context));
-            return out == null || out.isBlank() ? fallback(ranked) : out.trim();
+            if (out == null || out.isBlank()) {
+                log.warn("taste_comment_fallback reason=empty_response");
+                return fallback(ranked);
+            }
+            return out.trim();
         } catch (Exception e) {
-            // LLM 실패해도 페이지는 죽지 않게.
+            // 예외 메시지/본문/프롬프트에는 비밀값이나 사용자 정보가 포함될 수 있다.
+            log.warn("taste_comment_fallback reason=request_failed type={} status={} cause={}",
+                    e.getClass().getSimpleName(),
+                    e instanceof RestClientResponseException response ? response.getStatusCode().value() : null,
+                    e.getCause() == null ? null : e.getCause().getClass().getSimpleName());
             return fallback(ranked);
         }
     }

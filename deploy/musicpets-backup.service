@@ -1,0 +1,12 @@
+[Unit]
+Description=MusicPets database backup to S3
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /usr/local/lib/musicpets/ops.py backup
+UMask=0077
+PrivateTmp=true
+TimeoutStartSec=15min

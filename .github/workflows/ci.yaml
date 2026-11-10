@@ -14,6 +14,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  operations:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m unittest discover -s deploy -p test_ops.py
+
   frontend:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -50,7 +60,7 @@ jobs:
       - run: ./gradlew --no-daemon test migrationTest bootJar
 
   image:
-    needs: [frontend, backend]
+    needs: [frontend, backend, operations]
     # Opt in only after adding Docker Hub credentials in repository settings.
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && vars.DOCKERHUB_PUBLISH_ENABLED == 'true'
     runs-on: ubuntu-latest

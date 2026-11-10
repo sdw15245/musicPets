@@ -2,7 +2,7 @@
 
 프론트는 Vercel, 백엔드는 EC2의 Docker Compose로 실행합니다.
 백엔드 이미지는 Docker Hub의 `sdw0501/musicpets:sha-<전체 커밋 SHA>`에 보관합니다.
-현재 파일은 배포 준비용입니다. EC2 생성, 인증서 발급, 실제 OAuth 연동, 서버 자동 배포는 별도 단계입니다.
+운영 서버는 Sydney EC2의 `/opt/musicpets`에서 실행합니다. 백업과 자동 배포는 아래 운영 절차를 따릅니다.
 
 ## 주소의 역할
 
@@ -50,7 +50,7 @@ Docker Personal은 비공개 저장소 1개 또는 공개 저장소를 사용할
 토큰은 채팅이나 저장소에 기록하지 않습니다. 계정 비밀번호 대신 토큰을 사용합니다.
 PR은 검사만 하고, main push 또는 main에서 수동 실행할 때 모든 검사가 통과하면 이미지를 업로드합니다.
 이미지 태그는 `sha-<40자리 커밋 SHA>`입니다. latest 태그를 덮어쓰지 않습니다.
-현재 CI는 **EC2에 SSH 접속하거나 자동 배포하지 않습니다**. 첫 수동 배포 검증 후 연결합니다.
+EC2의 `musicpets-deploy.timer`가 5분 간격으로 main의 성공한 CI와 image 작업을 확인해 해당 SHA 이미지를 적용합니다. CI에서 EC2로 SSH 접속하지 않습니다.
 이미지는 linux/amd64로 빌드하므로 첫 EC2는 x86_64를 선택합니다. ARM 인스턴스는 빌드 대상 변경이 필요합니다.
 
 ## 로컬 컨테이너 검증
@@ -110,7 +110,7 @@ Nginx는 자체 healthz와 API/OAuth만 전달하고 Actuator는 공개하지 �
 Certbot은 호스트에 설치하고 인증서는 `/etc/letsencrypt`에 보관합니다.
 
 첫 인증서 발급 때는 이 경로를 제공하는 임시 HTTP 서버가 필요합니다.
-현재 서버의 임시 컨테이너 이름은 `musicpets-acme`입니다.
+최초 발급에 사용한 임시 컨테이너 `musicpets-acme`는 현재 제거했습니다. 아래 절차는 신규 서버를 준비할 때만 해당합니다.
 운영 Compose를 시작하기 직전에 `sudo docker stop musicpets-acme`로 80번 포트를 비웁니다.
 운영 Nginx의 HTTPS와 ACME 경로를 검증한 뒤 `sudo docker rm musicpets-acme`로 제거합니다.
 운영 시작에 실패하면 임시 컨테이너를 다시 시작해 ACME 경로를 복구합니다.
@@ -140,15 +140,88 @@ sudo certbot renew --cert-name musicpets.duckdns.org --dry-run --run-deploy-hook
 - 배포마다 Compose 전체를 down하지 않습니다. 단일 백엔드 교체에는 짧은 중단이 있습니다.
 - 운영 전 DB 백업·복구 및 인증서 자동 갱신을 검증합니다. Docker 볼륨 자체는 백업이 아닙니다.
 
-## 실제 배포에서 남은 검증
+## 운영 시 유의 사항
 
 - Vercel → EC2 경로의 OAuth 왕복, CSRF, 쿠키, 새로고침 후 로그인 복구.
 - Vercel 외부 프록시는 120초 제한이 있습니다. 실제 음악 분석 소요 시간도 확인합니다.
 - Nginx는 신뢰할 수 없는 X-Forwarded-For를 덮어씁니다.
   Vercel을 거치면 IP별 제한이 여러 사용자에게 묶일 수 있습니다.
   계정별 제한은 유지됩니다. 실제 프록시 헤더/신뢰 경계를 검증한 뒤 사용자 IP 복원을 구성합니다.
-- EC2 주소와 인증서가 준비되기 전에는 Vercel의 API 요청이 정상 동작하지 않습니다.
+- EC2의 자동 할당 공개 IP는 중지 후 시작하면 변경될 수 있습니다. 이 경우 DuckDNS를 새 IP로 갱신해야 합니다.
 
 참고: [Vercel rewrites](https://vercel.com/docs/routing/rewrites),
 [Vercel 프록시 제한](https://vercel.com/docs/limits),
 [Docker Hub 사용량](https://docs.docker.com/docker-hub/usage/).
+
+
+## DB 백업과 자동 배포
+
+현재 AWS Free 프로젝트 정책에서는 GitHub OIDC 설정이 제한됩니다.
+장기 AWS 키나 SSH 키를 GitHub에 저장하지 않고 EC2가 공개 GitHub API를 조회합니다.
+추가 인바운드 포트와 유료 플랜 전환은 필요하지 않습니다. S3 저장/요청은 사용량에 따라 크레딧에서 차감됩니다.
+
+- `musicpets-backup.timer`: 매일 **한국 시간 03:15** MySQL 전체 논리 백업.
+- S3: `musicpets-backups-100828721049-ap-southeast-2`, `mysql/` 경로, 비공개/AES256 암호화/HTTPS 전용.
+- 보존: 14일 후 S3 수명 주기 삭제 대상이 됩니다. 실제 삭제 시점은 S3 처리 일정에 따릅니다.
+- `MusicPetsBackupRole`: 해당 버킷의 백업 경로에만 읽기/쓰기/목록 권한.
+- EC2가 꺼져 있으면 백업/배포도 실행되지 않습니다. EC2가 삭제되어도 S3 백업은 남습니다.
+- DB 백업에는 `.env`, 인증서, 소스 코드가 포함되지 않습니다. 운영 `.env`는 비밀번호 관리자 등 별도로 안전하게 보관합니다.
+
+자동 배포는 main 최신 SHA의 CI 전체와 image 작업 성공을 확인한 뒤 새 이미지를 pull합니다.
+S3 백업을 검증하고 main이 여전히 같은 SHA인지 확인한 후 백엔드만 교체합니다.
+컨테이너 readiness와 공개 API가 정상이어야 성공으로 기록합니다. 교체 중 짧은 접속 중단이 있습니다.
+실패하면 이전 이미지를 복구하며, 프로세스가 중단되면 다음 실행에서 복구를 시도합니다.
+실패한 SHA는 자동 반복하지 않으므로 수정 커밋을 올려야 합니다.
+
+롤백은 **앱 이미지에만** 적용됩니다. DB 마이그레이션은 자동으로 되돌리지 않으므로 이전 앱과 호환되게 작성합니다.
+자동 갱신 대상은 백엔드 이미지입니다. Compose, Nginx, 운영 스크립트, `.env` 변경은 서버에 별도 반영합니다.
+Vercel 배포는 별도로 실행되므로 프론트/백엔드 변경도 서로 호환되게 배포합니다.
+
+### 새 서버에 설치
+
+Ubuntu의 `python3-boto3`, Docker Compose, 백업 권한의 EC2 인스턴스 프로필이 필요합니다.
+파일을 `/opt/musicpets`에 전달한 뒤 해당 디렉터리에서 실행합니다.
+
+```sh
+sudo install -d -m 0755 /usr/local/lib/musicpets
+sudo install -d -m 0700 /var/lib/musicpets
+sudo install -m 0644 deploy/ops.py /usr/local/lib/musicpets/ops.py
+sudo install -m 0600 deploy/ops.config.example.json /etc/musicpets-ops.json
+sudo install -m 0644 deploy/musicpets-backup.service deploy/musicpets-backup.timer deploy/musicpets-deploy.service deploy/musicpets-deploy.timer /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl start musicpets-backup.service
+sudo systemctl start musicpets-deploy.service
+sudo systemctl enable --now musicpets-backup.timer musicpets-deploy.timer
+```
+
+### 상태 확인
+
+```sh
+sudo systemctl list-timers 'musicpets-*'
+sudo journalctl -u musicpets-backup.service -n 20 --no-pager
+sudo journalctl -u musicpets-deploy.service -n 20 --no-pager
+sudo cat /var/lib/musicpets/deployment.json
+```
+
+수동 서버 작업 전 `sudo systemctl stop musicpets-deploy.timer`로 자동 검사를 멈춥니다.
+이미 실행 중인 service는 끝날 때까지 기다립니다. 작업 후 `sudo systemctl start musicpets-deploy.timer`로 재개합니다.
+API 제한/외부 서비스 장애 시 기존 앱을 유지하고 다음 주기에 다시 확인합니다.
+이메일/메신저 장애 알림은 설정하지 않았으므로 로그와 최근 백업 날짜를 확인합니다.
+디스크는 `df -h /`와 `sudo docker system df`로 확인하고, 필요할 때 롤백용 이미지를 남겨 두고 사용하지 않는 이미지 태그를 정리합니다.
+운영 볼륨 삭제나 `docker system prune --volumes`는 실행하지 않습니다.
+
+### 백업 복원 검증
+
+백업 로그에서 `mysql/...sql.gz` 키를 선택합니다. 다음 명령은 SHA256을 확인하고 **격리된 임시 MySQL**에 복원합니다.
+테이블 수와 Flyway 이력을 확인한 뒤 임시 컨테이너/볼륨/파일을 제거하며 운영 DB는 수정하지 않습니다.
+추가 메모리가 최대 512MiB 필요합니다.
+
+```sh
+sudo python3 /opt/musicpets/deploy/verify-backup.py mysql/YYYY/MM/DD/TIMESTAMP.sql.gz
+```
+
+실제 장애 복구는 자동 배포와 쓰기 요청을 중지하고, 검증한 백업으로 별도 DB 볼륨을 준비한 뒤
+해당 스키마와 호환되는 앱을 연결합니다. 복구 확인 전까지 기존 DB 볼륨을 보존합니다.
+백업 시점 이후 데이터는 복구되지 않습니다. 운영 DB를 덮어쓰는 복원은 자동 실행하지 않습니다.
+
+스크립트 검사: `python -m unittest discover -s deploy -p test_ops.py`.

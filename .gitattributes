@@ -4,3 +4,13 @@
 Dockerfile text eol=lf
 *.conf text eol=lf
 *.template text eol=lf
+
+# Keep build, deployment, and maintenance helpers out of language statistics.
+frontend/eslint.config.js linguist-detectable=false
+frontend/scripts/** linguist-detectable=false
+backend/scripts/** linguist-detectable=false
+backend/Dockerfile linguist-detectable=false
+backend/gradlew linguist-detectable=false
+backend/gradlew.bat linguist-detectable=false
+deploy/*.mjs linguist-detectable=false
+deploy/*.sh linguist-detectable=false

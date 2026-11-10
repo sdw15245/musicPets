@@ -17,17 +17,20 @@ test('deployment routing is static and every rewrite has a literal destination',
   }
 })
 
-test('API and both OAuth legs reach the backend while the callback screen stays in the SPA', async () => {
+test('Vercel serves the SPA without forwarding API or OAuth requests', async () => {
   const config = await load()
-  const destinations = new Map(config.rewrites.map(rule => [rule.source, rule.destination]))
-  assert.equal(destinations.get('/api/:path*'), 'https://musicpets.duckdns.org/api/:path*')
-  assert.equal(destinations.get('/oauth2/:path*'), 'https://musicpets.duckdns.org/oauth2/:path*')
-  assert.equal(destinations.get('/login/oauth2/:path*'), 'https://musicpets.duckdns.org/login/oauth2/:path*')
-  assert.equal(destinations.get('/(.*)'), '/index.html')
-  assert.equal(config.rewrites.at(-1).source, '/(.*)')
-  assert.equal(destinations.has('/oauth/:path*'), false)
-  for (const source of ['/api/:path*', '/oauth2/:path*', '/login/oauth2/:path*']) {
-    const rule = config.headers.find(rule => rule.source === source)
-    assert.ok(rule.headers.some(header => header.key === 'Cache-Control' && header.value.includes('no-store')))
+  assert.deepEqual(config.rewrites, [{ source: '/(.*)', destination: '/index.html' }])
+  assert.equal(config.headers?.some(rule => rule.source.startsWith('/api')), undefined)
+})
+
+test('old frontend and www hosts redirect to the canonical domain with their paths', async () => {
+  const config = await load()
+  for (const host of ['music-pets-lilac.vercel.app', 'www.musicpets.store']) {
+    const rule = config.redirects.find(rule => rule.has?.some(condition => condition.type === 'host' && condition.value === host))
+    assert.ok(rule)
+    assert.equal(rule.source, '/:path*')
+    assert.equal(rule.destination, 'https://musicpets.store/:path*')
+    assert.equal(rule.permanent, true)
   }
+  assert.ok(config.redirects.every(rule => rule.has?.length))
 })

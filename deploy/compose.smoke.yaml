@@ -2,5 +2,6 @@
 services:
   backend:
     environment:
+      SPOTIFY_REDIRECT_URI: ${APP_ORIGIN}/login/oauth2/code/spotify
       AUTH_COOKIE_SECURE: "false"
       SERVER_SERVLET_SESSION_COOKIE_SECURE: "false"

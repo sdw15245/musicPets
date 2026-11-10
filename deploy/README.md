@@ -4,38 +4,46 @@
 백엔드 이미지는 Docker Hub의 `sdw0501/musicpets:sha-<전체 커밋 SHA>`에 보관합니다.
 운영 서버는 Sydney EC2의 `/opt/musicpets`에서 실행합니다. 백업과 자동 배포는 아래 운영 절차를 따릅니다.
 
-## 주소의 역할
+## 주소와 DNS
 
-| 설정 | 값 |
+| 용도 | 주소 |
 | --- | --- |
-| Vercel API/OAuth 프록시 목적지 | `https://musicpets.duckdns.org` |
-| EC2 `DOMAIN` | `musicpets.duckdns.org` |
-| EC2 `APP_ORIGIN` | `https://music-pets-lilac.vercel.app` |
-| Spotify 운영 Redirect URI | `https://music-pets-lilac.vercel.app/login/oauth2/code/spotify` |
+| 사용자 접속 · EC2 `APP_ORIGIN` | `https://musicpets.store` |
+| API · EC2 `DOMAIN` | `api.musicpets.store` |
+| Spotify 운영 Redirect URI | `https://api.musicpets.store/login/oauth2/code/spotify` |
+| 로그인 완료 화면 | `https://musicpets.store/oauth/callback` |
 | Spotify 로컬 Redirect URI | `http://127.0.0.1:8080/login/oauth2/code/spotify` |
 
-DuckDNS로 OAuth 콜백을 직접 받으면 세션 쿠키가 Vercel 주소와 분리됩니다.
-로그인 시작(`/oauth2/...`)과 Spotify 콜백(`/login/oauth2/...`), API를 모두 Vercel로 통일합니다.
-로그인 완료 화면 `/oauth/callback`은 프론트 화면입니다. 백엔드로 보내지 않습니다.
-쿠키는 HttpOnly/Secure/SameSite=Lax를 유지합니다. Access 토큰을 URL로 전달하지 않습니다.
+가비아 DNS의 `@` A 레코드와 `www` CNAME은 Vercel에서 안내한 값으로 설정합니다.
+`api` A 레코드는 EC2 공개 IP를 가리킵니다. API 하위 도메인은 Vercel에 연결하지 않습니다.
+
+브라우저는 `api.musicpets.store`에 직접 API를 요청하며 Vercel API/OAuth 프록시는 사용하지 않습니다.
+Spotify 로그인 시작과 공급자 콜백도 API 주소를 사용하고, 로그인 완료 후 프론트 `/oauth/callback`으로 돌아옵니다.
+CORS는 `https://musicpets.store`만 허용합니다. refresh/CSRF 쿠키는 API 호스트에 한정된
+HttpOnly/Secure/SameSite=Lax 쿠키이며 `Domain=.musicpets.store`로 범위를 넓히지 않습니다.
+프론트와 API는 HTTPS의 동일 사이트이므로 쿠키 기반 로그인 복원이 가능합니다.
+Access 토큰은 브라우저 메모리에만 두고 URL이나 영구 저장소에 기록하지 않습니다.
+이전 주소의 쿠키는 새 API 주소로 옮겨지지 않으므로 전환 후 한 번 다시 로그인합니다.
 
 ## Vercel 프로젝트
 
-1. GitHub의 musicPets를 Import하고 Hobby 플랜, Framework Vite를 선택합니다.
-2. Root Directory: `frontend`; **Include source files outside of the Root Directory in the Build Step**을 켭니다.
+1. GitHub musicPets를 Import하고 Hobby 플랜, Framework Vite를 선택합니다.
+2. Root Directory는 `frontend`, **Include source files outside of the Root Directory in the Build Step**을 켭니다.
    `shared/characters.json`을 빌드에서 읽기 때문입니다.
 3. Node 22.x, Install `npm ci`, Build `npm run build`, Output `dist`.
-4. `frontend/vercel.json`의 API/OAuth 목적지는 `https://musicpets.duckdns.org`입니다.
-   별도 `BACKEND_ORIGIN` 환경변수는 사용하지 않습니다. 기존 값이 남아 있어도 동작에는 영향이 없습니다.
-5. Production의 고정 도메인을 정한 뒤 Spotify와 EC2의 APP_ORIGIN을 맞춥니다.
-   Preview마다 바뀌는 주소에서 운영 OAuth 로그인은 지원하지 않습니다.
-6. 백엔드 .env, JWT 키, Spotify client secret, DB 비밀번호는 Vercel에 입력하지 않습니다.
+4. Domains에 `musicpets.store`와 `www.musicpets.store`를 연결하고, 대표 주소는 `musicpets.store`로 유지합니다.
+   `frontend/vercel.json`은 www와 기존 production vercel.app 주소를 대표 주소로 이동시킵니다.
+   Vercel Dashboard에 반대 방향인 apex → www 리다이렉트를 추가하지 않습니다.
+5. 운영 API 주소는 `frontend/src/shared/api/config.ts`의 `https://api.musicpets.store`입니다.
+   Vercel에 별도의 BACKEND_ORIGIN 환경변수나 백엔드 비밀값을 입력하지 않습니다.
+6. Preview의 임의 도메인은 운영 CORS/로그인 대상이 아닙니다. OAuth 검증은 대표 도메인에서 진행합니다.
 
-`frontend/vercel.json`에 API/OAuth rewrites를 정적으로 정의합니다.
-백엔드 도메인이 바뀌면 이 파일의 세 프록시 목적지를 함께 변경합니다.
-이는 Vercel의 내장 프록시 설정이며 별도 서버를 만들지 않습니다.
-로컬 `npm run dev`는 기존대로 127.0.0.1:8080을 사용하고, 배포 빌드는 상대 URL을 사용합니다.
-`vite preview`는 Vercel 프록시를 실행하지 않습니다. E2E는 API를 모의 응답으로 검증합니다.
+`vercel.json`의 rewrite는 SPA 경로를 `index.html`로 연결하는 규칙만 남깁니다.
+API 캐시 방지와 HTTPS는 EC2 Nginx에서 처리합니다. Vercel 서버는 API 응답을 중계하지 않습니다.
+로컬 개발과 `e2e` 모드는 `http://127.0.0.1:8080`에 직접 연결합니다.
+`npm run test:production-origin`은 실제 운영 빌드의 API/OAuth 목적지를 모의 응답으로 검증합니다.
+`npm run test:e2e:preview`는 e2e 모드로 빌드해 localhost의 교차 출처 API/쿠키 동작을 검사합니다.
+Vercel 배포에서는 반드시 기본 `npm run build`를 사용합니다.
 
 ## Docker Hub와 GitHub Actions
 
@@ -83,12 +91,12 @@ DB 데이터 삭제 옵션인 `down -v`는 운영 데이터에 사용하지 않�
    실제 EC2에서 로그인·분석 요청 중 메모리와 OOM 여부를 확인한 후 운영합니다.
 2. 보안 그룹은 HTTP/HTTPS만 공개하고 SSH는 관리자의 IP로 제한합니다.
    MySQL 3306, Redis 6379, 백엔드 8080 포트는 공개하지 않습니다.
-3. DuckDNS를 서버의 고정 공개 IP에 연결합니다.
-4. `musicpets.duckdns.org`의 공인 인증서를 발급하고 자동 갱신 및 Nginx reload를 설정합니다.
+3. 가비아의 `api` A 레코드를 서버 공개 IP에 연결합니다.
+4. `api.musicpets.store`의 공인 인증서를 발급하고 자동 갱신 및 Nginx reload를 설정합니다.
    인증서 발급/갱신은 이 Compose가 대신하지 않습니다.
 5. 서버에 compose.production.yaml과 deploy/ 설정 파일을 전달합니다.
    deploy/.env는 운영용 비밀값으로 별도 작성하고 파일 권한을 제한합니다.
-6. APP_ORIGIN을 실제 Vercel 주소로 바꾸고 BACKEND_IMAGE를 검증한 Docker Hub SHA 태그로 설정합니다.
+6. APP_ORIGIN을 `https://musicpets.store`로 설정하고 BACKEND_IMAGE를 검증한 Docker Hub SHA 태그로 설정합니다.
 7. 비공개 이미지면 서버에서 read-only Docker Hub 토큰으로 `docker login -u sdw0501`을 실행합니다.
    Compose와 login은 같은 OS 사용자로 실행합니다.
 8. 인증서가 발급된 뒤 실행합니다.
@@ -118,10 +126,10 @@ Certbot은 호스트에 설치하고 인증서는 `/etc/letsencrypt`에 보관�
 인증서 발급 명령은 다음과 같습니다. 이메일 없이 등록하므로 갱신 상태는 서버에서 확인합니다.
 
 ```sh
-sudo certbot certonly --webroot -w /var/www/letsencrypt -d musicpets.duckdns.org --cert-name musicpets.duckdns.org --non-interactive --agree-tos --register-unsafely-without-email --keep-until-expiring
+sudo certbot certonly --webroot -w /var/www/letsencrypt -d api.musicpets.store --cert-name api.musicpets.store --non-interactive --agree-tos --register-unsafely-without-email --keep-until-expiring
 sudo install -m 0755 deploy/renew-nginx.sh /etc/letsencrypt/renewal-hooks/deploy/musicpets-nginx
 sudo systemctl enable --now certbot.timer
-sudo certbot renew --cert-name musicpets.duckdns.org --dry-run --run-deploy-hooks --no-random-sleep-on-renew
+sudo certbot renew --cert-name api.musicpets.store --dry-run --run-deploy-hooks --no-random-sleep-on-renew
 ```
 
 갱신 후 hook은 `musicpets-production` 프로젝트의 Nginx 설정을 검사하고 reload합니다.
@@ -142,15 +150,13 @@ sudo certbot renew --cert-name musicpets.duckdns.org --dry-run --run-deploy-hook
 
 ## 운영 시 유의 사항
 
-- Vercel → EC2 경로의 OAuth 왕복, CSRF, 쿠키, 새로고침 후 로그인 복구.
-- Vercel 외부 프록시는 120초 제한이 있습니다. 실제 음악 분석 소요 시간도 확인합니다.
+- 브라우저 → API 직접 연결의 CORS, OAuth 왕복, CSRF, 쿠키, 새로고침 후 로그인 복구.
+- Nginx 읽기 제한은 120초입니다. 실제 음악 분석 소요 시간과 클라이언트 타임아웃을 함께 확인합니다.
 - Nginx는 신뢰할 수 없는 X-Forwarded-For를 덮어씁니다.
-  Vercel을 거치면 IP별 제한이 여러 사용자에게 묶일 수 있습니다.
-  계정별 제한은 유지됩니다. 실제 프록시 헤더/신뢰 경계를 검증한 뒤 사용자 IP 복원을 구성합니다.
-- EC2의 자동 할당 공개 IP는 중지 후 시작하면 변경될 수 있습니다. 이 경우 DuckDNS를 새 IP로 갱신해야 합니다.
+  브라우저가 Nginx에 직접 연결하므로 해당 연결의 IP를 전달합니다. 계정별 제한도 유지됩니다.
+- EC2의 자동 할당 공개 IP는 중지 후 시작하면 변경될 수 있습니다. 이 경우 가비아의 `api` A 레코드를 새 IP로 갱신해야 합니다.
 
-참고: [Vercel rewrites](https://vercel.com/docs/routing/rewrites),
-[Vercel 프록시 제한](https://vercel.com/docs/limits),
+참고: [Vercel redirects](https://vercel.com/docs/routing/redirects),
 [Docker Hub 사용량](https://docs.docker.com/docker-hub/usage/).
 
 

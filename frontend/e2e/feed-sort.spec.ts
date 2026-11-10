@@ -40,7 +40,13 @@ test('sort menu requests separately paginated server order and preserves keyboar
     const rows = sort === 'popular' ? [latest[2], latest[0], latest[1]] : latest
     return route.fulfill({ json: { items: rows.slice(pageNo * 2, (pageNo + 1) * 2), page: pageNo, hasMore: pageNo === 0 } })
   })
-  await page.goto('/community')
+  // Establish the member profile before counting sort/pagination requests.
+  // Restoring a session on the feed legitimately refetches its guest cache.
+  await page.goto('/')
+  await page.getByRole('button', { name: '프로필', exact: true }).click()
+  await expect(page.locator('.landing-account-name')).toHaveText('음악 친구')
+  await page.keyboard.press('Escape')
+  await page.getByRole('link', { name: '커뮤니티', exact: true }).first().click()
   const authors = page.locator('.post-byline strong')
   await expect(authors).toHaveText(['최신글작성자', '이전글작성자'])
   await page.getByRole('button', { name: '음악 더 보기' }).click()

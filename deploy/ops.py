@@ -121,7 +121,7 @@ class Operations:
         # Check routing and database access, in addition to Compose readiness.
         for attempt in range(12):
             try:
-                with urlopen("https://musicpets.duckdns.org/api/posts?page=0&size=1", timeout=10) as response:
+                with urlopen("https://api.musicpets.store/api/posts?page=0&size=1", timeout=10) as response:
                     if response.status == 200 and isinstance(json.load(response), (dict, list)):
                         return
             except (OSError, ValueError):

@@ -6,49 +6,32 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
-      "source": "/api/:path*",
-      "destination": "https://musicpets.duckdns.org/api/:path*"
-    },
-    {
-      "source": "/oauth2/:path*",
-      "destination": "https://musicpets.duckdns.org/oauth2/:path*"
-    },
-    {
-      "source": "/login/oauth2/:path*",
-      "destination": "https://musicpets.duckdns.org/login/oauth2/:path*"
-    },
-    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
   ],
-  "headers": [
+  "redirects": [
     {
-      "source": "/api/:path*",
-      "headers": [
+      "source": "/:path*",
+      "has": [
         {
-          "key": "Cache-Control",
-          "value": "private, no-store"
+          "type": "host",
+          "value": "music-pets-lilac.vercel.app"
         }
-      ]
+      ],
+      "destination": "https://musicpets.store/:path*",
+      "permanent": true
     },
     {
-      "source": "/oauth2/:path*",
-      "headers": [
+      "source": "/:path*",
+      "has": [
         {
-          "key": "Cache-Control",
-          "value": "private, no-store"
+          "type": "host",
+          "value": "www.musicpets.store"
         }
-      ]
-    },
-    {
-      "source": "/login/oauth2/:path*",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "private, no-store"
-        }
-      ]
+      ],
+      "destination": "https://musicpets.store/:path*",
+      "permanent": true
     }
   ]
 }

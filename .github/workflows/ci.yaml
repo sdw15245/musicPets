@@ -41,6 +41,7 @@ jobs:
       - run: npm run lint
       - run: node --test scripts/vercel-config.test.mjs
       - run: npx playwright install --with-deps chromium
+      - run: npm run test:production-origin
       - run: npm run test:e2e:preview -- --workers=2
 
   backend:

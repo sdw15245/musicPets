@@ -32,6 +32,8 @@ test('failed publish keeps composer, successful retry waits for API, failed dele
     return route.fallback()
   })
   await page.goto('/community')
+  // This scenario exercises member publishing, after session restoration completes.
+  await expect(page.getByRole('button', { name: '프로필', exact: true })).toBeEnabled()
   await page.getByRole('button', { name: '오늘의 한 곡 올리기' }).click()
   await page.getByRole('textbox', { name: '곡 검색' }).fill('seasons')
   await page.getByRole('button', { name: '검색', exact: true }).click()

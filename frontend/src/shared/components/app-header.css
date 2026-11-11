@@ -1,6 +1,6 @@
 .app-header-surface { position: sticky; top: 0; z-index: 50; width: 100%; background: var(--seed-color-bg-layer-default); border-bottom: 1px solid var(--seed-color-stroke-neutral-muted); }
 .site-header.app-header { border-bottom: 0; }
-.app-header-account { display: flex; align-items: center; gap: var(--seed-dimension-x2); flex-shrink: 0; }
+.app-header-account { display: flex; align-items: center; gap: var(--seed-dimension-x2); flex-shrink: 0; min-width: 88px; justify-content: flex-end; }
 .notification-entry { position: relative; }
 .notification-dot { position: absolute; top: 6px; right: 6px; width: 6px; height: 6px; border-radius: var(--seed-radius-full); background: var(--seed-color-fg-brand); }
 .app-header .landing-nav-account { margin: 0; }

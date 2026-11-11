@@ -87,6 +87,8 @@ test('composer closes with focus restoration and resets drafts in reduced motion
 
 test('SEED text scaling enlarges content without horizontal page overflow', async ({ page }, testInfo) => {
   for (const route of ['/', '/login', '/community']) {
+    // Start each route at desktop width; the previous route finishes at 360px.
+    await page.setViewportSize({ width: 1280, height: 900 })
     await page.goto(route)
     // The route shell can show its title before the community module and styles are ready.
     if (route === '/community') await expect(page.getByPlaceholder('글 내용·태그 검색')).toBeVisible()
@@ -96,7 +98,17 @@ test('SEED text scaling enlarges content without horizontal page overflow', asyn
     expect(await title.evaluate(element => parseFloat(getComputedStyle(element).fontSize))).toBeGreaterThan(size * 1.3)
     for (const width of [1280, 768, 360]) {
       await page.setViewportSize({ width, height: 900 })
-      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${route} at ${width}px`).toBe(true)
+      await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${route} at ${width}px`).toBe(true)
+      if (route === '/community' && width <= 768) {
+        const search = page.getByRole('textbox', { name: '본문 또는 태그 검색' })
+        await expect(search).toBeHidden()
+        await page.getByRole('button', { name: '검색 열기', exact: true }).click()
+        await expect(search).toBeVisible()
+        await expect(search).toBeFocused()
+        await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `expanded search at ${width}px`).toBe(true)
+        await page.getByRole('button', { name: '검색 닫기', exact: true }).click()
+        await expect(search).toBeHidden()
+      }
     }
     await page.screenshot({ path: testInfo.outputPath(`scaled-${route.slice(1) || 'landing'}.png`), fullPage: true })
   }

@@ -5,7 +5,7 @@ import { sampleTracks } from './community-data'
 const snapshot = (id: string, pop: number) => ({
   id, analyzedAt: id === 'new' ? '2026-11-04T00:00:00Z' : '2026-10-04T00:00:00Z',
   genres: { vector: { pop, rock: 1 - pop }, unmappedTags: [], tagCount: 10, trackCount: 10 },
-  character: { slug: 'mochi', name: '모찌', description: '나를 닮은 펫', imageUrl: '/characters/mochi.png', score: 0.8 },
+  character: { slug: 'mochi', name: '멜로', description: '나를 닮은 펫', imageUrl: '/characters/mochi.png', score: 0.8 },
   profile: { mainstream: 50, obscurity: 50, comment: '그날의 음악 취향이에요.' },
   recommendations: [sampleTracks[0]], recommendationsAvailable: true, warnings: [],
 })

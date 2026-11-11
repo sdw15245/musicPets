@@ -16,6 +16,9 @@ import { useRequestLimit } from '../../shared/api/useRequestLimit'
 import ResultShareDialog from './ResultShareDialog'
 import AnalysisOverview from './AnalysisOverview'
 import PopularitySummary from './PopularitySummary'
+import { useHistory } from '../history/useHistory'
+import { previousAnalysis } from '../analysis/genreComparison'
+import { analysisPeriod } from '../analysis/analysisPeriod'
 import { analysisDate } from '../history/historyFormat'
 import CommunityBridge from '../community/CommunityBridge'
 import { isPopularityNotice } from './analysisNotices'
@@ -28,6 +31,9 @@ function ResultContent({ data, onRestart }: { data: AnalysisResult; onRestart: (
     // Consume the arrival marker, so refresh and back navigation do not replay it.
     if (location.state?.revealAnalysisId) navigate(location.pathname + location.search + location.hash, { replace: true, state: null })
   }, [location, navigate])
+  const history = useHistory()
+  const previous = previousAnalysis(data, history.data ?? [])
+  const differentPeriod = !!previous && analysisPeriod(previous) !== analysisPeriod(data)
   const retry = useRetryRecommendations()
   const save = useSavePlaylist()
   const limit = useRequestLimit([retry.error, save.error], data.recommendationLimit)
@@ -39,7 +45,7 @@ function ResultContent({ data, onRestart }: { data: AnalysisResult; onRestart: (
     <div className="result-details-grid">
       <RecommendationsSection data={data} retry={retry} save={save} limit={limit} onRestart={onRestart} />
       <div className="result-listening-details">
-        <GenreExplorer vector={data.genres.vector} trackCount={data.genres.trackCount} animate={reveal} />
+        <GenreExplorer vector={data.genres.vector} trackCount={data.genres.trackCount} previous={differentPeriod ? undefined : previous} differentPeriod={differentPeriod} />
         <PopularitySummary data={data} />
       </div>
     </div>

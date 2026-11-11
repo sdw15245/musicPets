@@ -29,7 +29,7 @@ test('analysis unlocks belong to an account and unowned legacy records are retai
   await page.route('**/api/analysis', route => { analyzed = true; return route.fulfill({ json: {
     id: 'account-analysis', analyzedAt: '2026-09-30T00:00:00Z',
     genres: { vector: { pop: 1 }, tagCount: 1, trackCount: 1, unmappedTags: [] },
-    character: { slug: 'pip', name: '핍', description: '신난 장난꾸러기', imageUrl: '/characters/pip.png', score: .9 },
+    character: { slug: 'pip', name: '루바', description: '신난 장난꾸러기', imageUrl: '/characters/pip.png', score: .9 },
     profile: { mainstream: 50, obscurity: 50, comment: '음악 취향' },
     recommendations: [], recommendationsAvailable: true, warnings: [],
   } }) })
@@ -40,10 +40,10 @@ test('analysis unlocks belong to an account and unowned legacy records are retai
   await page.goto('/analyze')
   await expect(page).toHaveURL(/\/result$/)
   await page.getByRole('link', { name: 'MusicPets', exact: true }).click()
-  await expect(page.locator('.character-card').filter({ hasText: '발견 완료' }).getByRole('img')).toHaveAttribute('alt', '핍')
+  await expect(page.locator('.character-card').filter({ hasText: '발견 완료' }).getByRole('img')).toHaveAttribute('alt', '루바')
   await signIn(page, '2')
   await expect(page.locator('.character-card').filter({ hasText: '발견 완료' }).getByRole('img')).toHaveCount(0)
   await signIn(page, '1')
-  await expect(page.locator('.character-card').filter({ hasText: '발견 완료' }).getByRole('img')).toHaveAttribute('alt', '핍')
+  await expect(page.locator('.character-card').filter({ hasText: '발견 완료' }).getByRole('img')).toHaveAttribute('alt', '루바')
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('unlocked-characters')!).state.unlocked)).toEqual(['mochi'])
 })

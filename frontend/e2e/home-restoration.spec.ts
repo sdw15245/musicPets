@@ -6,7 +6,7 @@ const access = `header.${Buffer.from(JSON.stringify({ sub: '1' })).toString('bas
 const result = {
   id: 'saved-home', analyzedAt: '2026-11-07T00:00:00Z',
   genres: { vector: { pop: 1 }, unmappedTags: [], tagCount: 1, trackCount: 20 },
-  character: { slug: 'pip', name: '핍', description: '', imageUrl: '/characters/pip.png', score: .9 },
+  character: { slug: 'pip', name: '루바', description: '', imageUrl: '/characters/pip.png', score: .9 },
   profile: { mainstream: 60, obscurity: 40, comment: '저장된 취향 설명' },
   recommendations: [], recommendationsAvailable: true, warnings: [],
 }

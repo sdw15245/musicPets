@@ -14,7 +14,7 @@ test('collection portraits stay anchored when a story opens and closes', async (
   for (const width of [1440, 390]) {
     await page.setViewportSize({ width, height: 960 })
     await page.goto('/pets')
-    const row = page.getByRole('listitem').filter({ has: page.getByRole('heading', { name: '모찌', exact: true }) })
+    const row = page.getByRole('listitem').filter({ has: page.getByRole('heading', { name: '멜로', exact: true }) })
     await expect(row).toBeVisible()
     await page.evaluate(() => document.fonts.ready)
     const offsets = () => page.locator('.pet-collection-row > img').evaluateAll(images => images.map(image =>
@@ -33,17 +33,17 @@ test('collection portraits stay anchored when a story opens and closes', async (
 
 test('unmet pet stories are unavailable in the collection and landing details', async ({ page }) => {
   await page.goto('/pets')
-  const row = page.getByRole('listitem').filter({ has: page.getByRole('heading', { name: '핍', exact: true }) })
+  const row = page.getByRole('listitem').filter({ has: page.getByRole('heading', { name: '루바', exact: true }) })
   await expect(row).toBeVisible()
   await expect(row.getByText('펫 이야기', { exact: true })).toHaveCount(0)
   await expect(row.getByText(characters[1].story, { exact: true })).toHaveCount(0)
   await expect(row).toContainText('펫을 만나면 이야기가 열려요.')
   await page.goto('/')
-  await page.getByRole('button', { name: '핍 자세히 보기', exact: true }).click()
-  const locked = page.getByRole('dialog', { name: '핍', exact: true })
+  await page.getByRole('button', { name: '루바 자세히 보기', exact: true }).click()
+  const locked = page.getByRole('dialog', { name: '루바', exact: true })
   await expect(locked.getByText(characters[1].story, { exact: true })).toHaveCount(0)
   await expect(locked).toContainText('펫을 만나면 이야기가 열려요.')
   await locked.getByRole('button', { name: '닫기', exact: true }).click()
-  await page.getByRole('button', { name: '모찌 자세히 보기', exact: true }).click()
-  await expect(page.getByRole('dialog', { name: '모찌', exact: true }).getByText(characters[0].story, { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: '멜로 자세히 보기', exact: true }).click()
+  await expect(page.getByRole('dialog', { name: '멜로', exact: true }).getByText(characters[0].story, { exact: true })).toBeVisible()
 })

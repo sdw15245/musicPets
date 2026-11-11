@@ -7,7 +7,7 @@ import { useMyCharacters } from '../../shared/unlockedCharacters'
 import { characters } from '../../shared/characters'
 
 function CharacterPreviewSection() {
-  // 소개에서는 외형을 공개하고, 획득한 캐릭터의 이야기만 해금한다.
+  // 아직 만나지 않은 펫은 흐리게 표시하고 이야기를 잠근다.
   const unlocked = useMyCharacters()
   const catalog = characters.map(character => ({
     ...character, discovered: unlocked.includes(character.slug) || unlocked.includes(character.name),
@@ -37,7 +37,7 @@ function CharacterPreviewSection() {
               <ResponsiveDialog.Trigger asChild><button type="button" className="character-card-trigger" aria-label={`${c.name} 자세히 보기`}>
               <div className="pet-stage">
                 <img
-                  className="pet-img"
+                  className={`pet-img${isUnlocked ? '' : ' is-locked'}`}
                   src={c.imageUrl}
                   alt={c.name}
                   width={96}
@@ -56,7 +56,7 @@ function CharacterPreviewSection() {
                 <ResponsiveDialog.Header><ResponsiveDialog.Title>{c.name}</ResponsiveDialog.Title><ResponsiveDialog.Description>{isUnlocked ? '펫 이야기' : '아직 만나기 전이에요'}</ResponsiveDialog.Description></ResponsiveDialog.Header>
                 <ResponsiveDialog.Body className="pet-detail-body">
                   <div className="pet-detail-portrait">
-                    <img className="pet-detail-image" src={c.imageUrl} alt={c.name} />
+                    <img className={`pet-detail-image${isUnlocked ? '' : ' is-locked'}`} src={c.imageUrl} alt={c.name} />
                   </div>
                   <Badge size="medium" tone={isUnlocked ? 'brand' : 'neutral'} variant="weak">{isUnlocked ? '발견 완료' : '아직 만나기 전'}</Badge>
                   <p>{isUnlocked ? c.story : '펫을 만나면 이야기가 열려요.'}</p>

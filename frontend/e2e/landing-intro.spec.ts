@@ -20,6 +20,6 @@ test('the narrow landing keeps analysis, carousel and navigation available', asy
   await expect(page.locator('.music-hero-actions').getByRole('link', { name: '내 음악 취향 분석하기' })).toHaveAttribute('href', '/analyze')
   const preview = page.getByRole('region', { name: '음악 펫 결과 예시' })
   await preview.getByRole('button', { name: '다음 펫 보기' }).click()
-  await expect(preview.getByRole('img', { name: '핍', exact: true })).toBeVisible()
+  await expect(preview.getByRole('img', { name: '루바', exact: true })).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
 })

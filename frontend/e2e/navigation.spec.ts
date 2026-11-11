@@ -8,7 +8,7 @@ test('new result navigation starts at the top while back and landing anchors pre
   await page.route('**/api/analysis/latest', route => route.fulfill({ json: {
     id: 'navigation-result', analyzedAt: '2026-10-10T00:00:00Z',
     genres: { vector: { pop: 1 }, tagCount: 5, trackCount: 10, unmappedTags: [] },
-    character: { slug: 'mochi', name: '모찌', description: '아늑한 몽상가', imageUrl: '/characters/mochi.png', score: .9 },
+    character: { slug: 'mochi', name: '멜로', description: '아늑한 몽상가', imageUrl: '/characters/mochi.png', score: .9 },
     profile: { mainstream: 60, obscurity: 40, comment: '편안한 팝을 즐겨 들어요.' },
     recommendations: [], recommendationsAvailable: true, warnings: [],
   } }))

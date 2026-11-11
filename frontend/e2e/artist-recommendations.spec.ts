@@ -5,7 +5,7 @@ const artist = (name: string, id: string) => ({ name, uri: `spotify:artist:${id}
 const result = {
   id: 'artist-analysis', analyzedAt: '2026-11-09T01:00:00Z',
   genres: { vector: { indie: .7, rock: .3 }, unmappedTags: [], tagCount: 20, trackCount: 20, timeRange: 'short_term' },
-  character: { slug: 'sulk-cat', name: '삐냥', description: '', imageUrl: '/characters/sulk-cat.png', score: .7 },
+  character: { slug: 'sulk-cat', name: '리토', description: '', imageUrl: '/characters/sulk-cat.png', score: .7 },
   profile: { mainstream: 40, obscurity: 60, comment: '인디 음악을 즐겨 듣는 취향이에요.' },
   recommendations: [], recommendedArtists: [artist('Redoor', 'redoor'), artist('Nerd Connection', 'nerd'), artist('Damons year', 'damons')],
   recommendationsAvailable: true, profilePending: false, recommendationsPending: false, warnings: [],
@@ -53,7 +53,7 @@ test('artist rate limits preserve the pet and block retry', async ({ page }) => 
   await page.goto('/result')
   await page.getByRole('button', { name: '아티스트 다시 찾기' }).click()
   await expect(page.getByRole('button', { name: '아티스트 다시 찾기' })).toBeDisabled()
-  await expect(page.getByRole('heading', { name: '삐냥', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '리토', exact: true })).toBeVisible()
 })
 
 test('login has one clear primary action at desktop and mobile sizes', async ({ page }, info) => {

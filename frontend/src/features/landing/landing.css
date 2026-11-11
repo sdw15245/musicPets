@@ -89,6 +89,7 @@
 .character-card-trigger:active { background: var(--seed-color-bg-neutral-weak-pressed); }
 .character-card-trigger:focus-visible { outline: 2px solid var(--seed-color-stroke-focus-ring); outline-offset: 4px; }
 .pet-stage { position: relative; display: grid; place-items: center; width: 96px; height: 96px; border-radius: var(--seed-radius-r3); background: transparent; overflow: hidden; }
+.pet-img.is-locked, .pet-detail-image.is-locked { filter: blur(7px); opacity: .65; }
 .pet-img { display: block; width: 96px; height: 96px; max-width: 100%; object-fit: contain; }
 .character-meta { min-width: 0; }
 .character-meta strong { display: block; margin-bottom: var(--seed-dimension-x1); font: var(--mp-type-section-title); }

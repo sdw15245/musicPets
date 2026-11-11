@@ -73,7 +73,7 @@ test('an actual analysis recommendation and pet carry into the share composer', 
     return route.fulfill({ json: {
       id: 'community-analysis', analyzedAt: '2026-09-30T00:00:00Z',
       genres: { vector: { pop: 1 }, unmappedTags: [], tagCount: 1, trackCount: 1 },
-      character: { slug: 'pip', name: '핍', description: '신난 장난꾸러기', imageUrl: '/characters/pip.png', score: 0.9 },
+      character: { slug: 'pip', name: '루바', description: '신난 장난꾸러기', imageUrl: '/characters/pip.png', score: 0.9 },
       profile: { mainstream: 60, obscurity: 40, comment: '경쾌한 음악 취향' },
       recommendations: [{ name: '나의 추천곡', artist: '추천 아티스트', uri: 'spotify:track:5VBjyOQzqlPNgdRPMM6prF', imageUrl: '' }],
       recommendationsAvailable: true, warnings: [],
@@ -87,13 +87,13 @@ test('an actual analysis recommendation and pet carry into the share composer', 
   await page.getByRole('link', { name: '나의 추천곡 이 곡으로 글 쓰기' }).click()
   const dialog = page.getByRole('dialog')
   await expect(dialog).toContainText('나의 추천곡')
-  await expect(dialog.getByRole('img', { name: '핍' })).toBeVisible()
+  await expect(dialog.getByRole('img', { name: '루바' })).toBeVisible()
   await dialog.getByRole('textbox', { name: '이 곡을 나누고 싶은 이유' }).fill('추천받은 곡을 공유해요.')
   await dialog.getByRole('button', { name: '공유하기', exact: true }).click()
   const published = page.getByRole('article').first()
   await expect(published).toContainText('추천받은 곡을 공유해요.')
   await expect(published.locator('.post-byline').getByText('나', { exact: true })).toBeVisible()
-  await expect(published.locator('.post-byline').getByText('핍', { exact: true })).toHaveCount(0)
+  await expect(published.locator('.post-byline').getByText('루바', { exact: true })).toHaveCount(0)
   expect(calls).toBe(1)
 })
 

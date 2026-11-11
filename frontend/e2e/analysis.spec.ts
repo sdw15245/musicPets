@@ -19,7 +19,7 @@ test('Spotify rate limit waits before manual retry without automatic requests', 
   await expect(retry).toBeEnabled()
   expect(calls).toBe(1)
   await retry.click()
-  await expect(page.getByRole('heading', { name: '핍', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '루바', exact: true })).toBeVisible()
   expect(calls).toBe(2)
 })
 
@@ -44,7 +44,7 @@ for (const action of ['initial-recommendations', 'recommendations', 'save'] as c
       await page.getByRole('button', { name: action === 'save' ? 'Spotify에 저장' : '추천곡 다시 시도' }).click()
     }
     await expect(page.getByRole('heading', { name: 'Spotify 사용량 한도에 도달했어요' })).toBeVisible()
-    await expect(page.getByRole('heading', { name: '핍', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: '루바', exact: true })).toBeVisible()
     await expect(page.getByRole('button', { name: '다시 분석하기' })).toBeDisabled()
     await expect(page.getByRole('button', { name: action === 'save' ? 'Spotify에 저장' : '추천곡 다시 시도' })).toBeDisabled()
     await page.clock.fastForward(121_000)
@@ -59,7 +59,7 @@ const result = {
     vector: { pop: 0, rock: 0, indie: 0, electronic: 1, 'hip-hop': 0, 'r-and-b': 0, jazz: 0, classical: 0, folk: 0, metal: 0, latin: 0, 'k-pop': 0, 'j-pop': 0 },
     unmappedTags: [], tagCount: 3, trackCount: 1,
   },
-  character: { slug: 'pip', name: '핍', description: '신난 장난꾸러기', imageUrl: '/characters/pip.png', score: 0.9 },
+  character: { slug: 'pip', name: '루바', description: '신난 장난꾸러기', imageUrl: '/characters/pip.png', score: 0.9 },
   profile: { mainstream: 60, obscurity: 40, comment: '전자음악을 즐겨 듣네요.' },
   recommendations: [{ name: '추천 노래', artist: '추천 가수', uri: 'spotify:track:abc', imageUrl: '' }],
   recommendationsAvailable: true, warnings: [],
@@ -106,7 +106,7 @@ test('a slow analysis is shown immediately when ready and failures have no artif
   await page.clock.runFor(3000)
   release()
   await expect(page).toHaveURL(/\/result$/)
-  await expect(page.getByRole('heading', { name: '핍', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '루바', exact: true })).toBeVisible()
   await page.route('**/api/analysis', route => route.fulfill({ status: 502, json: {} }))
   const failedResponse = page.waitForResponse('**/api/analysis')
   await page.getByRole('button', { name: '다시 분석하기' }).click()
@@ -137,7 +137,7 @@ test('pet and genres appear while details wait; recommendations can arrive befor
   })
   await page.goto('/analyze')
   await expect(page).toHaveURL(/\/result$/)
-  await expect(page.getByRole('heading', { name: '핍', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '루바', exact: true })).toBeVisible()
   await expect(page.locator('.genre-track').first()).toBeVisible()
   await expect(page.getByText('취향 설명을 쓰고 있어요.')).toBeVisible()
   await expect(page.getByText('추천곡을 찾고 있어요.')).toBeVisible()
@@ -173,7 +173,7 @@ test('a saved pet survives a comment outage and retry without rerunning analysis
     ? { status: 502, json: {} } : { json: result }))
   await page.goto('/result')
   await expect(page.getByText('취향 설명을 불러오지 못했어요.', { exact: true })).toBeVisible()
-  await expect(page.getByRole('heading', { name: '핍', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '루바', exact: true })).toBeVisible()
   await expect(page.getByText('추천 노래', { exact: true })).toBeVisible()
   await page.locator('.profile-card').getByRole('button', { name: '다시 시도' }).click()
   await expect(page.getByText(result.profile.comment)).toBeVisible()
@@ -271,7 +271,7 @@ test('slow analysis explains the wait and retry resets the notice', async ({ pag
   await expect(page).toHaveURL(/\/result$/)
   await page.clock.fastForward(10_000)
   await expect(delayed).toHaveCount(0)
-  await expect(page.getByRole('heading', { name: '핍', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '루바', exact: true })).toBeVisible()
   expect(calls).toBe(2)
 })
 
@@ -287,7 +287,7 @@ test('core failure can retry and every result card reuses one analysis', async (
   await expect(page.getByRole('heading', { name: '음악 취향을 분석하지 못했어요' })).toBeVisible()
   await page.getByRole('button', { name: '다시 분석하기' }).click()
   await expect(page).toHaveURL(/\/result$/)
-  await expect(page.getByRole('heading', { name: '핍', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '루바', exact: true })).toBeVisible()
   await expect(page.getByText(result.profile.comment)).toBeVisible()
   await expect(page.getByText('추천 노래')).toBeVisible()
   await page.screenshot({ path: testInfo.outputPath('result.png'), fullPage: true })
@@ -379,7 +379,7 @@ test('expired Spotify grant offers reconnect and waits for another analysis clic
   expect(calls).toBe(1)
   await page.locator('.music-hero-actions').getByRole('link', { name: '내 음악 취향 분석하기', exact: true }).click()
   await expect(page).toHaveURL(/\/result$/)
-  await expect(page.getByRole('heading', { name: '핍', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '루바', exact: true })).toBeVisible()
   expect(calls).toBe(2)
   expect(jwtRefreshCalls).toBe(2)
 })
@@ -401,7 +401,7 @@ for (const action of ['recommendations', 'save'] as const) {
     await page.getByRole('button', { name: buttonName }).click()
     await expect(page.getByRole('link', { name: 'Spotify 다시 연결' })).toBeVisible()
     await expect(page.getByRole('button', { name: buttonName })).toHaveCount(0)
-    await expect(page.getByRole('heading', { name: '핍', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: '루바', exact: true })).toBeVisible()
     expect(calls).toBe(1)
   })
 }

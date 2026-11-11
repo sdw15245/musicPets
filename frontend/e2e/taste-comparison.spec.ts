@@ -1,16 +1,16 @@
 import { expect, test } from './test'
 import { signedInPreview } from './community-fixture'
 
-const record = (id: string, date: string, vector: Record<string, number>, name = '모찌') => ({
+const record = (id: string, date: string, vector: Record<string, number>, name = '멜로') => ({
   id, analyzedAt: date, genres: { vector, tagCount: 10, trackCount: 10, unmappedTags: [] },
-  character: { slug: 'mochi', name, description: '나를 닮은 펫', imageUrl: '/characters/mochi.png', score: .8 },
+  character: { slug: name === '리프' ? 'yuze' : name === '루바' ? 'pip' : 'mochi', name, description: '나를 닮은 펫', imageUrl: '/characters/mochi.png', score: .8 },
   profile: { mainstream: 50, obscurity: 50, comment: '저장된 취향 해설' },
   recommendations: [], recommendationsAvailable: true, warnings: [],
 })
 const records = [
   record('new', '2026-11-04T07:52:00Z', { indie: .384, 'r-and-b': .227, 'hip-hop': .226, rock: .066, 'k-pop': .0554, pop: .039, folk: .004 }),
-  record('old', '2026-11-02T21:47:00Z', { indie: .532, 'r-and-b': .176, 'hip-hop': .125, rock: .076, 'k-pop': .0516, pop: .036, folk: .003 }, '유즈'),
-  record('older', '2026-10-01T00:00:00Z', { indie: .2, jazz: .8 }, '핍'),
+  record('old', '2026-11-02T21:47:00Z', { indie: .532, 'r-and-b': .176, 'hip-hop': .125, rock: .076, 'k-pop': .0516, pop: .036, folk: .003 }, '리프'),
+  record('older', '2026-10-01T00:00:00Z', { indie: .2, jazz: .8 }, '루바'),
 ]
 
 test('comparison shows dated pairs, consistent rounded differences, and switches previous records', async ({ page }, info) => {
@@ -34,7 +34,7 @@ test('comparison shows dated pairs, consistent rounded differences, and switches
   await page.screenshot({ path: info.outputPath('comparison-desktop.png'), fullPage: true })
   await select.selectOption('older')
   await expect(comparison.getByText('재즈 비중이 가장 크게 줄었어요.')).toBeVisible()
-  await expect(comparison).toContainText('핍')
+  await expect(comparison).toContainText('루바')
   await select.selectOption('old')
   await page.setViewportSize({ width: 390, height: 844 })
   await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }))

@@ -25,7 +25,7 @@
 .analysis-pet { align-self: start; }
 .analysis-pet img { display: block; width: 224px; height: 224px; object-fit: contain; border-radius: var(--seed-radius-r5); }
 .analysis-notices { border-left: 2px solid var(--seed-color-stroke-neutral-weak); padding-left: var(--seed-dimension-x4); margin-bottom: var(--seed-dimension-x6); font: var(--mp-type-caption); }
-.genre-track { display: block; height: 6px; border-radius: var(--seed-radius-full); background: var(--seed-color-bg-neutral-muted); overflow: hidden; }
+.genre-track { display: block; height: 8px; border-radius: var(--seed-radius-full); background: var(--seed-color-bg-neutral-muted); overflow: hidden; }
 .genre-fill { display: block; height: 100%; background: var(--seed-color-bg-brand-solid); border-radius: inherit; }
 .result-recommendations, .genre-explorer { padding-block: var(--seed-dimension-x8); border-top: 1px solid var(--seed-color-stroke-neutral-muted); }
 .result-details-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); column-gap: var(--seed-dimension-x16); margin-top: var(--seed-dimension-x10); align-items: start; }
@@ -48,7 +48,11 @@
 .genre-breakdown { padding: 0; list-style: none; max-width: 800px; }
 .genre-breakdown li + li { border-top: 1px solid var(--seed-color-stroke-neutral-muted); }
 .genre-breakdown summary { display: grid; grid-template-columns: 110px minmax(32px, 1fr) 64px; align-items: center; gap: var(--seed-dimension-x5); padding-block: var(--seed-dimension-x4); cursor: pointer; font: var(--mp-type-label); }
-.genre-breakdown summary > strong { text-align: right; font-variant-numeric: tabular-nums; }
+.genre-value { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; text-align: right; font-variant-numeric: tabular-nums; }
+.genre-change { color: var(--seed-color-fg-neutral-muted); font: var(--mp-type-caption); white-space: nowrap; }
+.genre-comparison-date { font: var(--mp-type-caption); color: var(--seed-color-fg-neutral-muted); margin-block: var(--seed-dimension-x3); }
+.genre-comparison-date a { text-decoration: underline; text-underline-offset: 3px; }
+.genre-explorer:has(.genre-change) .genre-breakdown summary { grid-template-columns: minmax(0, 80px) minmax(24px, 1fr) max-content; gap: var(--seed-dimension-x3); }
 .genre-breakdown summary > span:first-child { overflow-wrap: anywhere; }
 .genre-breakdown details p { font: var(--mp-type-body); color: var(--seed-color-fg-neutral-muted); margin: 0 0 var(--seed-dimension-x5); }
 .genre-breakdown summary:focus-visible { outline: 2px solid var(--seed-color-stroke-focus-ring); outline-offset: 2px; }
@@ -65,9 +69,9 @@
   .is-new-result .profile-comment, .result-share-preview {
     animation: result-content-in var(--seed-duration-d3) var(--seed-timing-function-easing) both;
   }
-  .genre-explorer[data-animate="true"][data-revealed="false"] .genre-fill { transform: scaleX(0); }
-  .genre-explorer[data-animate="true"][data-revealed="true"] .genre-fill {
-    animation: genre-result-in var(--seed-duration-d4) var(--seed-timing-function-easing) both;
+  :is(.genre-explorer, .popularity-summary)[data-animate="true"][data-revealed="false"] .genre-fill { transform: scaleX(0); }
+  :is(.genre-explorer, .popularity-summary)[data-animate="true"][data-revealed="true"] .genre-fill {
+    animation: genre-result-in 420ms var(--seed-timing-function-easing) both;
   }
   .genre-fill { transform-origin: left; }
 }

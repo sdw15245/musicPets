@@ -5,7 +5,7 @@ const record = {
   id: 'top-five', analyzedAt: '2026-11-09T00:00:00Z',
   genres: { vector: { jazz: .03, rock: .12, pop: .32, indie: .25, folk: .05, electronic: .08, 'r-and-b': .15 },
     trackCount: 20, tagCount: 30, unmappedTags: [], timeRange: 'short_term' },
-  character: { slug: 'mochi', name: '모찌', description: '', imageUrl: '/characters/mochi.png', score: .8 },
+  character: { slug: 'mochi', name: '멜로', description: '', imageUrl: '/characters/mochi.png', score: .8 },
   profile: { mainstream: 50, obscurity: 50, comment: '저장된 해설' },
   recommendations: [], recommendedArtists: [], recommendationsAvailable: true, warnings: [],
 }

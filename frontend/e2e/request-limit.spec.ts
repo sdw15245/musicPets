@@ -5,7 +5,7 @@ import { sampleTracks } from './community-data'
 const result = {
   id: 'limited-result', analyzedAt: '2026-10-28T00:00:00Z',
   genres: { vector: { pop: 1 }, unmappedTags: [], tagCount: 1, trackCount: 1 },
-  character: { slug: 'pip', name: '핍', description: '음악 친구', imageUrl: '/characters/pip.png', score: .9 },
+  character: { slug: 'pip', name: '루바', description: '음악 친구', imageUrl: '/characters/pip.png', score: .9 },
   profile: { mainstream: 60, obscurity: 40, comment: '보관된 결과' },
   recommendations: [{ ...sampleTracks[0] }], recommendationsAvailable: true, warnings: [],
 }

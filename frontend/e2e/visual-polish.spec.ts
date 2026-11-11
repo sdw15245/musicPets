@@ -28,15 +28,16 @@ for (const member of [false, true]) {
   })
 }
 
-test('visitors can preview pet appearances while detailed stories stay locked', async ({ page }) => {
+test('visitors see blurred undiscovered pets while detailed stories stay locked', async ({ page }) => {
   await page.goto('/')
-  const card = page.getByRole('button', { name: '모찌 자세히 보기', exact: true })
+  const card = page.getByRole('button', { name: '멜로 자세히 보기', exact: true })
   await card.scrollIntoViewIfNeeded()
-  await expect(card.getByRole('img', { name: '모찌', exact: true })).toBeVisible()
+  await expect(card.getByRole('img', { name: '멜로', exact: true })).toBeVisible()
+  await expect(card.locator('img')).toHaveCSS('filter', /blur/)
   await expect(card).not.toContainText('아늑한 몽상가')
   await card.click()
   const dialog = page.getByRole('dialog')
-  await expect(dialog.getByRole('img', { name: '모찌', exact: true })).toBeVisible()
+  await expect(dialog.getByRole('img', { name: '멜로', exact: true })).toBeVisible()
   await expect(dialog).toContainText('펫을 만나면 이야기가 열려요.')
-  await expect(dialog).not.toContainText('모찌의 방에는')
+  await expect(dialog).not.toContainText('멜로의 방에는')
 })

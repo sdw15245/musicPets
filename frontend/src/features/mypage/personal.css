@@ -62,5 +62,5 @@
 .pet-collection-row img { flex-shrink: 0; object-fit: contain; border-radius: var(--seed-radius-r2); }
 .pet-collection-row h2 { margin: 0; font: var(--mp-type-section-title); }
 .pet-collection-row p { color: var(--ink-soft); font: var(--mp-type-caption); margin: var(--seed-dimension-x1) 0; }
-.pet-not-met { filter: grayscale(1); opacity: .45; }
+.pet-not-met { filter: blur(7px); opacity: .45; }
 @media (max-width: 767px) { .pets-collection { grid-template-columns: minmax(0, 1fr); } .pet-collection-row { flex-wrap: wrap; } }

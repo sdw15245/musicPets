@@ -155,13 +155,12 @@ function CommunityContent({ profile, initialTrack }: ContentProps) {
             <RadioChip value="same" disabled={!canFilter}><RadioChipLabel>{requestedPet ? `${requestedPet.name}의 음악` : '나와 같은 펫'}</RadioChipLabel></RadioChip>
             <RadioChip value="other" disabled={!canFilter}><RadioChipLabel>다른 펫</RadioChipLabel></RadioChip>
           </RadioChipGroup>
-            <div className="community-feed-tools">
+            <FeedSortMenu value={sort} onChange={setSort} />
               <CommunitySearch owner={signedIn ? profile.owner : null} inputRef={searchInputRef} value={searchInput} onSearch={updateSearch} onValueChange={value => {
                   setSearchDraft(current => current.pending ? { ...current, value } : { query, value, pending: false })
                   if (!value.trim() && query) updateSearch('')
                 }} />
-              <FeedSortMenu value={sort} onChange={setSort} />
-            </div>
+
           </div>
           {query && <div className="community-search-summary" role="status"><span>‘{query}’ 검색 결과</span><Button size="small" variant="ghost" onClick={clearSearch}>검색 초기화</Button></div>}
           {!canFilter && <p className="community-filterhint">{signedIn ? '음악 취향을 분석하면 펫별로 음악을 둘러볼 수 있어요.' : '로그인하면 글·댓글을 작성할 수 있어요. 취향 필터는 분석 후 이용할 수 있어요.'}</p>}

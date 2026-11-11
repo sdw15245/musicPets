@@ -4,7 +4,7 @@ import { signedInPreview } from './community-fixture'
 const result = {
   id: 'stored-result', analyzedAt: '2026-10-08T00:00:00Z',
   genres: { vector: { pop: 1 }, unmappedTags: [], tagCount: 1, trackCount: 1 },
-  character: { slug: 'pip', name: '핍', description: '음악 친구', imageUrl: '/characters/pip.png', score: .9 },
+  character: { slug: 'pip', name: '루바', description: '음악 친구', imageUrl: '/characters/pip.png', score: .9 },
   profile: { mainstream: 60, obscurity: 40, comment: '서버에 저장된 취향 설명' },
   recommendations: [], recommendationsAvailable: true, warnings: [],
 }
@@ -22,7 +22,7 @@ test('saved result survives refresh and home navigation without starting analysi
   await page.getByRole('link', { name: 'MusicPets', exact: true }).click()
   await expect(page.locator('.music-hero').getByRole('link', { name: '내 취향 보기' })).toBeVisible()
   const summary = page.getByRole('region', { name: '나의 음악 취향 요약' })
-  await expect(summary.getByRole('img', { name: '핍', exact: true })).toBeVisible()
+  await expect(summary.getByRole('img', { name: '루바', exact: true })).toBeVisible()
   await expect(summary).toContainText('90% 매칭')
   await expect(summary).toContainText(result.profile.comment)
   await expect(summary.getByRole('listitem')).toHaveCount(0)
@@ -30,7 +30,7 @@ test('saved result survives refresh and home navigation without starting analysi
   await expect(summary.getByRole('button', { name: '다음 펫 보기' })).toHaveCount(0)
   await page.clock.install()
   await page.clock.runFor(15000)
-  await expect(summary.getByRole('img', { name: '핍', exact: true })).toBeVisible()
+  await expect(summary.getByRole('img', { name: '루바', exact: true })).toBeVisible()
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.screenshot({ path: testInfo.outputPath('home-saved-result-desktop.png') })
   await page.setViewportSize({ width: 390, height: 844 })
@@ -69,7 +69,7 @@ test('logging out replaces the personal hero summary with clearly labeled exampl
   await expect(page.locator('.music-hero').getByRole('link', { name: '내 음악 취향 분석하기' })).toBeVisible()
   await examples.getByRole('button', { name: '다음 펫 보기' }).click()
   await examples.getByRole('button', { name: '다음 펫 보기' }).click()
-  await expect(examples.getByRole('heading', { name: '봉봉', exact: true })).toBeVisible()
+  await expect(examples.getByRole('heading', { name: '코다', exact: true })).toBeVisible()
 })
 
 test('failed result retrieval offers read retry without silently starting a new analysis', async ({ page }) => {
@@ -103,7 +103,7 @@ test('server analysis pet supplies the profile photo despite old avatar preferen
   await expect(page.locator('.profile-editor').getByRole('radio')).toHaveCount(0)
   await page.locator('.mypage-profile-card').screenshot({ path: info.outputPath('automatic-pet-profile.png') })
   await page.getByRole('link', { name: 'MusicPets', exact: true }).click()
-  await expect(page.locator('.character-card').filter({ hasText: '발견 완료' }).getByRole('img')).toHaveAttribute('alt', '핍')
+  await expect(page.locator('.character-card').filter({ hasText: '발견 완료' }).getByRole('img')).toHaveAttribute('alt', '루바')
 })
 
 test('profile save failure preserves the draft and never reports success', async ({ page }) => {

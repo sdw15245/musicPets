@@ -38,20 +38,21 @@ test('result entry reveals the real values, and reduced motion keeps everything 
   await page.route('**/api/analysis/latest', route => route.fulfill({ json: {
     id: 'motion-result', analyzedAt: '2026-10-29T00:00:00Z',
     genres: { vector: { pop: .5, indie: .3, rock: .2 }, unmappedTags: [], tagCount: 10, trackCount: 20 },
-    character: { slug: 'mochi', name: '모찌', description: '아늑한 몽상가', imageUrl: '/characters/mochi.png', score: .92 },
+    character: { slug: 'mochi', name: '멜로', description: '아늑한 몽상가', imageUrl: '/characters/mochi.png', score: .92 },
     profile: { mainstream: 60, obscurity: 40, comment: '편안한 멜로디를 즐겨 들어요.' },
     recommendations: [], recommendationsAvailable: true, warnings: [],
   } }))
   await page.goto('/result')
-  await expect(page.getByRole('heading', { name: '모찌', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '멜로', exact: true })).toBeVisible()
   await page.locator('.result-page').evaluate(element => Promise.all(element.getAnimations({ subtree: true }).map(animation => animation.finished.catch(() => {}))))
   await expect(page.getByText('92% 매칭', { exact: true })).toBeVisible()
   await expect(page.getByText('마이너함 40%', { exact: true })).toBeVisible()
-  expect(await page.locator('.profile-meter .genre-fill').evaluate(element => element.getBoundingClientRect().width / element.parentElement!.getBoundingClientRect().width)).toBeCloseTo(.4)
+  await page.locator('.profile-meter').scrollIntoViewIfNeeded()
+  await expect.poll(() => page.locator('.profile-meter .genre-fill').evaluate(element => element.getBoundingClientRect().width / element.parentElement!.getBoundingClientRect().width)).toBeCloseTo(.4)
   await page.screenshot({ path: info.outputPath('result-entry-completed.png') })
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.reload()
-  await expect(page.getByRole('heading', { name: '모찌', exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '멜로', exact: true })).toBeVisible()
   for (const selector of ['.result-heading', '.analysis-pet', '.profile-meter .genre-fill', '.genre-breakdown .genre-fill']) {
     expect(await page.locator(selector).first().evaluate(element => getComputedStyle(element).animationName)).toBe('none')
   }

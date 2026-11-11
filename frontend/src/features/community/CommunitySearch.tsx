@@ -1,4 +1,4 @@
-import { useId, useRef, useState, type RefObject } from 'react'
+import { useEffect, useId, useRef, useState, type RefObject } from 'react'
 import { Icon, Popover, TextField } from '@seed-design/react'
 import { IconMagnifyingglassLine, IconXmarkLine } from '@karrotmarket/react-monochrome-icon'
 import Button from '../../shared/components/ui/Button'
@@ -14,6 +14,18 @@ interface CommunitySearchProps {
 
 export default function CommunitySearch({ owner, value, inputRef, onValueChange, onSearch }: CommunitySearchProps) {
   const [open, setOpen] = useState(false)
+  const [expanded, setExpanded] = useState(false)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const searchId = useId()
+  const visible = expanded || !!value
+  useEffect(() => {
+    if (expanded) inputRef.current?.focus()
+  }, [expanded, inputRef])
+  const closeSearch = () => {
+    setOpen(false)
+    setExpanded(false)
+    triggerRef.current?.focus()
+  }
   const history = useRecentSearches(owner)
   const historyRef = useRef<HTMLDivElement>(null)
   const historyId = useId()
@@ -26,19 +38,31 @@ export default function CommunitySearch({ owner, value, inputRef, onValueChange,
     setOpen(false)
   }
 
-  return <Popover.Root open={showHistory} onOpenChange={setOpen} autoFocus={false} placement="bottom-start" gutter={8}>
+  return <div className={`community-search-control${visible ? ' is-expanded' : ''}${value ? ' has-value' : ''}`}>
+    <Button ref={triggerRef} className="community-search-toggle" variant="ghost" size="medium" layout="iconOnly"
+      aria-label={visible ? '검색 닫기' : '검색 열기'} aria-expanded={visible} aria-controls={searchId}
+      onClick={() => { if (visible) closeSearch(); else setExpanded(true) }}>
+      <Icon svg={visible ? <IconXmarkLine /> : <IconMagnifyingglassLine />} />
+    </Button>
+    <Popover.Root open={showHistory} onOpenChange={setOpen} autoFocus={false} placement="bottom-start" gutter={8}>
     <Popover.Anchor asChild>
-      <form className="community-search" role="search" aria-label="게시글 검색" onSubmit={event => {
+      <form id={searchId} className="community-search" role="search" aria-label="게시글 검색" onSubmit={event => {
         event.preventDefault()
         // Submit what is visible, even while the router is committing the previous search.
         search(inputRef.current?.value ?? value)
       }}>
-        <TextField.Root className="community-search-field" size="large" value={value} onValueChange={onValueChange}>
+        <TextField.Root className="community-search-field" size="medium" value={value} onValueChange={onValueChange}>
           <TextField.Input ref={inputRef} aria-label="본문 또는 태그 검색" placeholder="글 내용·태그 검색" maxLength={100} autoComplete="off"
             aria-haspopup={owner ? 'dialog' : undefined} aria-expanded={owner ? showHistory : undefined} aria-controls={showHistory ? historyId : undefined}
-            onFocus={event => { if (owner && !historyRef.current?.contains(event.relatedTarget)) setOpen(true) }}
+            onFocus={event => { setExpanded(true); if (owner && !historyRef.current?.contains(event.relatedTarget)) setOpen(true) }}
             onClick={() => { if (owner) setOpen(true) }}
-            onKeyDown={event => { if (event.key === 'Enter' && (event.nativeEvent.isComposing || event.keyCode === 229)) event.preventDefault() }} />
+            onKeyDown={event => {
+              if (event.key === 'Enter' && (event.nativeEvent.isComposing || event.keyCode === 229)) event.preventDefault()
+              if (event.key === 'Escape' && !showHistory && !value && triggerRef.current?.getClientRects().length) {
+                event.preventDefault()
+                closeSearch()
+              }
+            }} />
           <Button className="community-search-submit" type="submit" size="medium" variant="ghost" layout="iconOnly" color="fg.neutralMuted" aria-label="게시글 검색">
             <Icon size="x6" svg={<IconMagnifyingglassLine />} />
           </Button>
@@ -67,5 +91,5 @@ export default function CommunitySearch({ owner, value, inputRef, onValueChange,
         </Popover.Body>
       </Popover.Content>
     </Popover.Positioner>}
-  </Popover.Root>
+  </Popover.Root></div>
 }

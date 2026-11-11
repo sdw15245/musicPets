@@ -64,7 +64,7 @@ test('guests can search captions and tags, recover from empty results and clear 
   expect(Math.abs(inputBounds!.y - sortBounds!.y)).toBeLessThan(15)
   await input.fill('출근길')
   await input.dispatchEvent('keydown', { key: 'Enter', code: 'Enter', isComposing: true })
-  expect(queries).toEqual([''])
+  expect(queries.filter(query => query !== '')).toEqual([])
   await input.press('Enter')
   await expect(posts).toHaveCount(1)
   await expect(posts).toContainText('유월')

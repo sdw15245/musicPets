@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { resolveCharacter, currentCharacterText } from '../../shared/characters'
 
 export const RecommendedTrackSchema = z.object({
   name: z.string(),
@@ -43,6 +44,10 @@ export const AnalysisSchema = z.object({
     message: z.string(), retryAfterSeconds: z.number().nonnegative(), retryAt: z.string(),
   }).nullish(),
   warnings: z.array(z.string()),
-})
+}).transform(data => ({
+  ...data,
+  character: data.character ? { ...data.character, name: resolveCharacter(data.character.slug)?.name ?? data.character.name } : null,
+  profile: data.profile ? { ...data.profile, comment: currentCharacterText(data.profile.comment) } : data.profile,
+}))
 
 export type AnalysisResult = z.infer<typeof AnalysisSchema>

@@ -6,7 +6,7 @@ import { analysisDate } from './historyFormat'
 import { genreLabel } from '../analysis/genreLabels'
 import './taste-comparison.css'
 
-const percent = (value = 0) => Math.round(value * 1000) / 10
+import { genrePercent as percent, genreDifference } from '../analysis/genreComparison'
 
 function PetSummary({ record }: { record: AnalysisResult }) {
   return <div className="comparison-pet">
@@ -27,7 +27,7 @@ export default function TasteComparison({ records }: { records: AnalysisResult[]
     .map(genre => {
       const before = percent(previous.genres.vector[genre]), after = percent(latest.genres.vector[genre])
       // Match the displayed precision, so 5.2 → 5.5 is consistently +0.3%p.
-      return { genre, name: genreLabel(genre), before, after, difference: Math.round((after - before) * 10) / 10 }
+      return { genre, name: genreLabel(genre), before, after, difference: genreDifference(previous.genres.vector[genre], latest.genres.vector[genre]) }
     })
     .sort((a, b) => Math.abs(b.difference) - Math.abs(a.difference) || b.after - a.after)
     .slice(0, 5)

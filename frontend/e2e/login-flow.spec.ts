@@ -4,7 +4,7 @@ import { mockAuth } from './auth-fixture'
 const result = {
   id: 'login-analysis', analyzedAt: '2026-10-29T00:00:00Z',
   genres: { vector: { pop: 1 }, unmappedTags: [], tagCount: 1, trackCount: 1 },
-  character: { slug: 'pip', name: '핍', description: '신난 장난꾸러기', imageUrl: '/characters/pip.png', score: 0.9 },
+  character: { slug: 'pip', name: '루바', description: '신난 장난꾸러기', imageUrl: '/characters/pip.png', score: 0.9 },
   profile: { mainstream: 50, obscurity: 50, comment: '음악 취향' },
   recommendations: [], recommendationsAvailable: true, warnings: [],
 }

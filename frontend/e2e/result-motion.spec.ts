@@ -4,7 +4,7 @@ import { signedInPreview } from './community-fixture'
 const record = {
   id: 'motion-result', analyzedAt: '2026-11-09T00:00:00Z',
   genres: { vector: { pop: .6, indie: .4 }, trackCount: 20, tagCount: 30, unmappedTags: [], timeRange: 'short_term' },
-  character: { slug: 'mochi', name: '모찌', description: '', imageUrl: '/characters/mochi.png', score: .8 },
+  character: { slug: 'mochi', name: '멜로', description: '', imageUrl: '/characters/mochi.png', score: .8 },
   profile: { mainstream: 50, obscurity: 50, comment: '저장된 취향 해설' },
   recommendations: [], recommendedArtists: [], recommendationsAvailable: true, warnings: [],
 }
@@ -16,7 +16,7 @@ test.beforeEach(async ({ page }) => {
   await page.route('**/api/analysis/history/motion-result', route => route.fulfill({ json: record }))
 })
 
-test('a new result reveals once; sharing stays usable and reload or history does not replay', async ({ page }) => {
+test('pet reveal runs only for new results; charts reveal once on each visit', async ({ page }) => {
   await page.goto('/analyze')
   await expect(page).toHaveURL(/\/result$/)
   await expect(page.locator('.analysis-pet')).toHaveCSS('animation-name', 'pet-result-in')
@@ -36,7 +36,8 @@ test('a new result reveals once; sharing stays usable and reload or history does
   await expect(genres).not.toHaveAttribute('data-replayed', 'true')
   await page.reload()
   await expect(page.locator('.analysis-pet')).toHaveCSS('animation-name', 'none')
-  await expect(page.locator('.genre-fill').first()).toHaveCSS('animation-name', 'none')
+  await genres.scrollIntoViewIfNeeded()
+  await expect(page.locator('.genre-fill').first()).toHaveCSS('animation-name', 'genre-result-in')
   await page.goto('/history/motion-result')
   await expect(page.locator('.analysis-pet')).toHaveCSS('animation-name', 'none')
 })

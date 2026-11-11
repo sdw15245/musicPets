@@ -4,7 +4,7 @@ import { signedInPreview, mockPlayers } from './community-fixture'
 const result = {
   id: 'saved-ux-result', analyzedAt: '2026-11-02T00:00:00Z',
   genres: { vector: { pop: .7, indie: .3 }, tagCount: 2, trackCount: 10, unmappedTags: [] },
-  character: { slug: 'mochi', name: '모찌', description: '아늑한 몽상가', imageUrl: '/characters/mochi.png', score: .92 },
+  character: { slug: 'mochi', name: '멜로', description: '아늑한 몽상가', imageUrl: '/characters/mochi.png', score: .92 },
   profile: { mainstream: 60, obscurity: 40, comment: '팝과 인디의 분위기를 즐기는 취향이에요.' },
   recommendations: [], recommendationsAvailable: true, warnings: [],
 }
@@ -69,11 +69,11 @@ test('profile and music list skeletons become real content or an empty state aft
 
 test('pet details keep undiscovered stories locked and restore keyboard focus when closed', async ({ page }, info) => {
   await page.goto('/')
-  const trigger = page.getByRole('button', { name: '모찌 자세히 보기' })
+  const trigger = page.getByRole('button', { name: '멜로 자세히 보기' })
   await trigger.click()
-  const dialog = page.getByRole('dialog', { name: '모찌', exact: true })
+  const dialog = page.getByRole('dialog', { name: '멜로', exact: true })
   await expect(dialog.getByRole('heading', { name: '대표 장르' })).toHaveCount(0)
-  await expect(dialog.getByRole('img', { name: '모찌', exact: true })).toBeVisible()
+  await expect(dialog.getByRole('img', { name: '멜로', exact: true })).toBeVisible()
   await expect(dialog).toContainText('펫을 만나면 이야기가 열려요.')
   await dialog.getByRole('button', { name: '닫기', exact: true }).click()
   await expect(trigger).toBeFocused()
@@ -81,8 +81,8 @@ test('pet details keep undiscovered stories locked and restore keyboard focus wh
   await signedInPreview(page)
   await page.reload()
   await expect(page.getByText(/총 5마리/)).toHaveCount(0)
-  await page.getByRole('button', { name: '모찌 자세히 보기' }).click()
-  await expect(dialog.getByRole('img', { name: '모찌', exact: true })).not.toHaveClass(/is-locked/)
+  await page.getByRole('button', { name: '멜로 자세히 보기' }).click()
+  await expect(dialog.getByRole('img', { name: '멜로', exact: true })).not.toHaveClass(/is-locked/)
   await page.screenshot({ path: info.outputPath('pet-details-desktop.png'), animations: 'disabled' })
   expect(await page.evaluate(() => !!document.elementFromPoint(20, 20)?.closest('.pet-detail-layer'))).toBe(true)
 })
@@ -150,8 +150,8 @@ test.describe('touch screens', () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
     await page.screenshot({ path: info.outputPath('result-help-mobile.png'), animations: 'disabled' })
     await page.goto('/')
-    await page.getByRole('button', { name: '핍 자세히 보기' }).click()
-    const dialog = page.getByRole('dialog', { name: '핍', exact: true })
+    await page.getByRole('button', { name: '루바 자세히 보기' }).click()
+    const dialog = page.getByRole('dialog', { name: '루바', exact: true })
     await expect(dialog).toHaveClass(/seed-bottom-sheet__content/)
     await expect(dialog.getByRole('button', { name: '닫기', exact: true })).toBeInViewport()
     await page.screenshot({ path: info.outputPath('pet-details-mobile.png'), animations: 'disabled' })

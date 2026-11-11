@@ -10,7 +10,7 @@ test('genre explanations expand without changing the saved analysis', async ({ p
     return route.fulfill({ json: {
       id: 'remodel-analysis', analyzedAt: '2026-09-30T00:00:00Z',
       genres: { vector: { pop: .4, indie: .3, jazz: .2, rock: .1 }, trackCount: 10, tagCount: 20, unmappedTags: [] },
-      character: { slug: 'mochi', name: '모찌', description: '아늑한 몽상가', imageUrl: '/characters/mochi.png', score: .92 },
+      character: { slug: 'mochi', name: '멜로', description: '아늑한 몽상가', imageUrl: '/characters/mochi.png', score: .92 },
       profile: { mainstream: 60, obscurity: 40, comment: '익숙한 멜로디 속에서 나만의 분위기를 발견하는 취향이에요.' },
       recommendations: [{ name: '검증용 추천곡', artist: '테스트 아티스트', uri: 'spotify:track:example123', imageUrl: '' }],
       recommendationsAvailable: true, warnings: [],

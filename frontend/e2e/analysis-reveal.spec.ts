@@ -4,7 +4,7 @@ import { signedInPreview } from './community-fixture'
 const result = {
   id: 'reveal', analyzedAt: '2026-11-09T00:00:00Z',
   genres: { vector: { pop: 1 }, trackCount: 20, tagCount: 20, unmappedTags: [], timeRange: 'short_term' },
-  character: { slug: 'mochi', name: '모찌', description: '', imageUrl: '/characters/mochi.png', score: .8 },
+  character: { slug: 'mochi', name: '멜로', description: '', imageUrl: '/characters/mochi.png', score: .8 },
   profile: { mainstream: 50, obscurity: 50, comment: '대기 중 완성된 해설' },
   recommendations: [], recommendedArtists: [], recommendationsAvailable: true, warnings: [],
   profilePending: false, recommendationsPending: false,

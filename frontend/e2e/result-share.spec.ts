@@ -5,7 +5,7 @@ import { mockAuth } from './auth-fixture'
 const result = {
   id: 'share-result', analyzedAt: '2026-10-29T00:00:00Z',
   genres: { vector: { pop: .5, indie: .3, electronic: .2 }, unmappedTags: [], tagCount: 10, trackCount: 20 },
-  character: { slug: 'mochi', name: '모찌', description: '아늑한 몽상가', imageUrl: '/characters/mochi.png', score: .92 },
+  character: { slug: 'mochi', name: '멜로', description: '아늑한 몽상가', imageUrl: '/characters/mochi.png', score: .92 },
   profile: { mainstream: 60, obscurity: 40, comment: '편안한 멜로디를 즐겨 들어요.' },
   recommendations: [], recommendationsAvailable: true, warnings: [],
 }
@@ -99,7 +99,7 @@ test('native sharing sends the generated file, treats cancellation quietly and r
     Object.defineProperty(navigator, 'share', { configurable: true, value: async ({ files, title, url }: ShareData) => {
       if (calls++ === 0) throw new DOMException('Cancelled', 'AbortError')
       if (calls === 2) throw new DOMException('Blocked', 'NotAllowedError')
-      if (!files || files[0].name !== 'musicpets-mochi.png' || files[0].size < 20_000 || title !== 'MusicPets · 모찌' || url) {
+      if (!files || files[0].name !== 'musicpets-mochi.png' || files[0].size < 20_000 || title !== 'MusicPets · 멜로' || url) {
         throw new Error('Unexpected share data')
       }
     } })
@@ -154,14 +154,14 @@ test('saved interpretation is shared and the pet story is separate from personal
   await page.goto('/result')
   await expect(page.getByText('아늑한 몽상가', { exact: true })).toHaveCount(0)
   await expect(page.getByText(result.profile.comment, { exact: true })).toBeVisible()
-  await page.getByText('모찌의 이야기', { exact: true }).click()
-  await expect(page.getByText(/모찌의 방에는 좋아하는 노래/)).toBeVisible()
+  await page.getByText('멜로의 이야기', { exact: true }).click()
+  await expect(page.getByText(/멜로의 방에는 좋아하는 노래/)).toBeVisible()
   await page.getByRole('button', { name: '결과 공유하기', exact: true }).click()
   await expect(page.getByRole('img', { name: /취향 해설이 담긴 음악 취향 공유 이미지/ })).toBeVisible()
   const drawn = await page.evaluate(() => (window as Window & { __sharedText: string[] }).__sharedText.join('\n'))
   expect(drawn).toContain(result.profile.comment)
   expect(drawn).not.toContain(result.character.description)
-  expect(drawn).not.toContain('모찌의 방에는')
+  expect(drawn).not.toContain('멜로의 방에는')
 })
 
 test('expanding the pet story keeps the portrait anchored on desktop and mobile', async ({ page }) => {
@@ -177,22 +177,22 @@ test('expanding the pet story keeps the portrait anchored on desktop and mobile'
       return { x: image.x - section.x, y: image.y - section.y }
     })
     const before = await position()
-    await page.getByText('모찌의 이야기', { exact: true }).click()
-    await expect(page.getByText(/모찌의 방에는 좋아하는 노래/)).toBeVisible()
+    await page.getByText('멜로의 이야기', { exact: true }).click()
+    await expect(page.getByText(/멜로의 방에는 좋아하는 노래/)).toBeVisible()
     const expanded = await position()
     expect(Math.abs(expanded.x - before.x)).toBeLessThanOrEqual(1)
     expect(Math.abs(expanded.y - before.y)).toBeLessThanOrEqual(1)
-    await page.getByText('모찌의 이야기', { exact: true }).click()
+    await page.getByText('멜로의 이야기', { exact: true }).click()
     expect(await position()).toEqual(before)
   }
 })
 
 test('long shared interpretations wrap at word boundaries without losing the saved words', async ({ page }, info) => {
-  const comment = '인디와 힙합을 중심으로 여러 장르를 함께 듣고 있어요. 레코드 가게에서 서로 다른 음반을 골라오는 삐냥의 모습과 닮은 부분이에요. 같은 펫을 만났어도 어떤 음악을 곁들이는지는 서로 다를 수 있어요.'
+  const comment = '인디와 힙합을 중심으로 여러 장르를 함께 듣고 있어요. 레코드 가게에서 서로 다른 음반을 골라오는 리토의 모습과 닮은 부분이에요. 같은 펫을 만났어도 어떤 음악을 곁들이는지는 서로 다를 수 있어요.'
   await page.route('**/api/analysis/latest', route => route.fulfill({ json: {
     ...result,
     genres: { ...result.genres, timeRange: 'short_term' },
-    character: { ...result.character, slug: 'sulk-cat', name: '삐냥', imageUrl: '/characters/sulk-cat.png' },
+    character: { ...result.character, slug: 'sulk-cat', name: '리토', imageUrl: '/characters/sulk-cat.png' },
     profile: { ...result.profile, comment },
   } }))
   await page.addInitScript(() => {

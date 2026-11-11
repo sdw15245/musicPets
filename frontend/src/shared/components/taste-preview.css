@@ -70,9 +70,7 @@
 .preview-tag {
   display: inline-block;
   margin-top: var(--seed-dimension-x4);
-  padding: var(--seed-dimension-x1) var(--seed-dimension-x3);
-  border-radius: var(--seed-radius-full);
-  background: var(--seed-color-bg-brand-weak);
+  padding: 0;
   color: var(--seed-color-fg-brand);
   font: var(--mp-type-caption);
 }

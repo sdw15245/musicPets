@@ -19,7 +19,7 @@ class TasteCommentServiceTest {
         var prompts = org.mockito.ArgumentCaptor.forClass(String.class);
         verify(gemini, times(2)).generateWithoutThinking(prompts.capture());
         for (String prompt : prompts.getAllValues()) {
-            assertThat(prompt).contains("삐냥", "레코드 가게", "펫의 설정", "사용자의 실제 행동", "indie 40.0%");
+            assertThat(prompt).contains("리토", "레코드 가게", "펫의 설정", "사용자의 실제 행동", "indie 40.0%");
             assertThat(prompt).doesNotContain("도도한 리듬 탐험가");
             assertThat(prompt).contains("한 문장 안에서 직접 연결", "입력의 모든 장르를 나열하지", "설정에 없는 행동");
         }

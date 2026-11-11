@@ -1,5 +1,9 @@
 import { genreLabel } from '../analysis/genreLabels'
-import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { useChartReveal } from './useChartReveal'
+import { genreDifference } from '../analysis/genreComparison'
+import type { AnalysisResult } from '../analysis/schemas'
+import { analysisDate } from '../history/historyFormat'
 
 const genreInfo: Record<string, [string, string]> = {
   pop: ['Pop', '귀에 남는 멜로디와 선명한 후렴을 중심으로 펼쳐지는 음악이에요.'],
@@ -17,24 +21,22 @@ const genreInfo: Record<string, [string, string]> = {
   'j-pop': ['J-Pop', '다채로운 편곡과 서정적인 멜로디를 탐험해보세요.'],
 }
 
-export default function GenreExplorer({ vector, trackCount, animate = false }: { vector: Record<string, number>; trackCount: number; animate?: boolean }) {
-  const sectionRef = useRef<HTMLElement>(null)
-  const [revealed, setRevealed] = useState(false)
-  useEffect(() => {
-    if (!animate || !sectionRef.current) return
-    const observer = new IntersectionObserver(([entry]) => {
-      if (!entry.isIntersecting) return
-      setRevealed(true)
-      observer.disconnect()
-    }, { threshold: 0.1 })
-    observer.observe(sectionRef.current)
-    return () => observer.disconnect()
-  }, [animate])
+export default function GenreExplorer({ vector, trackCount, animate = true, previous, differentPeriod = false }: {
+  vector: Record<string, number>; trackCount: number; animate?: boolean; previous?: AnalysisResult; differentPeriod?: boolean
+}) {
+  const { sectionRef, revealed } = useChartReveal(animate)
   const genres = Object.entries(vector).filter(([, value]) => value > 0).sort((a, b) => b[1] - a[1]).slice(0, 5)
   return <section ref={sectionRef} className="genre-explorer" data-animate={animate} data-revealed={revealed} aria-label="청취 기록의 장르 분석">
     <h2>어떤 음악을 들었을까요?</h2><p className="wf-sub">분석한 {trackCount}곡에서 발견한 장르 비중이에요. 곡 수나 재생 횟수의 비율과는 달라요.</p>
-    {!genres.length ? <p>장르 정보가 충분하지 않아요.</p> : <ol className="genre-breakdown">{genres.map(([genre, ratio]) => <li key={genre}>
-      <details><summary><span>{genreLabel(genre)}</span><span className="genre-track" aria-hidden="true"><span className="genre-fill" style={{ width: Math.min(ratio * 100, 100) + '%' }} /></span><strong>{(ratio * 100).toFixed(1)}%</strong></summary><p>{genreInfo[genre]?.[1] ?? '청취 기록에서 발견한 음악 장르예요.'}</p></details>
+    {previous && <p className="genre-comparison-date"><Link to={`/history/${encodeURIComponent(previous.id)}`}>이전 분석 · {analysisDate(previous.analyzedAt)}</Link> 대비</p>}
+    {differentPeriod && <p className="genre-comparison-date">이전 기록과 분석 기간이 달라 비교를 생략했어요.</p>}
+    {!genres.length ? <p>장르 정보가 충분하지 않아요.</p> : <ol className="genre-breakdown">{genres.map(([genre, ratio], index) => <li key={genre}>
+      <details><summary><span>{genreLabel(genre)}</span><span className="genre-track" aria-hidden="true"><span className="genre-fill" style={{ width: Math.min(ratio * 100, 100) + '%', animationDelay: `${index * 45}ms` }} /></span><span className="genre-value"><strong>{(ratio * 100).toFixed(1)}%</strong>{previous && <GenreChange before={previous.genres.vector[genre]} after={ratio} />}</span></summary><p>{genreInfo[genre]?.[1] ?? '청취 기록에서 발견한 음악 장르예요.'}</p></details>
     </li>)}</ol>}
   </section>
+}
+
+function GenreChange({ before, after }: { before?: number; after: number }) {
+  const delta = genreDifference(before, after)
+  return <small className="genre-change">{delta === 0 ? '변화 없음' : <><span aria-hidden="true">{delta > 0 ? '↑ ' : '↓ '}</span>{Math.abs(delta).toFixed(1)}%p {delta > 0 ? '증가' : '감소'}</>}</small>
 }

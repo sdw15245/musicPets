@@ -4,7 +4,7 @@ import { signedInPreview } from './community-fixture'
 const record = {
   id: 'four-weeks', analyzedAt: '2026-11-07T00:00:00Z',
   genres: { vector: { pop: .6, indie: .4 }, trackCount: 20, tagCount: 30, unmappedTags: [], timeRange: 'short_term' },
-  character: { slug: 'mochi', name: '모찌', description: '아늑한 몽상가', imageUrl: '/characters/mochi.png', score: .9 },
+  character: { slug: 'mochi', name: '멜로', description: '아늑한 몽상가', imageUrl: '/characters/mochi.png', score: .9 },
   profile: null, profilePending: true, recommendations: [], recommendationsPending: true,
   recommendationsAvailable: false, warnings: [],
 }

@@ -15,6 +15,7 @@ import { useCurrentAnalysis } from '../analysis/useCurrentAnalysis'
 import { useAuthStore } from '../auth/useAuthStore'
 import { useProfile } from '../profile/useProfile'
 import CommunityIcon from './CommunityIcon'
+import { useFloatingComposer } from './useFloatingComposer'
 import CommunitySearch from './CommunitySearch'
 import PostCard from './PostCard'
 import ShareComposer from './ShareComposer'
@@ -36,6 +37,7 @@ function CommunityContent({ profile, initialTrack }: ContentProps) {
   const analysis = useCurrentAnalysis()
   const composerTriggerRef = useRef<HTMLButtonElement>(null)
   const floatingTriggerRef = useRef<HTMLButtonElement>(null)
+  const showFloatingComposer = useFloatingComposer(composerTriggerRef)
   const openedFromFloating = useRef(false)
   const [searchParams, setSearchParams] = useSearchParams()
   const requestedPet = canFilter ? getPet(searchParams.get('pet')) : undefined
@@ -186,7 +188,7 @@ function CommunityContent({ profile, initialTrack }: ContentProps) {
         </main>
 
       </div>
-      <div className="community-compose-fab">
+      <div className="community-compose-fab" hidden={!showFloatingComposer}>
         <FloatingActionButton.Root ref={floatingTriggerRef} extended aria-label="빠르게 한 곡 올리기"
           aria-haspopup="dialog" aria-expanded={composer?.open || loginOpen || false}
           onClick={() => { openedFromFloating.current = true; openComposer() }}>

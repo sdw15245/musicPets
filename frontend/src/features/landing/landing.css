@@ -22,7 +22,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: center;
   gap: var(--seed-dimension-x12);
-  padding-block: 80px 88px;
+  padding-block: 64px 72px;
 }
 .music-hero-copy { min-width: 0; }
 .hero-eyebrow { color: var(--seed-color-fg-neutral-muted); font: var(--mp-type-label); }
@@ -42,23 +42,22 @@
   gap: var(--seed-dimension-x6);
   border: 0;
   border-radius: var(--seed-radius-r6);
-  background: color-mix(in srgb, var(--preview-pet-color, var(--seed-color-bg-neutral-muted)) 22%, var(--seed-color-bg-layer-default));
+  background: var(--seed-color-bg-brand-weak);
   box-shadow: none;
 }
 .hero-result-preview .preview-topline { flex-wrap: nowrap; font: var(--mp-type-caption); }
 .hero-result-preview .preview-topline > span:first-child { min-width: 0; word-break: keep-all; }
 .hero-result-preview .preview-pet {
-  grid-template-columns: 144px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
   justify-items: stretch;
   gap: var(--seed-dimension-x6);
   padding: var(--seed-dimension-x4) 0;
   background: transparent;
 }
-.hero-result-preview .preview-pet > img { width: 144px; height: 144px; max-width: 100%; object-fit: contain; border-radius: var(--seed-radius-r5); }
+.hero-result-preview .preview-pet > img { width: 100%; height: auto; aspect-ratio: 1; max-width: 232px; object-fit: contain; border-radius: var(--seed-radius-r5); }
 .hero-result-preview .preview-identity { text-align: left; }
 .hero-result-preview .preview-identity h2 { font: var(--seed-font-weight-bold) var(--seed-font-size-t12)/var(--seed-line-height-t12) var(--seed-font-family); }
 .hero-result-preview .preview-identity .preview-pet-label { margin: 0 0 var(--seed-dimension-x2); font: var(--mp-type-caption); }
-.preview-share-note { margin: 0; padding-top: var(--seed-dimension-x5); border-top: 1px solid var(--seed-color-stroke-neutral-muted); font: var(--mp-type-caption); color: var(--seed-color-fg-neutral-muted); word-break: keep-all; }
 
 .remodeled-landing .section-pad { padding-block: 80px; }
 .remodeled-landing .section-head { grid-template-columns: minmax(0, 1fr) minmax(0, 380px); gap: var(--seed-dimension-x12); margin-bottom: var(--seed-dimension-x10); }
@@ -69,7 +68,7 @@
 .steps-section { background: var(--seed-color-bg-neutral-weak); }
 .characters-section { background: var(--seed-color-bg-layer-default); }
 .character-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--seed-dimension-x4); }
-.character-card { min-width: 0; border-bottom: 1px solid var(--seed-color-stroke-neutral-muted); }
+.character-card { min-width: 0; border: 1px solid var(--seed-color-stroke-neutral-muted); border-radius: var(--seed-radius-r5); background: var(--seed-color-bg-layer-default); }
 .character-card-trigger {
   display: grid;
   grid-template-columns: 96px minmax(0, 1fr);
@@ -91,8 +90,6 @@
 .character-card-trigger:focus-visible { outline: 2px solid var(--seed-color-stroke-focus-ring); outline-offset: 4px; }
 .pet-stage { position: relative; display: grid; place-items: center; width: 96px; height: 96px; border-radius: var(--seed-radius-r3); background: transparent; overflow: hidden; }
 .pet-img { display: block; width: 96px; height: 96px; max-width: 100%; object-fit: contain; }
-.pet-img.is-locked { filter: blur(6px) saturate(.7); }
-.pet-lock { position: absolute; display: grid; place-items: center; width: var(--seed-dimension-x8); height: var(--seed-dimension-x8); border-radius: var(--seed-radius-full); color: var(--seed-color-fg-neutral-inverted); background: var(--seed-color-bg-neutral-inverted); font: var(--mp-type-label); }
 .character-meta { min-width: 0; }
 .character-meta strong { display: block; margin-bottom: var(--seed-dimension-x1); font: var(--mp-type-section-title); }
 .character-meta span { color: var(--seed-color-fg-neutral-muted); font: var(--mp-type-caption); }
@@ -105,7 +102,6 @@
 .pet-detail-body p { margin: 0; font: var(--mp-type-article-body); }
 .pet-detail-portrait { position: relative; display: grid; place-items: center; width: 100%; }
 .pet-detail-image { width: 128px; height: 128px; max-width: 100%; object-fit: contain; border-radius: var(--seed-radius-r3); }
-.pet-detail-image.is-locked { filter: blur(6px) grayscale(.7); }
 
 .cta-section { padding-block: var(--seed-dimension-x16); background: var(--seed-color-bg-neutral-weak); }
 .cta-inner { display: flex; justify-content: space-between; align-items: center; gap: var(--seed-dimension-x10); }
@@ -128,8 +124,8 @@
   .music-hero { gap: var(--seed-dimension-x8); }
   .music-hero h1 { font-size: var(--seed-font-size-t12); line-height: var(--seed-line-height-t12); }
   .hero-result-preview .taste-preview { padding: var(--seed-dimension-x6); }
-  .hero-result-preview .preview-pet { grid-template-columns: 104px minmax(0, 1fr); gap: var(--seed-dimension-x4); padding: var(--seed-dimension-x2) 0; }
-  .hero-result-preview .preview-pet > img { width: 104px; height: 104px; }
+  .hero-result-preview .preview-pet { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: var(--seed-dimension-x4); padding: var(--seed-dimension-x2) 0; }
+  .hero-result-preview .preview-pet > img { width: 100%; height: auto; }
   .hero-result-preview .preview-identity h2 { font: var(--mp-type-screen-title); }
 }
 @media (max-width: 767px) {
@@ -142,11 +138,12 @@
   .music-hero-actions { gap: var(--seed-dimension-x2); margin-top: var(--seed-dimension-x6); }
   .hero-result-preview { max-width: none; }
   .hero-result-preview .taste-preview { padding: var(--seed-dimension-x5); }
+  .hero-result-preview .preview-pet { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
   .remodeled-landing .section-pad { padding-block: var(--seed-dimension-x12); }
   .remodeled-landing .section-head { margin-bottom: var(--seed-dimension-x8); }
   .remodeled-landing .wf-h2 { font: var(--mp-type-screen-title); }
-  .character-card-trigger { grid-template-columns: 72px minmax(0, 1fr); gap: var(--seed-dimension-x4); padding: var(--seed-dimension-x4); }
-  .pet-stage, .pet-img { width: 72px; height: 72px; }
+  .character-card-trigger { grid-template-columns: 96px minmax(0, 1fr); gap: var(--seed-dimension-x4); padding: var(--seed-dimension-x4); }
+  .pet-stage, .pet-img { width: 96px; height: 96px; }
   .cta-section { padding-block: var(--seed-dimension-x10); }
   .cta-inner { flex-direction: column; align-items: flex-start; gap: var(--seed-dimension-x6); }
   .wf-footer { column-gap: var(--seed-dimension-x6); row-gap: var(--seed-dimension-x2); }

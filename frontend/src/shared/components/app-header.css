@@ -1,6 +1,7 @@
 .app-header-surface { position: sticky; top: 0; z-index: 50; width: 100%; background: var(--seed-color-bg-layer-default); border-bottom: 1px solid var(--seed-color-stroke-neutral-muted); }
 .site-header.app-header { border-bottom: 0; }
 .app-header-account { display: flex; align-items: center; gap: var(--seed-dimension-x2); flex-shrink: 0; min-width: 88px; justify-content: flex-end; }
+.app-header-account:empty { display: none; }
 .notification-entry { position: relative; }
 .notification-dot { position: absolute; top: 6px; right: 6px; width: 6px; height: 6px; border-radius: var(--seed-radius-full); background: var(--seed-color-fg-brand); }
 .app-header .landing-nav-account { margin: 0; }
@@ -8,8 +9,12 @@
 .taste-nav a { padding: var(--seed-dimension-x3) 0; min-height: 44px; color: var(--seed-color-fg-neutral-muted); font: var(--mp-type-label); white-space: nowrap; border-bottom: 2px solid transparent; }
 .taste-nav a[aria-current] { border-bottom-color: var(--seed-color-fg-brand); color: var(--seed-color-fg-brand); }
 @media (max-width: 767px) {
-  .site-header.app-header { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--seed-dimension-x2) var(--seed-dimension-x4); padding-block: var(--seed-dimension-x3); }
-  .app-header > nav { grid-column: 1 / -1; grid-row: 2; justify-content: center; margin: 0; gap: var(--seed-dimension-x6); }
-  .app-header-account { grid-column: 2; grid-row: 1; }
-  .taste-nav { gap: var(--seed-dimension-x5); margin-block: var(--seed-dimension-x6); }
+  .site-header.app-header { display: flex; flex-wrap: wrap; gap: var(--seed-dimension-x2); min-height: 64px; padding-block: var(--seed-dimension-x2); }
+  .app-header > .brand-logo { font-size: var(--seed-font-size-t6); }
+  .app-header > nav { justify-content: flex-end; gap: var(--seed-dimension-x3); margin-left: auto; }
+  .app-header .site-nav-link { font-size: var(--seed-font-size-t4); }
+  .app-header-account { min-width: 80px; gap: 0; }
+  .app-header--intro > nav { order: 3; flex-basis: 100%; justify-content: center; gap: var(--seed-dimension-x6); }
+  .app-header--intro .app-header-account { margin-left: auto; }
+  .taste-nav { gap: var(--seed-dimension-x5); margin-block: var(--seed-dimension-x4); }
 }

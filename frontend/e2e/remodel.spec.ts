@@ -38,7 +38,7 @@ test('login explains connection without a second landing or analysis requests', 
   const analyses: string[] = []
   page.on('request', request => { if (new URL(request.url()).pathname === '/api/analysis') analyses.push(request.method()) })
   await page.goto('/login')
-  await expect(page.getByRole('heading', { name: 'MusicPets 로그인' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '나의 음악 펫을 만나보세요' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Spotify로 계속하기' })).toBeVisible()
   await page.screenshot({ path: testInfo.outputPath('login-desktop.png'), fullPage: true })
   await page.setViewportSize({ width: 360, height: 800 })

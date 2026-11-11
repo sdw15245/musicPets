@@ -103,7 +103,7 @@ test('server analysis pet supplies the profile photo despite old avatar preferen
   await expect(page.locator('.profile-editor').getByRole('radio')).toHaveCount(0)
   await page.locator('.mypage-profile-card').screenshot({ path: info.outputPath('automatic-pet-profile.png') })
   await page.getByRole('link', { name: 'MusicPets', exact: true }).click()
-  await expect(page.locator('.pet-img:not(.is-locked)')).toHaveAttribute('alt', '핍')
+  await expect(page.locator('.character-card').filter({ hasText: '발견 완료' }).getByRole('img')).toHaveAttribute('alt', '핍')
 })
 
 test('profile save failure preserves the draft and never reports success', async ({ page }) => {

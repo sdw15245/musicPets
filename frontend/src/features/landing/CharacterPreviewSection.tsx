@@ -1,5 +1,4 @@
 // 랜딩의 캐릭터 미리보기 섹션. 매칭될 수 있는 펫 캐릭터 일부를 카드로 노출.
-import type { CSSProperties } from 'react'
 import { ResponsiveDialog, Portal, ResponsivePair } from '@seed-design/react'
 import { Badge } from 'seed-design/ui/badge'
 import Button from '../../shared/components/ui/Button'
@@ -8,7 +7,7 @@ import { useMyCharacters } from '../../shared/unlockedCharacters'
 import { characters } from '../../shared/characters'
 
 function CharacterPreviewSection() {
-  // 매칭으로 획득한 캐릭터만 선명하게 공개(도감 해금). 나머지는 잠금(흐릿).
+  // 소개에서는 외형을 공개하고, 획득한 캐릭터의 이야기만 해금한다.
   const unlocked = useMyCharacters()
   const catalog = characters.map(character => ({
     ...character, discovered: unlocked.includes(character.slug) || unlocked.includes(character.name),
@@ -36,16 +35,15 @@ function CharacterPreviewSection() {
             <article key={c.slug} className="character-card">
               <ResponsiveDialog.Root>
               <ResponsiveDialog.Trigger asChild><button type="button" className="character-card-trigger" aria-label={`${c.name} 자세히 보기`}>
-              <div className="pet-stage has-img" style={{ '--pet-color': c.color } as CSSProperties}>
+              <div className="pet-stage">
                 <img
-                  className={`pet-img${isUnlocked ? '' : ' is-locked'}`}
+                  className="pet-img"
                   src={c.imageUrl}
-                  alt={isUnlocked ? c.name : '잠긴 캐릭터'}
+                  alt={c.name}
                   width={96}
                   height={96}
                   loading="lazy"
                 />
-                {!isUnlocked && <span className="pet-lock" aria-hidden="true">?</span>}
               </div>
               <div className="character-meta">
                 <div>
@@ -58,8 +56,7 @@ function CharacterPreviewSection() {
                 <ResponsiveDialog.Header><ResponsiveDialog.Title>{c.name}</ResponsiveDialog.Title><ResponsiveDialog.Description>{isUnlocked ? '펫 이야기' : '아직 만나기 전이에요'}</ResponsiveDialog.Description></ResponsiveDialog.Header>
                 <ResponsiveDialog.Body className="pet-detail-body">
                   <div className="pet-detail-portrait">
-                    <img className={`pet-detail-image${isUnlocked ? '' : ' is-locked'}`} src={c.imageUrl} alt={isUnlocked ? c.name : '아직 발견하지 않은 펫'} />
-                    {!isUnlocked && <span className="pet-lock" aria-hidden="true">?</span>}
+                    <img className="pet-detail-image" src={c.imageUrl} alt={c.name} />
                   </div>
                   <Badge size="medium" tone={isUnlocked ? 'brand' : 'neutral'} variant="weak">{isUnlocked ? '발견 완료' : '아직 만나기 전'}</Badge>
                   <p>{isUnlocked ? c.story : '펫을 만나면 이야기가 열려요.'}</p>

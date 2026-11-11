@@ -67,13 +67,14 @@ test('profile and music list skeletons become real content or an empty state aft
   await expect(page.getByText('첫 번째 음악을 들려주세요', { exact: true })).toBeVisible()
 })
 
-test('pet details keep undiscovered pets locked and restore keyboard focus when closed', async ({ page }, info) => {
+test('pet details keep undiscovered stories locked and restore keyboard focus when closed', async ({ page }, info) => {
   await page.goto('/')
   const trigger = page.getByRole('button', { name: '모찌 자세히 보기' })
   await trigger.click()
   const dialog = page.getByRole('dialog', { name: '모찌', exact: true })
   await expect(dialog.getByRole('heading', { name: '대표 장르' })).toHaveCount(0)
-  await expect(dialog.getByRole('img', { name: '아직 발견하지 않은 펫' })).toHaveClass(/is-locked/)
+  await expect(dialog.getByRole('img', { name: '모찌', exact: true })).toBeVisible()
+  await expect(dialog).toContainText('펫을 만나면 이야기가 열려요.')
   await dialog.getByRole('button', { name: '닫기', exact: true }).click()
   await expect(trigger).toBeFocused()
   await expect(page.getByText(/발견 0\/5/)).toHaveCount(0)
@@ -91,7 +92,10 @@ test.describe('touch screens', () => {
 
   test('floating composer supports adding tags by touch and returns focus after publishing', async ({ page }, info) => {
     await signedInPreview(page)
+    await mockPlayers(page)
     await page.goto('/community')
+    await expect(page.getByRole('radio', { name: '나와 같은 펫', exact: true })).toBeEnabled()
+    await expect(page.getByRole('article').first()).toBeVisible()
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
     const trigger = page.getByRole('button', { name: '빠르게 한 곡 올리기' })
     await expect(trigger).toBeInViewport()
@@ -118,13 +122,15 @@ test.describe('touch screens', () => {
     await dialog.getByRole('button', { name: '공유하기', exact: true }).click()
     expect((await publish).postDataJSON().tags).toEqual(['산책'])
     await expect(dialog).toHaveCount(0)
-    await expect(trigger).toBeFocused()
+    await expect(page.getByRole('button', { name: '오늘의 한 곡 올리기', exact: true })).toBeFocused()
     await expect(page.getByRole('article').first()).toContainText('산책하며 듣는 노래')
   })
 
   test('guest floating action asks for login and can be dismissed', async ({ page }) => {
     await mockPlayers(page)
     await page.goto('/community')
+    await expect(page.getByRole('article').first()).toBeVisible()
+    await page.evaluate(() => window.scrollTo(0, 650))
     const trigger = page.getByRole('button', { name: '빠르게 한 곡 올리기' })
     await trigger.click()
     await expect(page.getByRole('alertdialog')).toContainText('로그인하고 함께해요')

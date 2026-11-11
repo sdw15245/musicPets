@@ -17,7 +17,8 @@ export default function LoginPage() {
     <AppHeader />
     <main className="login-layout">
       {switching ? <AccountSwitch destination={destination} oauthFailed={oauthFailed} /> : <section className="login-copy">
-        <header className="login-heading"><h1>MusicPets 로그인</h1>
+        <div className="login-pets" aria-hidden="true"><img src="/characters/mochi.png" alt="" /><img src="/characters/pip.png" alt="" /><img src="/characters/bongbong.png" alt="" /></div>
+        <header className="login-heading"><h1>나의 음악 펫을 만나보세요</h1>
           <p>Spotify 계정으로 시작하세요.</p></header>
         {oauthFailed && <Callout.Root tone="critical" role="alert"><Callout.Content>
           <Callout.Title>Spotify 연결을 완료하지 못했어요</Callout.Title>

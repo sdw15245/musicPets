@@ -1,5 +1,4 @@
 import { useEffect, useState, useSyncExternalStore } from 'react'
-import type { CSSProperties } from 'react'
 import { Icon } from '@seed-design/react'
 import { IconChevronLeftLine, IconChevronRightLine } from '@karrotmarket/react-monochrome-icon'
 import Button from './ui/Button'
@@ -36,7 +35,6 @@ export default function TastePreview({ analysis }: TastePreviewProps) {
   const selectedIndex = characters.findIndex(item => item.slug === selected)
   const example = characters.find(item => item.slug === selected) ?? characters[0]
   const pet = analysis ? analysis.character : example
-  const petColor = characters.find(item => item.slug === pet?.slug)?.color
 
   useEffect(() => {
     if (!rotating) return
@@ -50,7 +48,7 @@ export default function TastePreview({ analysis }: TastePreviewProps) {
     setSelected(characters[(selectedIndex + direction + characters.length) % characters.length].slug)
   }
 
-  return <section className="taste-preview" style={{ '--preview-pet-color': petColor } as CSSProperties} aria-label={analysis ? '나의 음악 취향 요약' : '음악 펫 결과 예시'}
+  return <section className="taste-preview" aria-label={analysis ? '나의 음악 취향 요약' : '음악 펫 결과 예시'}
     aria-roledescription={showCarousel ? '캐러셀' : undefined}
     onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
     onFocusCapture={event => {
@@ -93,6 +91,5 @@ export default function TastePreview({ analysis }: TastePreviewProps) {
     </div>}
     {analysis?.profile?.comment && <p className="preview-summary">{analysis.profile.comment}</p>}
     </div>
-    {showCarousel && <p className="preview-share-note">내가 듣는 음악으로 펫을 만나고,<br />나의 취향 해설을 친구에게 공유해보세요.</p>}
   </section>
 }

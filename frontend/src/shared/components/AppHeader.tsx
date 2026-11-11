@@ -15,7 +15,7 @@ export default function AppHeader({ children, pending = false }: { children?: Re
   const unread = useUnreadCount(!pending)
   const tasteActive = ['/result', '/history', '/pets'].some(path => pathname === path || pathname.startsWith(path + '/'))
   return <header className="app-header-surface">
-    <div className="site-header app-header">
+    <div className={`site-header app-header${children && !member ? ' app-header--intro' : ''}`}>
       <BrandLogo />
       <nav aria-label="메인 메뉴">
         {member ? <Link className="site-nav-link" to="/result" aria-current={tasteActive ? 'page' : undefined}>내 취향</Link> : member === null ? <span className="header-nav-placeholder" aria-hidden="true"><Skeleton radius="8" width={children ? '176px' : '64px'} height="lineHeight.t5" /></span> : children}

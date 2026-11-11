@@ -59,7 +59,7 @@ test('artist rate limits preserve the pet and block retry', async ({ page }) => 
 test('login has one clear primary action at desktop and mobile sizes', async ({ page }, info) => {
   await mockAuth(page, null)
   await page.goto('/login')
-  await expect(page.getByRole('heading', { name: 'MusicPets 로그인' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '나의 음악 펫을 만나보세요' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Spotify로 계속하기', exact: true })).toBeVisible()
   for (const width of [1280, 360]) {
     await page.setViewportSize({ width, height: 800 })

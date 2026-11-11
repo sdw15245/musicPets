@@ -9,7 +9,7 @@ export default function AnalysisOverview({ data, historical = false, reveal = fa
   const pet = data.character
   const story = characters.find(item => item.slug === pet?.slug)?.story
   return <section className={`analysis-overview${reveal ? ' is-new-result' : ''}`} aria-label="음악 취향 요약">
-    {pet && <div className="analysis-pet"><img src={pet.imageUrl} alt={pet.name} width={144} height={144} /></div>}
+    {pet && <div className="analysis-pet"><img src={pet.imageUrl} alt={pet.name} width={224} height={224} /></div>}
     <div className="analysis-story">
       <div className="analysis-identity">
       <p className="analysis-period">{analysisPeriodLabel(data)} · {data.genres.trackCount}곡 분석</p>

@@ -16,7 +16,7 @@ export async function createResultShareImage(data: AnalysisResult): Promise<File
     image.decode(),
     Promise.allSettled([
       document.fonts.load(`700 80px ${family}`),
-      document.fonts.load('400 58px "Funky Bird"'),
+      document.fonts.load('400 58px "DNFBitBitv2"'),
     ]),
   ])
 
@@ -46,7 +46,7 @@ export async function createResultShareImage(data: AnalysisResult): Promise<File
   box(0, 0, 1080, 1350, 0, weak)
   box(48, 48, 984, 1254, 44, color('bg-layer-default'))
   ctx.textBaseline = 'middle'
-  ctx.font = '400 58px "Funky Bird"'
+  ctx.font = '400 58px "DNFBitBitv2"'
   ctx.fillStyle = ink
   ctx.fillText('Music', 104, 116)
   const logoWidth = ctx.measureText('Music').width

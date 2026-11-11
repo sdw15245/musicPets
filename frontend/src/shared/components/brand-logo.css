@@ -2,7 +2,7 @@
   display: inline-block;
   flex-shrink: 0;
   color: var(--seed-color-fg-neutral);
-  font: 400 var(--seed-font-size-t7)/var(--seed-line-height-t7) 'Funky Bird', var(--seed-font-family);
+  font: 400 var(--seed-font-size-t7)/var(--seed-line-height-t7) 'DNFBitBitv2', var(--seed-font-family);
   letter-spacing: normal;
   text-decoration: none;
   white-space: nowrap;

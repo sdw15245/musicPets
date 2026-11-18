@@ -1,5 +1,5 @@
 import { useMenuFocus } from '../../shared/components/ui/useMenuFocus'
-import { Menu } from '@seed-design/react'
+import { Menu, SegmentedControl } from '@seed-design/react'
 import { IconCheckmarkLine, IconChevronDownLine } from '@karrotmarket/react-monochrome-icon'
 import Button from '../../shared/components/ui/Button'
 
@@ -10,7 +10,19 @@ const options = [
 
 export type FeedSort = typeof options[number]['value']
 
-export default function FeedSortMenu({ value, onChange }: { value: FeedSort; onChange: (value: FeedSort) => void }) {
+type SortProps = { value: FeedSort; onChange: (value: FeedSort) => void }
+
+export function FeedSortSegments({ value, onChange }: SortProps) {
+  return <SegmentedControl.Root className="community-sort-segments" aria-label="게시글 정렬" name="feed-sort"
+    value={value} onValueChange={next => { if (next === 'latest' || next === 'popular') onChange(next) }}>
+    <SegmentedControl.Indicator />
+    {options.map(option => <SegmentedControl.Item key={option.value} value={option.value}>
+      {option.label}<SegmentedControl.ItemHiddenInput />
+    </SegmentedControl.Item>)}
+  </SegmentedControl.Root>
+}
+
+export default function FeedSortMenu({ value, onChange }: SortProps) {
   const { open, onOpenChange, triggerRef, contentRef } = useMenuFocus()
   const label = options.find(option => option.value === value)!.label
   return <Menu.Root size="responsive" placement="bottom-end" gutter={8} open={open} onOpenChange={onOpenChange}>

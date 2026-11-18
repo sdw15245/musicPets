@@ -18,3 +18,8 @@
   .app-header--intro .app-header-account { margin-left: auto; }
   .taste-nav { gap: var(--seed-dimension-x5); margin-block: var(--seed-dimension-x4); }
 }
+@media (max-width: 359px) {
+  .site-header.app-header:not(.app-header--intro) { gap: var(--seed-dimension-x1); }
+  .app-header:not(.app-header--intro) > .brand-logo { font-size: var(--seed-font-size-t5); }
+  .app-header:not(.app-header--intro) > nav { gap: var(--seed-dimension-x1); }
+}

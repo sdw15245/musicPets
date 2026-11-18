@@ -1065,6 +1065,12 @@
 }
 
 @media (max-width: 767px) {
+  .community-sort-segments { grid-area: sort; justify-self: start; }
+  .community-sort-segments label { min-height: 44px; }
+  .community-filterbar:has(.community-search-control.is-expanded) {
+    grid-template-areas: "filters filters" "sort sort" "search search";
+  }
+  .post-caption-link { display: block; color: inherit; min-height: 44px; }
   .community-layout {
     display: block;
     padding-top: var(--seed-dimension-x5);

@@ -71,7 +71,7 @@ test('sort menu requests separately paginated server order and preserves keyboar
   await expect(page.getByRole('menu')).toBeHidden()
   await expect(trigger).toBeFocused()
   await page.setViewportSize({ width: 390, height: 844 })
-  await expect(trigger).toBeVisible()
+  await expect(page.getByRole('radio', { name: '최신순', exact: true })).toBeChecked()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
 })
 

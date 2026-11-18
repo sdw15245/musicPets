@@ -146,7 +146,7 @@ test('search resets pagination and stays applied with pet filters and popularity
   expect(reads).toEqual([':all:latest:0', ':all:latest:1', '산책:all:latest:0', '산책:all:latest:1', '산책:all:popular:0', '산책:same:popular:0', '산책:other:popular:0'])
   await page.setViewportSize({ width: 360, height: 900 })
   await expect(input).toBeVisible()
-  await expect(page.getByRole('button', { name: '정렬: 인기순', exact: true })).toBeVisible()
+  await expect(page.getByRole('radio', { name: '인기순', exact: true })).toBeChecked()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   await page.screenshot({ path: info.outputPath('post-search-mobile.png') })
 })

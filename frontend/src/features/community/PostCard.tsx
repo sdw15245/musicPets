@@ -14,6 +14,7 @@ import { Link } from 'react-router-dom'
 
 interface PostCardProps {
   post: CommunityPost
+  linkCaption?: boolean
   liked: boolean
   onLike: () => Promise<boolean> | void
   onDelete: () => Promise<void>
@@ -25,7 +26,7 @@ interface PostCardProps {
   focusCommentId?: string
 }
 
-function PostCard({ post, liked, onLike, onDelete, onEdit, onRequireLogin, deleting, liking, initialCommentsOpen = false, focusCommentId }: PostCardProps) {
+function PostCard({ post, linkCaption, liked, onLike, onDelete, onEdit, onRequireLogin, deleting, liking, initialCommentsOpen = false, focusCommentId }: PostCardProps) {
   const commentsId = useId()
   const [commentsOpen, setCommentsOpen] = useState(initialCommentsOpen)
   const [commentsOpened, setCommentsOpened] = useState(initialCommentsOpen)
@@ -83,7 +84,7 @@ function PostCard({ post, liked, onLike, onDelete, onEdit, onRequireLogin, delet
         <span className="post-record" aria-hidden="true"><CommunityIcon name="music" /></span>
       </a>}
       <div className="post-story">
-        <p className="post-caption">{post.caption}</p>
+        <p className="post-caption">{linkCaption ? <Link to={postPath} className="post-caption-link">{post.caption}</Link> : post.caption}</p>
         <div className="post-tags">{post.tags.map(tag => <span className="post-tag" key={tag}>#{tag}</span>)}</div>
       </div>
       </div>

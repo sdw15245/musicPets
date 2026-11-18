@@ -5,10 +5,10 @@ import RequestErrorNotice from '../../shared/components/ui/RequestErrorNotice'
 import { useSuccessNotice } from '../../shared/components/ui/useSuccessNotice'
 import { RadioChipGroup, RadioChip, RadioChipLabel } from '../../shared/components/ui/RadioChip'
 import Button from '../../shared/components/ui/Button'
-import { AlertDialog, FloatingActionButton, Portal } from '@seed-design/react'
+import { AlertDialog, FloatingActionButton, Portal, useBreakpointValue } from '@seed-design/react'
 import { IconPlusLine } from '@karrotmarket/react-monochrome-icon'
 import { ResultSection } from 'seed-design/ui/result-section'
-import FeedSortMenu, { type FeedSort } from './FeedSortMenu'
+import FeedSortMenu, { FeedSortSegments, type FeedSort } from './FeedSortMenu'
 import { useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useCurrentAnalysis } from '../analysis/useCurrentAnalysis'
@@ -31,6 +31,7 @@ interface ContentProps {
 }
 
 function CommunityContent({ profile, initialTrack }: ContentProps) {
+  const mobileFeed = useBreakpointValue({ base: true, md: false })
   const { signedIn } = profile
   const pet = getPet(profile.petSlug)
   const canFilter = signedIn && !!pet
@@ -155,7 +156,7 @@ function CommunityContent({ profile, initialTrack }: ContentProps) {
             <RadioChip value="same" disabled={!canFilter}><RadioChipLabel>{requestedPet ? `${requestedPet.name}의 음악` : '나와 같은 펫'}</RadioChipLabel></RadioChip>
             <RadioChip value="other" disabled={!canFilter}><RadioChipLabel>다른 펫</RadioChipLabel></RadioChip>
           </RadioChipGroup>
-            <FeedSortMenu value={sort} onChange={setSort} />
+            {mobileFeed ? <FeedSortSegments value={sort} onChange={setSort} /> : <FeedSortMenu value={sort} onChange={setSort} />}
               <CommunitySearch owner={signedIn ? profile.owner : null} inputRef={searchInputRef} value={searchInput} onSearch={updateSearch} onValueChange={value => {
                   setSearchDraft(current => current.pending ? { ...current, value } : { query, value, pending: false })
                   if (!value.trim() && query) updateSearch('')
@@ -169,7 +170,7 @@ function CommunityContent({ profile, initialTrack }: ContentProps) {
           {feed.isError && <RequestErrorNotice error={feed.error} action={blocked => <Button loading={feed.isFetching} disabled={feed.isFetching || blocked} onClick={() => void feed.refetch()}>다시 불러오기</Button>}>글 목록을 불러오지 못했어요.</RequestErrorNotice>}
           {like.isError && <RequestErrorNotice error={like.error}>공감을 변경하지 못했어요. 잠시 후 공감 버튼을 다시 눌러주세요.</RequestErrorNotice>}
           <div className="community-posts">
-            {posts.map((post) => <PostCard key={post.id} post={post} liked={signedIn && post.liked}
+            {posts.map((post) => <PostCard key={post.id} post={post} linkCaption={mobileFeed} liked={signedIn && post.liked}
               onRequireLogin={() => setLoginOpen(true)}
               liking={pendingLikeIds.has(post.id)}
               onLike={() => { if (!signedIn) { setLoginOpen(true); return } return likePost({ id: post.id, liked: !post.liked }) }}

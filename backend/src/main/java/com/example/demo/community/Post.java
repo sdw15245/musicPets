@@ -4,12 +4,13 @@ import com.example.demo.spotify.SpotifyService.TrackHit;
 import com.example.demo.user.User;
 import jakarta.persistence.*;
 import org.hibernate.annotations.BatchSize;
-import org.hibernate.annotations.Formula;
+import org.hibernate.annotations.DynamicUpdate;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@DynamicUpdate
 @Table(name = "posts", indexes = @Index(name = "idx_posts_author_id", columnList = "author_id,id"))
 public class Post {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,8 +38,7 @@ public class Post {
     private Instant createdAt;
     @Column(nullable = false)
     private Instant updatedAt;
-    // Derived on read: no separate counter that can drift from the actual likes.
-    @Formula("(select count(*) from post_likes pl where pl.post_id = id)")
+    @Column(name = "like_count", nullable = false)
     private long likes;
 
     protected Post() {}
@@ -50,6 +50,8 @@ public class Post {
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
     public long getLikes() { return likes; }
+    void addLike() { likes++; }
+    void removeLike() { likes--; }
     public TrackHit getTrack() { return new TrackHit(trackUri, trackName, trackArtist, trackImageUrl); }
     public void edit(TrackHit track, String caption, List<String> tags) {
         this.trackUri = track.uri(); this.trackName = track.name();

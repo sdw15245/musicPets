@@ -19,6 +19,17 @@ PowerShell 스크립트는 현재 프로세스의 `DB_URL`, `DB_USERNAME`, `DB_P
 
 ## 다음 변경
 
+V2는 기존 `post_likes`를 집계해 `posts.like_count`를 채우고 인기순 인덱스를 생성합니다.
+전환 시 이전 버전의 공감 쓰기가 종료된 상태에서 마이그레이션을 실행합니다.
+V1 앱으로 롤백한 동안 공감이 바뀌었다면 V2 앱을 다시 열기 전에 쓰기를 멈추고 아래 SQL로 저장된 값을 복구합니다.
+
+```sql
+UPDATE posts p
+LEFT JOIN (SELECT post_id, COUNT(*) AS total FROM post_likes GROUP BY post_id) l ON l.post_id = p.id
+SET p.like_count = COALESCE(l.total, 0)
+WHERE p.like_count <> COALESCE(l.total, 0);
+```
+
 - V1 적용 후에는 해당 SQL을 수정하지 않고 `V2__설명.sql`, `V3__설명.sql`을 추가합니다. 이미 실행된 SQL 변경은 체크섬 검증으로 탐지합니다.
 - 엔티티 변경과 대응하는 SQL을 같이 작성하고 `migrationTest`로 검증합니다.
 - 초기 V1은 기존 MySQL 8.0의 데이터형·문자 정렬·인덱스·외래키 이름을 유지합니다. 이름 정리나 자료형 변경이 필요하면 별도 버전으로 처리합니다.

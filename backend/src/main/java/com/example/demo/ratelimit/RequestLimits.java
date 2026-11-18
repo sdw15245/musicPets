@@ -9,7 +9,7 @@ import java.util.Map;
 public class RequestLimits {
     public enum Operation {
         ANALYSIS(1, 10, true), PROFILE(2, 10, true), RECOMMENDATIONS(2, 10, true), PLAYLIST(2, 10, true),
-        SEARCH(30, 120, true), WRITE(30, 120, false), READ(120, 300, false);
+        SEARCH(30, 120, true), WRITE(30, 120, false), READ(120, 600, false);
         final int userDefault;
         final int ipDefault;
         final boolean external;

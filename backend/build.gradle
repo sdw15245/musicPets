@@ -115,3 +115,19 @@ tasks.named('processResources') {
 tasks.named('bootJar') {
 	archiveFileName = 'app.jar'
 }
+
+// Local-only load-test fixture server; excluded from the production bootJar.
+sourceSets {
+    loadtest {
+        compileClasspath += sourceSets.main.output + configurations.runtimeClasspath
+        runtimeClasspath += output + compileClasspath
+    }
+}
+tasks.register('loadTestJar', org.springframework.boot.gradle.tasks.bundling.BootJar) {
+    group = 'verification'
+    description = 'Builds the isolated local k6 fixture server, never the production image.'
+    mainClass = 'com.example.loadtest.LocalLoadTestApplication'
+    classpath = sourceSets.loadtest.runtimeClasspath
+    targetJavaVersion = JavaVersion.VERSION_21
+    archiveFileName = 'loadtest.jar'
+}

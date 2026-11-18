@@ -28,7 +28,7 @@ public final class ExistingDatabaseBaseline {
         if (!Files.isRegularFile(backup) || Files.size(backup) == 0)
             throw new IllegalArgumentException("A non-empty, verified backup file is required");
         var flyway = Flyway.configure().dataSource(url, user, password == null ? "" : password)
-                .baselineVersion("1").baselineDescription("Existing schema aligned with V1")
+                .target("1").baselineVersion("1").baselineDescription("Existing schema aligned with V1")
                 .baselineOnMigrate(false).cleanDisabled(true).load();
         flyway.baseline();
         flyway.validate();

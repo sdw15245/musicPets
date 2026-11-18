@@ -11,9 +11,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.support.TransactionTemplate;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -28,6 +33,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestPropertySource(properties = "spring.datasource.url=jdbc:h2:mem:musicpets-likes-test;MODE=MySQL;DB_CLOSE_DELAY=-1")
 class PostLikeIntegrationTest {
     @Autowired MockMvc mvc;
+    @Autowired JdbcTemplate db;
+    @Autowired TransactionTemplate transaction;
     @Autowired ObjectMapper mapper;
     @Autowired UserRepository users;
     @Autowired PostRepository posts;
@@ -72,11 +79,30 @@ class PostLikeIntegrationTest {
                 .andExpect(jsonPath("$.items[0].liked").value(true)).andExpect(jsonPath("$.items[0].likes").value(1));
     }
 
+    @Test void popularIncludesOnlyPostsWrittenInTheLastWeekWithAtLeastOneLike() throws Exception {
+        Long expired = newPost(owner, "지난주 글").getId();
+        Long recent = newPost(owner, "이번 주 글").getId();
+        newPost(owner, "아직 공감 없는 글");
+        Instant cutoff = Instant.now().minus(7, ChronoUnit.DAYS);
+        db.update("update posts set created_at = ? where id = ?", Timestamp.from(cutoff.minusSeconds(60)), expired);
+        db.update("update posts set created_at = ? where id = ?", Timestamp.from(cutoff.plusSeconds(60)), recent);
+        service.setLiked(owner.getId(), expired, true);
+        service.setLiked(other.getId(), expired, true);
+        service.setLiked(other.getId(), recent, true);
+        mvc.perform(get("/api/posts").param("sort", "popular"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].id").value(recent.toString()));
+        service.setLiked(other.getId(), recent, false);
+        mvc.perform(get("/api/posts").param("sort", "popular"))
+                .andExpect(jsonPath("$.items").isEmpty()).andExpect(jsonPath("$.hasMore").value(false));
+        mvc.perform(get("/api/posts").param("sort", "latest")).andExpect(jsonPath("$.items.length()").value(3));
+    }
+
     @Test void popularitySortsAllRowsBeforePaginationAndKeepsLatestFirstForTies() throws Exception {
         owner.recordAnalysis("mochi"); users.save(owner);
         other.recordAnalysis("pip"); users.save(other);
         Long oldest = newPost(owner, "가장 오래된 인기글").getId();
-        for (int i = 0; i < 22; i++) newPost(owner, "새 글 " + i);
+        for (int i = 0; i < 22; i++) service.setLiked(owner.getId(), newPost(owner, "새 글 " + i).getId(), true);
         Long newest = newPost(other, "다른 펫 인기글").getId();
         service.setLiked(owner.getId(), oldest, true);
         service.setLiked(other.getId(), oldest, true);
@@ -114,7 +140,21 @@ class PostLikeIntegrationTest {
             for (var future : futures) future.get(15, TimeUnit.SECONDS);
         }
         assertThat(likes.countByPostId(id)).isEqualTo(2);
+        assertThat(db.queryForObject("select like_count from posts where id = ?", Long.class, id)).isEqualTo(2L);
         assertThat(service.setLiked(owner.getId(), id, false).likes()).isEqualTo(1);
+        assertThat(service.setLiked(owner.getId(), id, false).likes()).isEqualTo(1);
+        assertThat(db.queryForObject("select like_count from posts where id = ?", Long.class, id)).isEqualTo(likes.countByPostId(id));
+    }
+
+    @Test void rollingBackALikeRestoresTheCountAndTheLikeRow() {
+        Long id = newPost(owner, "롤백").getId();
+        transaction.executeWithoutResult(status -> {
+            assertThat(service.setLiked(other.getId(), id, true).likes()).isEqualTo(1);
+            posts.flush();
+            status.setRollbackOnly();
+        });
+        assertThat(likes.countByPostId(id)).isZero();
+        assertThat(posts.findById(id).orElseThrow().getLikes()).isZero();
     }
 
     @Test void deletingPostRemovesLikesAndMissingPostsRejectLikeChanges() throws Exception {

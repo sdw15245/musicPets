@@ -6,7 +6,7 @@ test('sort menu keeps focus on its trigger when Escape precedes the opening anim
   await signedInPreview(page)
   await mockPlayers(page)
   await page.goto('/community')
-  const trigger = page.getByRole('button', { name: '정렬: 최신글', exact: true })
+  const trigger = page.getByRole('button', { name: '정렬: 최신순', exact: true })
   await trigger.focus()
   await expect(trigger).toBeFocused()
   const now = new Date()
@@ -33,8 +33,8 @@ test('sort menu requests separately paginated server order and preserves keyboar
     const pageNo = Number(params.get('page'))
     reads.push(`${sort}:${pageNo}`)
     const latest = [
-      { ...samplePosts[0], id: '3', author: '최신글작성자', likes: 0 },
-      { ...samplePosts[0], id: '2', author: '이전글작성자', likes: 0 },
+      { ...samplePosts[0], id: '3', author: '최신글작성자', likes: 1 },
+      { ...samplePosts[0], id: '2', author: '이전글작성자', likes: 1 },
       { ...samplePosts[0], id: '1', author: '오래된인기글', likes: 3 },
     ]
     const rows = sort === 'popular' ? [latest[2], latest[0], latest[1]] : latest
@@ -51,18 +51,18 @@ test('sort menu requests separately paginated server order and preserves keyboar
   await expect(authors).toHaveText(['최신글작성자', '이전글작성자'])
   await page.getByRole('button', { name: '음악 더 보기' }).click()
   await expect(authors).toHaveText(['최신글작성자', '이전글작성자', '오래된인기글'])
-  const trigger = page.getByRole('button', { name: '정렬: 최신글', exact: true })
+  const trigger = page.getByRole('button', { name: '정렬: 최신순', exact: true })
   await trigger.click()
   await expect(page.getByRole('menuitem')).toHaveCount(2)
-  await expect(page.getByRole('menuitem', { name: '최신글', exact: true })).toHaveAttribute('aria-current', 'true')
+  await expect(page.getByRole('menuitem', { name: '최신순', exact: true })).toHaveAttribute('aria-current', 'true')
   await page.screenshot({ path: info.outputPath('feed-sort-desktop.png') })
-  await page.getByRole('menuitem', { name: '인기글(공감순)', exact: true }).click()
+  await page.getByRole('menuitem', { name: '인기순', exact: true }).click()
   await expect(authors).toHaveText(['오래된인기글', '최신글작성자'])
   expect(reads).toEqual(['latest:0', 'latest:1', 'popular:0'])
   await page.getByRole('button', { name: '음악 더 보기' }).click()
   await expect(authors).toHaveText(['오래된인기글', '최신글작성자', '이전글작성자'])
-  await page.getByRole('button', { name: '정렬: 인기글(공감순)', exact: true }).click()
-  await page.getByRole('menuitem', { name: '최신글', exact: true }).click()
+  await page.getByRole('button', { name: '정렬: 인기순', exact: true }).click()
+  await page.getByRole('menuitem', { name: '최신순', exact: true }).click()
   await expect(authors).toHaveText(['최신글작성자', '이전글작성자', '오래된인기글'])
   await trigger.focus()
   await page.keyboard.press('Enter')
@@ -73,4 +73,18 @@ test('sort menu requests separately paginated server order and preserves keyboar
   await page.setViewportSize({ width: 390, height: 844 })
   await expect(trigger).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+})
+
+test('empty popular feed links back to the latest posts', async ({ page }) => {
+  await signedInPreview(page)
+  await mockPlayers(page)
+  await page.route(/\/api\/posts\?/, route => {
+    const popular = new URL(route.request().url()).searchParams.get('sort') === 'popular'
+    return route.fulfill({ json: { items: popular ? [] : [samplePosts[0]], page: 0, hasMore: false } })
+  })
+  await page.goto('/community?sort=popular')
+  await expect(page.getByRole('button', { name: '정렬: 인기순' })).toBeVisible()
+  await page.getByRole('button', { name: '최신 글 보기' }).click()
+  await expect(page.getByRole('button', { name: '정렬: 최신순' })).toBeVisible()
+  await expect(page.locator('.post-byline strong')).toHaveText('초록밤')
 })

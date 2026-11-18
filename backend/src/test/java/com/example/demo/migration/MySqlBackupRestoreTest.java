@@ -29,7 +29,7 @@ class MySqlBackupRestoreTest {
                 ExistingDatabaseBaseline.verifySchema(connection);
                 var flyway = Flyway.configure().dataSource(mysql.getJdbcUrl(), mysql.getUsername(), mysql.getPassword()).cleanDisabled(true).load();
                 flyway.baseline();
-                assertThat(flyway.migrate().migrationsExecuted).isZero();
+                assertThat(flyway.migrate().migrationsExecuted).isEqualTo(1);
                 assertThat(fingerprints(connection)).isEqualTo(before);
                 assertThat(before).hasSize(13);
             }
@@ -46,7 +46,12 @@ class MySqlBackupRestoreTest {
             if (!table.matches("[a-z_]+")) throw new IllegalStateException("Unexpected table identifier");
             List<String> columns = new ArrayList<>();
             try (var statement = connection.createStatement(); var rows = statement.executeQuery("SHOW COLUMNS FROM `" + table + "`")) {
-                while (rows.next()) if (!table.equals("users") || !rows.getString(1).equals("avatar")) columns.add("`" + rows.getString(1) + "`");
+                while (rows.next()) {
+                    String column = rows.getString(1);
+                    if (table.equals("users") && column.equals("avatar")) continue;
+                    if (table.equals("posts") && column.equals("like_count")) continue;
+                    columns.add("`" + column + "`");
+                }
             }
             List<String> hashes = new ArrayList<>();
             try (var statement = connection.createStatement(); var rows = statement.executeQuery("SELECT " + String.join(",", columns) + " FROM `" + table + "`")) {

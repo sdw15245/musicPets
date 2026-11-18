@@ -8,6 +8,7 @@ import com.example.demo.user.UserRepository;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.server.ResponseStatusException;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -66,9 +68,16 @@ public class PostService {
             if (Character.POOL.stream().noneMatch(c -> c.slug().equals(selected))) throw badRequest();
         }
         String selectedPet = filterPet;
-        Sort order = sort.equals("popular") ? Sort.by(Sort.Direction.DESC, "likes", "id") : Sort.by(Sort.Direction.DESC, "id");
-        var result = posts.findAll((root, query, cb) -> {
+        boolean popular = sort.equals("popular");
+        Sort order = popular ? Sort.by(Sort.Direction.DESC, "likes", "createdAt", "id") : Sort.by(Sort.Direction.DESC, "id");
+        Slice<Post> result = posts.findBy((root, query, cb) -> {
+            root.fetch("author");
             var conditions = new ArrayList<Predicate>();
+            if (popular) {
+                Instant now = Instant.now();
+                conditions.add(cb.between(root.get("createdAt"), now.minus(7, ChronoUnit.DAYS), now));
+                conditions.add(cb.gt(root.get("likes"), 0L));
+            }
             if (view.equals("mine")) conditions.add(cb.equal(root.get("author").get("id"), viewer));
             if (filter.equals("same")) conditions.add(cb.equal(root.get("author").get("analyzedPet"), selectedPet));
             if (filter.equals("other")) conditions.add(cb.notEqual(root.get("author").get("analyzedPet"), selectedPet));
@@ -79,7 +88,7 @@ public class PostService {
                 conditions.add(cb.or(cb.like(cb.lower(root.get("caption")), pattern, '!'), cb.exists(matchingTags)));
             }
             return cb.and(conditions.toArray(Predicate[]::new));
-        }, PageRequest.of(page, 20, order));
+        }, feed -> feed.slice(PageRequest.of(page, 20, order)));
         List<Long> postIds = result.stream().map(Post::getId).toList();
         Set<Long> likedIds = viewer == null || postIds.isEmpty() ? Set.of() : likes.findLikedPostIds(viewer, postIds);
         Map<Long, Long> commentCounts = postIds.isEmpty() ? Map.of() : comments.countForPosts(postIds).stream()

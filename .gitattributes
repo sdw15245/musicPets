@@ -15,3 +15,7 @@ backend/gradlew.bat linguist-detectable=false
 deploy/*.mjs linguist-detectable=false
 deploy/*.sh linguist-detectable=false
 deploy/*.py linguist-detectable=false
+
+# Local performance tooling should not change application language statistics.
+loadtest/** linguist-detectable=false
+backend/src/loadtest/** linguist-detectable=false

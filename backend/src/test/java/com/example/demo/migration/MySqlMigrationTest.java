@@ -28,7 +28,7 @@ class MySqlMigrationTest {
 
     @Test void emptyDatabaseGetsAllTablesAndRestartDoesNotRepeatMigration() throws Exception {
         var flyway = Flyway.configure().dataSource(MYSQL.getJdbcUrl(), MYSQL.getUsername(), MYSQL.getPassword()).load();
-        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(1);
+        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(2);
         try (var connection = DriverManager.getConnection(MYSQL.getJdbcUrl(), MYSQL.getUsername(), MYSQL.getPassword());
              var statement = connection.createStatement();
              var rows = statement.executeQuery("SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME <> 'flyway_schema_history'")) {
@@ -36,7 +36,6 @@ class MySqlMigrationTest {
         }
         assertThat(flyway.migrate().migrationsExecuted).isZero();
         assertThat(flyway.validateWithResult().validationSuccessful).isTrue();
-        try (var connection = connection()) { ExistingDatabaseBaseline.verifySchema(connection); }
     }
 
     @Test void legacySchemaMustBeAlignedBeforeBaselineAndExistingDataSurvivesUpgrade() throws Exception {
@@ -45,6 +44,8 @@ class MySqlMigrationTest {
         try (var connection = connection(); var statement = connection.createStatement()) {
             statement.executeUpdate("INSERT INTO users(id,created_at,spotify_id,nickname,avatar) VALUES(1,NOW(6),'test-spotify','음악 친구','legacy-avatar')");
             statement.executeUpdate("INSERT INTO posts(id,caption,created_at,track_artist,track_image_url,track_name,track_uri,updated_at,author_id) VALUES(1,'기록',NOW(6),'artist','','song','spotify:track:test',NOW(6),1)");
+            statement.executeUpdate("INSERT INTO posts(id,caption,created_at,track_artist,track_image_url,track_name,track_uri,updated_at,author_id) VALUES(2,'새 글',NOW(6),'artist','','song','spotify:track:other',NOW(6),1)");
+            statement.executeUpdate("INSERT INTO post_likes(post_id,user_id) VALUES(1,1)");
             statement.executeUpdate("INSERT INTO analysis_history(analysis_id,result_json,user_id) VALUES('existing','{\"saved\":true}',1)");
             assertThatThrownBy(() -> ExistingDatabaseBaseline.verifySchema(connection)).hasMessageContaining("users");
             assertThatThrownBy(() -> flyway().migrate()).isInstanceOf(org.flywaydb.core.api.FlywayException.class);
@@ -52,21 +53,22 @@ class MySqlMigrationTest {
             ExistingDatabaseBaseline.verifySchema(connection);
         }
         var flyway = flyway(); flyway.baseline();
-        assertThat(flyway.migrate().migrationsExecuted).isZero();
-        var upgrade = Flyway.configure().dataSource(MYSQL.getJdbcUrl(), MYSQL.getUsername(), MYSQL.getPassword())
-                .locations("classpath:db/migration", "classpath:db/test-upgrade").load();
-        assertThat(upgrade.migrate().migrationsExecuted).isEqualTo(1);
+        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(1);
         try (var connection = connection(); var statement = connection.createStatement()) {
             try (var rows = statement.executeQuery("SELECT nickname FROM users WHERE id=1")) { rows.next(); assertThat(rows.getString(1)).isEqualTo("음악 친구"); }
             try (var rows = statement.executeQuery("SELECT result_json FROM analysis_history WHERE analysis_id='existing'")) { rows.next(); assertThat(rows.getString(1)).isEqualTo("{\"saved\":true}"); }
-            try (var rows = statement.executeQuery("SELECT COUNT(*) FROM posts WHERE author_id=1")) { rows.next(); assertThat(rows.getInt(1)).isEqualTo(1); }
+            try (var rows = statement.executeQuery("SELECT like_count FROM posts WHERE author_id=1 ORDER BY id")) {
+                assertThat(rows.next()).isTrue(); assertThat(rows.getLong(1)).isEqualTo(1);
+                assertThat(rows.next()).isTrue(); assertThat(rows.getLong(1)).isZero();
+                assertThat(rows.next()).isFalse();
+            }
             assertThatThrownBy(() -> statement.executeUpdate("INSERT INTO users(created_at,spotify_id) VALUES(NOW(6),'test-spotify')")).isInstanceOf(SQLException.class);
         }
-        assertThat(upgrade.migrate().migrationsExecuted).isZero();
+        assertThat(flyway.migrate().migrationsExecuted).isZero();
     }
 
     @Test void schemaCheckRejectsMissingIndexesAndUnexpectedTables() throws Exception {
-        flyway().migrate();
+        Flyway.configure().dataSource(MYSQL.getJdbcUrl(), MYSQL.getUsername(), MYSQL.getPassword()).target("1").load().migrate();
         try (var connection = connection(); var statement = connection.createStatement()) {
             statement.executeUpdate("CREATE TABLE unexpected(id BIGINT)");
             assertThatThrownBy(() -> ExistingDatabaseBaseline.verifySchema(connection)).hasMessageContaining("Unexpected table");

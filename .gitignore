@@ -67,3 +67,6 @@ Thumbs.db
 /AGENTS.md
 /CLAUDE.md
 /GEMINI.md
+
+# Generated local load-test tokens, raw metrics and reports.
+/loadtest/results/

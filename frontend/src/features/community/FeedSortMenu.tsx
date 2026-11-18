@@ -4,8 +4,8 @@ import { IconCheckmarkLine, IconChevronDownLine } from '@karrotmarket/react-mono
 import Button from '../../shared/components/ui/Button'
 
 const options = [
-  { value: 'latest', label: '최신글' },
-  { value: 'popular', label: '인기글(공감순)' },
+  { value: 'latest', label: '최신순' },
+  { value: 'popular', label: '인기순' },
 ] as const
 
 export type FeedSort = typeof options[number]['value']

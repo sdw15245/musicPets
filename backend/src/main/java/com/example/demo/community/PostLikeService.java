@@ -29,12 +29,14 @@ public class PostLikeService {
         boolean exists = likes.existsByPostIdAndUserId(postId, userId);
         if (liked && !exists) {
             likes.save(new PostLike(post, user));
+            post.addLike();
             notifications.liked(post, user);
         }
         if (!liked && exists) {
             likes.deleteByPostIdAndUserId(postId, userId);
+            post.removeLike();
             notifications.unlike(postId, userId);
         }
-        return new LikeView(likes.countByPostId(postId), liked);
+        return new LikeView(post.getLikes(), liked);
     }
 }

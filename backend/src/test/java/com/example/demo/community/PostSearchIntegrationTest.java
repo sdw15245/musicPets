@@ -8,9 +8,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -23,7 +26,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest @ActiveProfiles("test") @AutoConfigureMockMvc @Transactional
-@TestPropertySource(properties = "spring.datasource.url=jdbc:h2:mem:musicpets-search-test;MODE=MySQL;DB_CLOSE_DELAY=-1")
+@TestPropertySource(properties = {
+        "spring.datasource.url=jdbc:h2:mem:musicpets-search-test;MODE=MySQL;DB_CLOSE_DELAY=-1",
+        "spring.jpa.show-sql=true"
+})
 class PostSearchIntegrationTest {
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper mapper;
@@ -70,6 +76,17 @@ class PostSearchIntegrationTest {
                 .andExpect(jsonPath("$.items[0].id").value(literal.toString()));
     }
 
+    @Test @ExtendWith(OutputCaptureExtension.class)
+    void exactPageOfMatchesHasNoMoreWithoutCountingPosts(CapturedOutput output) throws Exception {
+        for (int i = 0; i < 20; i++) newPost(owner, "검색 대상", "산책");
+        newPost(other, "다른 글");
+        mvc.perform(get("/api/posts").param("q", "산책"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.items.length()").value(20))
+                .andExpect(jsonPath("$.hasMore").value(false));
+        assertThat(output.getOut()).containsPattern("(?i)from\\s+posts\\s")
+                .doesNotContainPattern("(?i)select\\s+count\\([^)]*\\)\\s+from\\s+posts\\b");
+    }
+
     @Test void searchFiltersAllRowsBeforePagination() throws Exception {
         for (int i = 0; i < 21; i++) newPost(owner, "오래된 검색 대상 " + i, "밤산책", "산책음악");
         for (int i = 0; i < 21; i++) newPost(other, "새 글 " + i);
@@ -96,11 +113,11 @@ class PostSearchIntegrationTest {
         entityManager.flush();
         entityManager.clear();
         mvc.perform(get("/api/posts").param("q", "산책").param("sort", "popular"))
-                .andExpect(jsonPath("$.items.length()").value(3))
+                .andExpect(jsonPath("$.items.length()").value(2))
                 .andExpect(jsonPath("$.items[0].id").value(popular.toString()))
                 .andExpect(jsonPath("$.items[1].id").value(different.toString()));
         mvc.perform(get("/api/posts").param("q", "산책").param("sort", "popular").param("filter", "same").header("Authorization", auth(owner)))
-                .andExpect(jsonPath("$.items.length()").value(2)).andExpect(jsonPath("$.items[0].id").value(popular.toString()));
+                .andExpect(jsonPath("$.items.length()").value(1)).andExpect(jsonPath("$.items[0].id").value(popular.toString()));
         mvc.perform(get("/api/posts").param("q", "산책").param("filter", "other").header("Authorization", auth(owner)))
                 .andExpect(jsonPath("$.items.length()").value(1)).andExpect(jsonPath("$.items[0].id").value(different.toString()));
         mvc.perform(get("/api/posts").param("q", "산책").param("filter", "same").param("pet", "pip").header("Authorization", auth(owner)))

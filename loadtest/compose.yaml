@@ -1,0 +1,56 @@
+name: musicpets-loadtest
+services:
+  mysql:
+    image: mysql:8.0.43
+    command: ["--innodb-buffer-pool-size=128M", "--max-connections=30", "--performance-schema=OFF"]
+    environment:
+      MYSQL_DATABASE: musicpets_loadtest
+      MYSQL_USER: musicpets_loadtest
+      MYSQL_PASSWORD: local-loadtest-only
+      MYSQL_ROOT_PASSWORD: local-loadtest-root-only
+    volumes: ["loadtest-mysql-data:/var/lib/mysql"]
+    cpuset: "0,1"
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD-SHELL", "MYSQL_PWD=local-loadtest-only mysql -h 127.0.0.1 -u musicpets_loadtest musicpets_loadtest -e 'SELECT 1' >/dev/null 2>&1"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+    networks: [isolated]
+  redis:
+    image: redis:7.4-alpine
+    command: ["redis-server", "--maxmemory", "64mb", "--maxmemory-policy", "allkeys-lru", "--save", "", "--appendonly", "no"]
+    cpuset: "0,1"
+    mem_limit: 128m
+    networks: [isolated]
+  backend:
+    image: eclipse-temurin:21-jre-jammy
+    entrypoint: ["java", "-XX:MaxRAMPercentage=50", "-XX:+ExitOnOutOfMemoryError", "-jar", "/app/loadtest.jar"]
+    volumes: ["../backend/build/libs/loadtest.jar:/app/loadtest.jar:ro"]
+    ports: ["127.0.0.1:18080:8080"]
+    environment:
+      APP_RATE_LIMIT_ENABLED: ${LOADTEST_LIMITS_ENABLED:-false}
+    mem_limit: 768m
+    cpus: 2
+    cpuset: "0,1"
+    depends_on:
+      mysql: {condition: service_healthy}
+      redis: {condition: service_started}
+    networks: [isolated]
+  k6:
+    image: grafana/k6:1.6.1
+    profiles: [tools]
+    user: "0:0"
+    working_dir: /work
+    volumes: ["./:/work"]
+    mem_limit: 512m
+    cpuset: "2,3"
+    networks: [isolated]
+networks:
+  isolated:
+    # Dedicated bridge; only the backend publishes a loopback port.
+    # External HTTP is intercepted by the loadtest-only RestClient customizer.
+    driver: bridge
+
+volumes:
+  loadtest-mysql-data:

@@ -176,12 +176,16 @@ function CommunityContent({ profile, initialTrack }: ContentProps) {
               onEdit={() => { if (post.own) setComposer(current => ({ key: (current?.key ?? 0) + 1, open: true, post })) }}
               deleting={remove.isPending && remove.variables === post.id}
               onDelete={() => deletePost(post.id)} />)}
-            {!feed.isPending && !feed.isError && !posts.length && <ResultSection
+            {!feed.isPending && !feed.isError && !posts.length && (sort === 'popular' ? <ResultSection
+              size="medium" asset={<CommunityIcon name="music" />}
+              title="지금 보여줄 인기글이 없어요"
+              description="최근 7일 안에 올라와 공감을 받은 글이 여기에 표시돼요."
+              actions={<Button onClick={() => setSort('latest')}>최신 글 보기</Button>} /> : <ResultSection
               size="medium"
               asset={<CommunityIcon name={query ? 'search' : 'music'} />}
               title={query ? '검색 결과가 없어요' : filter !== 'all' ? '이 취향의 공유곡이 아직 없어요' : view === 'mine' ? '아직 공유한 음악이 없어요' : '첫 번째 음악을 들려주세요'}
               description={query ? '다른 단어로 검색하거나 검색어를 지워보세요.' : filter !== 'all' ? '다른 취향의 음악도 둘러보세요.' : '좋아하는 곡과 짧은 이야기를 남겨보세요.'}
-              actions={<Button onClick={query ? clearSearch : filter !== 'all' ? () => setFilter('all') : openComposer}>{query ? '검색어 지우기' : filter !== 'all' ? '전체 음악 둘러보기' : signedIn ? '한 곡 올리기' : '로그인하고 한 곡 올리기'}</Button>} />}
+              actions={<Button onClick={query ? clearSearch : filter !== 'all' ? () => setFilter('all') : openComposer}>{query ? '검색어 지우기' : filter !== 'all' ? '전체 음악 둘러보기' : signedIn ? '한 곡 올리기' : '로그인하고 한 곡 올리기'}</Button>} />)}
           </div>
           {feed.hasNextPage && <Button loading={feed.isFetchingNextPage} disabled={feed.isFetchingNextPage} onClick={() => void feed.fetchNextPage()}>음악 더 보기</Button>}
         </main>

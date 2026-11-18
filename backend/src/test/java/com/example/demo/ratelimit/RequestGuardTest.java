@@ -15,6 +15,21 @@ class RequestGuardTest {
     RequestGuard guard() { return new RequestGuard(limits, nanos::get, Clock.fixed(Instant.parse("2026-10-28T00:00:00Z"), ZoneOffset.UTC)); }
     void advance(long seconds) { nanos.addAndGet(TimeUnit.SECONDS.toNanos(seconds)); }
 
+    @Test void schoolReadBurstAllowsThirtyUsersWithoutRemovingIndividualProtection() {
+        RequestGuard guard = guard();
+        // Thirty students each make twelve reads while opening the site together.
+        for (long user = 1; user <= 30; user++) {
+            for (int read = 0; read < 12; read++) guard.acquire(READ, user, "school").close();
+        }
+        // The shared budget is still bounded, and one blocked IP does not spend a new user's budget.
+        for (int read = 360; read < 600; read++) guard.acquire(READ, 100L + read, "school").close();
+        assertThatThrownBy(() -> guard.acquire(READ, 999L, "school")).isInstanceOf(RequestLimitException.class);
+        guard.acquire(READ, 999L, "other").close();
+        // Changing IPs cannot bypass the account's existing 120-read budget.
+        for (int read = 0; read < 120; read++) guard.acquire(READ, 1000L, "ip-" + read).close();
+        assertThatThrownBy(() -> guard.acquire(READ, 1000L, "new-ip")).isInstanceOf(RequestLimitException.class);
+    }
+
     @Test void userBudgetSurvivesAddressChangesAndRecoversAtExactBoundary() {
         RequestGuard guard = guard();
         guard.acquire(ANALYSIS, 1L, "ip1").close();

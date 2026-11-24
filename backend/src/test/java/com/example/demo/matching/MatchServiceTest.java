@@ -7,7 +7,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class MatchServiceTest {
-    private final MatchService service = new MatchService(new CosineSimilarity());
+    private final MatchService service = new MatchService();
 
     @Test
     void differentTastesSelectDifferentCatalogCharacters() {

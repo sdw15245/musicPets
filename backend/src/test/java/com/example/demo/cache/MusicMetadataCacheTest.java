@@ -23,13 +23,13 @@ class MusicMetadataCacheTest {
 
     @Test void anotherServerReusesTypedDataAndRefreshesAfterTtl() {
         AtomicInteger calls = new AtomicInteger();
-        var first = cache.get("track-tags", track, TAGS, () -> {
+        var first = cache.get(CacheCategory.TRACK_TAGS, track, TAGS, () -> {
             calls.incrementAndGet(); return List.of(new LastfmTag("pop", 100));
         });
-        assertThat(store.cache().get("track-tags", List.of(" artist ", "SONG"), TAGS,
+        assertThat(store.cache().get(CacheCategory.TRACK_TAGS, List.of(" artist ", "SONG"), TAGS,
                 () -> { throw new AssertionError("must reuse shared data"); })).isEqualTo(first);
         store.now.updateAndGet(now -> now.plus(Duration.ofDays(7)));
-        var fresh = cache.get("track-tags", track, TAGS, () -> {
+        var fresh = cache.get(CacheCategory.TRACK_TAGS, track, TAGS, () -> {
             calls.incrementAndGet(); return List.of(new LastfmTag("rock", 80));
         });
         assertThat(fresh).containsExactly(new LastfmTag("rock", 80));
@@ -37,64 +37,64 @@ class MusicMetadataCacheTest {
     }
 
     @Test void metadataAndEmptyResponsesHaveDifferentExpiryAndFailuresAreNeverStored() {
-        cache.get("listeners", track, COUNT, () -> 123L);
-        String countKey = MusicMetadataCache.key("listeners", track);
+        cache.get(CacheCategory.LISTENERS, track, COUNT, () -> 123L);
+        String countKey = MusicMetadataCache.key(CacheCategory.LISTENERS, track);
         assertThat(store.expiry.get(countKey)).isEqualTo(store.now.get().plus(Duration.ofDays(1)));
-        cache.get("track-tags", track, TAGS, List::of);
-        String tagsKey = MusicMetadataCache.key("track-tags", track);
+        cache.get(CacheCategory.TRACK_TAGS, track, TAGS, List::of);
+        String tagsKey = MusicMetadataCache.key(CacheCategory.TRACK_TAGS, track);
         assertThat(store.expiry.get(tagsKey)).isEqualTo(store.now.get().plus(Duration.ofMinutes(10)));
         store.now.updateAndGet(now -> now.plus(Duration.ofMinutes(10)));
-        assertThatThrownBy(() -> cache.get("track-tags", track, TAGS, () -> { throw new IllegalStateException("provider unavailable"); }))
+        assertThatThrownBy(() -> cache.get(CacheCategory.TRACK_TAGS, track, TAGS, () -> { throw new IllegalStateException("provider unavailable"); }))
                 .isInstanceOf(IllegalStateException.class);
-        assertThat(cache.get("track-tags", track, TAGS, () -> List.of(new LastfmTag("indie", 90))))
+        assertThat(cache.get(CacheCategory.TRACK_TAGS, track, TAGS, () -> List.of(new LastfmTag("indie", 90))))
                 .containsExactly(new LastfmTag("indie", 90));
     }
 
     @Test void redisReadFailureBypassesRepeatedTimeoutsThenRecovers() {
-        String key = MusicMetadataCache.key("listeners", track);
+        String key = MusicMetadataCache.key(CacheCategory.LISTENERS, track);
         when(store.values.get(key)).thenThrow(new RedisConnectionFailureException("unavailable"));
-        assertThat(cache.get("listeners", track, COUNT, () -> 10L)).isEqualTo(10L);
-        assertThat(cache.get("listeners", track, COUNT, () -> 20L)).isEqualTo(20L);
+        assertThat(cache.get(CacheCategory.LISTENERS, track, COUNT, () -> 10L)).isEqualTo(10L);
+        assertThat(cache.get(CacheCategory.LISTENERS, track, COUNT, () -> 20L)).isEqualTo(20L);
         verify(store.values, times(1)).get(key);
         verify(store.values, never()).set(anyString(), anyString(), any(Duration.class));
         store.now.updateAndGet(now -> now.plusSeconds(30));
         doReturn("30").when(store.values).get(key);
-        assertThat(cache.get("listeners", track, COUNT, () -> { throw new AssertionError("cache recovered"); })).isEqualTo(30L);
+        assertThat(cache.get(CacheCategory.LISTENERS, track, COUNT, () -> { throw new AssertionError("cache recovered"); })).isEqualTo(30L);
     }
 
     @Test void failedRedisWriteDoesNotDiscardSuccessfulProviderData() {
         doThrow(new RedisConnectionFailureException("unavailable"))
                 .when(store.values).set(anyString(), anyString(), any(Duration.class));
-        assertThat(cache.get("listeners", track, COUNT, () -> 123L)).isEqualTo(123L);
+        assertThat(cache.get(CacheCategory.LISTENERS, track, COUNT, () -> 123L)).isEqualTo(123L);
     }
 
     @Test void corruptedJsonIsReplacedAndDisabledCacheDoesNoRedisIo() {
-        String key = MusicMetadataCache.key("track-tags", track);
+        String key = MusicMetadataCache.key(CacheCategory.TRACK_TAGS, track);
         store.data.put(key, "not-json");
-        assertThat(cache.get("track-tags", track, TAGS, () -> List.of(new LastfmTag("pop", 80))))
+        assertThat(cache.get(CacheCategory.TRACK_TAGS, track, TAGS, () -> List.of(new LastfmTag("pop", 80))))
                 .containsExactly(new LastfmTag("pop", 80));
         assertThat(store.data.get(key)).contains("pop");
         clearInvocations(store.redis, store.values);
         store.props.setEnabled(false);
-        assertThat(cache.get("track-tags", track, TAGS, List::of)).isEmpty();
+        assertThat(cache.get(CacheCategory.TRACK_TAGS, track, TAGS, List::of)).isEmpty();
         verifyNoInteractions(store.redis, store.values);
     }
 
     @Test void keysSeparateArtistsMethodsAndLimitsWithoutKeepingRawNames() {
-        String first = MusicMetadataCache.key("similar", List.of("Artist", "Song", "5"));
+        String first = MusicMetadataCache.key(CacheCategory.SIMILAR_ARTISTS, List.of("Artist", "Song", "5"));
         assertThat(first).doesNotContain("Artist", "Song");
-        assertThat(first).isNotEqualTo(MusicMetadataCache.key("similar", List.of("Other", "Song", "5")))
-                .isNotEqualTo(MusicMetadataCache.key("similar", List.of("Artist", "Song", "1")))
-                .isNotEqualTo(MusicMetadataCache.key("track-tags", List.of("Artist", "Song", "5")));
-        assertThat(MusicMetadataCache.key("track-tags", List.of("a:b", "c")))
-                .isNotEqualTo(MusicMetadataCache.key("track-tags", List.of("a", "b:c")));
+        assertThat(first).isNotEqualTo(MusicMetadataCache.key(CacheCategory.SIMILAR_ARTISTS, List.of("Other", "Song", "5")))
+                .isNotEqualTo(MusicMetadataCache.key(CacheCategory.SIMILAR_ARTISTS, List.of("Artist", "Song", "1")))
+                .isNotEqualTo(MusicMetadataCache.key(CacheCategory.TRACK_TAGS, List.of("Artist", "Song", "5")));
+        assertThat(MusicMetadataCache.key(CacheCategory.TRACK_TAGS, List.of("a:b", "c")))
+                .isNotEqualTo(MusicMetadataCache.key(CacheCategory.TRACK_TAGS, List.of("a", "b:c")));
     }
 
     @Test void overlappingRequestsShareOneProviderCall() throws Exception {
         CountDownLatch started = new CountDownLatch(1), release = new CountDownLatch(1);
         AtomicInteger calls = new AtomicInteger();
         try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
-            var first = executor.submit(() -> cache.get("listeners", track, COUNT, () -> {
+            var first = executor.submit(() -> cache.get(CacheCategory.LISTENERS, track, COUNT, () -> {
                 calls.incrementAndGet(); started.countDown();
                 try { if (!release.await(5, TimeUnit.SECONDS)) throw new AssertionError("timed out"); }
                 catch (InterruptedException error) { throw new RuntimeException(error); }
@@ -102,7 +102,7 @@ class MusicMetadataCacheTest {
             }));
             try {
                 assertThat(started.await(5, TimeUnit.SECONDS)).isTrue();
-                var second = executor.submit(() -> cache.get("listeners", track, COUNT, () -> { calls.incrementAndGet(); return 456L; }));
+                var second = executor.submit(() -> cache.get(CacheCategory.LISTENERS, track, COUNT, () -> { calls.incrementAndGet(); return 456L; }));
                 release.countDown();
                 assertThat(first.get(5, TimeUnit.SECONDS)).isEqualTo(123L);
                 assertThat(second.get(5, TimeUnit.SECONDS)).isEqualTo(123L);

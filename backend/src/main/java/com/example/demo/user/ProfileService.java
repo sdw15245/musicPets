@@ -31,7 +31,7 @@ public class ProfileService {
     @Transactional
     public Profile edit(Long userId, EditProfile request) {
         String name = request.name() == null ? "" : request.name().strip();
-        if (name.isBlank() || name.length() > 30 || name.codePoints().anyMatch(java.lang.Character::isISOControl)) {
+        if (name.isBlank() || name.length() > 30 || name.codePoints().anyMatch(Character::isISOControl)) {
             throw new ApiException(ErrorCode.INVALID_REQUEST, "이름은 1~30자로 입력해주세요.");
         }
         User user = users.findForUpdate(userId).orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND));

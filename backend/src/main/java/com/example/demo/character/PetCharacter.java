@@ -7,25 +7,32 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
- * shared/characters.json을 도감과 매칭의 단일 정의로 사용한다.
- * Gradle이 JSON을 classpath에 포함하며, 13개 장르와 비율 합을 검증한다.
+ * 음악 펫 캐릭터. shared/characters.json을 도감과 매칭의 단일 정의로 사용한다.
+ * Gradle이 JSON을 classpath에 포함하며, 시작할 때 13개 장르와 비율 합을 검증한다.
+ * (java.lang.Character와 이름이 겹치지 않도록 PetCharacter로 부른다.)
  */
-public record Character(String slug, String name, String description, String imageUrl,
-                        String color, String tag, Map<String, Double> vector, String story) {
-    public Character {
+public record PetCharacter(String slug, String name, String description, String imageUrl,
+                           String color, String tag, Map<String, Double> vector, String story) {
+    public PetCharacter {
         vector = Map.copyOf(vector);
     }
 
-    public static final List<Character> POOL = load();
+    /** 바뀌지 않는 묶음 데이터라 enum처럼 정적으로 한 번만 읽는다. */
+    public static final List<PetCharacter> POOL = load();
 
-    private static List<Character> load() {
-        try (var input = Character.class.getResourceAsStream("/characters.json")) {
+    public static Optional<PetCharacter> find(String slug) {
+        return POOL.stream().filter(character -> character.slug().equals(slug)).findFirst();
+    }
+
+    private static List<PetCharacter> load() {
+        try (var input = PetCharacter.class.getResourceAsStream("/characters.json")) {
             if (input == null) throw new IllegalStateException("Missing character catalog");
-            List<Character> characters = new ObjectMapper().readValue(input, new TypeReference<>() {});
+            List<PetCharacter> characters = new ObjectMapper().readValue(input, new TypeReference<>() {});
             var slugs = new HashSet<String>();
-            for (Character character : characters) {
+            for (PetCharacter character : characters) {
                 if (!slugs.add(character.slug())
                         || character.story() == null || character.story().isBlank()
                         || !character.vector().keySet().equals(new HashSet<>(GenreDictionary.MAIN_GENRES))

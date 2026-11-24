@@ -48,7 +48,7 @@ public class MusicMetadataCache {
     }
 
     @SuppressWarnings("unchecked") // 같은 키는 같은 category라 항상 같은 타입이다.
-    public <T> T get(String category, List<String> parts, TypeReference<T> type, Supplier<T> loader) {
+    public <T> T get(CacheCategory category, List<String> parts, TypeReference<T> type, Supplier<T> loader) {
         if (!props.isEnabled()) return loader.get();
         String key = key(category, parts);
         return (T) loads.run(key, () -> {
@@ -93,13 +93,13 @@ public class MusicMetadataCache {
         if (!previous.isAfter(now)) log.warn("music_cache redis_unavailable bypass_seconds={}", props.getRetryDelay().toSeconds());
     }
 
-    private Duration ttl(String category, Object value) {
+    private Duration ttl(CacheCategory category, Object value) {
         if (value instanceof Collection<?> items && items.isEmpty()
                 || value instanceof Number number && number.longValue() <= 0) return props.getEmptyTtl();
-        return category.endsWith("tags") ? props.getTagsTtl() : props.getMetadataTtl();
+        return category.tags() ? props.getTagsTtl() : props.getMetadataTtl();
     }
 
-    static String key(String category, List<String> parts) {
+    static String key(CacheCategory category, List<String> parts) {
         StringBuilder identity = new StringBuilder();
         for (String part : parts) {
             String normalized = part.trim().toLowerCase(Locale.ROOT);
@@ -107,7 +107,7 @@ public class MusicMetadataCache {
         }
         try {
             byte[] digest = MessageDigest.getInstance("SHA-256").digest(identity.toString().getBytes(StandardCharsets.UTF_8));
-            return "musicpets:lastfm:v1:" + category + ":" + HexFormat.of().formatHex(digest);
+            return "musicpets:lastfm:v1:" + category.key() + ":" + HexFormat.of().formatHex(digest);
         } catch (NoSuchAlgorithmException impossible) {
             throw new IllegalStateException("SHA-256 is unavailable", impossible);
         }

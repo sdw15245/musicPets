@@ -1,7 +1,7 @@
 package com.example.demo.taste;
 
 import com.example.demo.llm.GeminiClient;
-import com.example.demo.character.Character;
+import com.example.demo.character.PetCharacter;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientResponseException;
 import org.slf4j.Logger;
@@ -84,8 +84,7 @@ public class TasteCommentService {
             String distribution = ranked.stream()
                     .map(genre -> String.format(Locale.ROOT, "%s %.1f%%", genre, genreVector.get(genre) * 100))
                     .collect(Collectors.joining(", "));
-            String context = Character.POOL.stream().filter(pet -> pet.slug().equals(matchedSlug))
-                    .findFirst().map(pet -> pet.name() + " — " + pet.story())
+            String context = PetCharacter.find(matchedSlug).map(pet -> pet.name() + " — " + pet.story())
                     .orElse("펫 연결 없이 장르만 설명하세요. 매칭된 펫 설정을 확인할 수 없어요.");
             String out = gemini.generateWithoutThinking(PROMPT.formatted(distribution, mainstreamLabel(mainstream), context));
             if (out == null || out.isBlank()) {

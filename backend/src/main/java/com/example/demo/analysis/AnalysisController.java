@@ -8,6 +8,7 @@ import com.example.demo.recommendation.RecommendationService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -43,7 +44,7 @@ public class AnalysisController {
         return storage.historical(userId, id);
     }
 
-    @org.springframework.web.bind.annotation.DeleteMapping("/history/{id}")
+    @DeleteMapping("/history/{id}")
     public ResponseEntity<Void> deleteHistory(@AuthenticationPrincipal Long userId, @PathVariable String id) {
         storage.deleteHistory(userId, id);
         return ResponseEntity.noContent().build();

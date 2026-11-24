@@ -39,11 +39,11 @@ class MusicRedisIntegrationTest {
         if (connection == null) return;
         try {
             if (redis != null) redis.delete(List.of(
-                    MusicMetadataCache.key("track-tags", List.of(artist, "Song")),
-                    MusicMetadataCache.key("artist-tags", List.of(artist)),
-                    MusicMetadataCache.key("listeners", List.of(artist, "Song")),
-                    MusicMetadataCache.key("similar-artists", List.of(artist, "10")),
-                    MusicMetadataCache.key("similar-artists", List.of(artist, "1"))));
+                    MusicMetadataCache.key(CacheCategory.TRACK_TAGS, List.of(artist, "Song")),
+                    MusicMetadataCache.key(CacheCategory.ARTIST_TAGS, List.of(artist)),
+                    MusicMetadataCache.key(CacheCategory.LISTENERS, List.of(artist, "Song")),
+                    MusicMetadataCache.key(CacheCategory.SIMILAR_ARTISTS, List.of(artist, "10")),
+                    MusicMetadataCache.key(CacheCategory.SIMILAR_ARTISTS, List.of(artist, "1"))));
         } finally { connection.destroy(); }
     }
 
@@ -72,9 +72,9 @@ class MusicRedisIntegrationTest {
             assertThat(second.getSimilarArtists(artist, 10)).isEqualTo(similar);
         }
         assertThat(second.getSimilarArtists(artist, 1)).isEmpty();
-        assertThat(redis.getExpire(MusicMetadataCache.key("track-tags", List.of(artist, "Song"))))
+        assertThat(redis.getExpire(MusicMetadataCache.key(CacheCategory.TRACK_TAGS, List.of(artist, "Song"))))
                 .isBetween(Duration.ofDays(7).toSeconds() - 60, Duration.ofDays(7).toSeconds());
-        assertThat(redis.getExpire(MusicMetadataCache.key("similar-artists", List.of(artist, "1"))))
+        assertThat(redis.getExpire(MusicMetadataCache.key(CacheCategory.SIMILAR_ARTISTS, List.of(artist, "1"))))
                 .isBetween(540L, 600L);
         server.verify();
     }
@@ -85,11 +85,11 @@ class MusicRedisIntegrationTest {
         var type = new TypeReference<Long>() {};
         var parts = List.of(artist, "Song");
         AtomicInteger loads = new AtomicInteger();
-        assertThat(cache.get("listeners", parts, type, () -> (long) loads.incrementAndGet())).isEqualTo(1);
-        String key = MusicMetadataCache.key("listeners", parts);
+        assertThat(cache.get(CacheCategory.LISTENERS, parts, type, () -> (long) loads.incrementAndGet())).isEqualTo(1);
+        String key = MusicMetadataCache.key(CacheCategory.LISTENERS, parts);
         long deadline = System.nanoTime() + Duration.ofSeconds(3).toNanos();
         while (Boolean.TRUE.equals(redis.hasKey(key)) && System.nanoTime() < deadline) Thread.sleep(20);
         assertThat(redis.hasKey(key)).isFalse();
-        assertThat(cache.get("listeners", parts, type, () -> (long) loads.incrementAndGet())).isEqualTo(2);
+        assertThat(cache.get(CacheCategory.LISTENERS, parts, type, () -> (long) loads.incrementAndGet())).isEqualTo(2);
     }
 }

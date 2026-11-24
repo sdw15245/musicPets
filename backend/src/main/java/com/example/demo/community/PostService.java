@@ -1,6 +1,6 @@
 package com.example.demo.community;
 
-import com.example.demo.character.Character;
+import com.example.demo.character.PetCharacter;
 import com.example.demo.error.ApiException;
 import com.example.demo.error.ErrorCode;
 import com.example.demo.spotify.SpotifyService;
@@ -68,7 +68,7 @@ public class PostService {
         User user = users.findById(viewer).orElseThrow(() -> new ApiException(ErrorCode.UNAUTHORIZED));
         if (user.getAnalyzedPet() == null) throw new ApiException(ErrorCode.FORBIDDEN, "음악 취향 분석이 필요해요.");
         String pet = requested == null ? user.getAnalyzedPet() : requested;
-        if (Character.POOL.stream().noneMatch(c -> c.slug().equals(pet))) {
+        if (PetCharacter.find(pet).isEmpty()) {
             throw new ApiException(ErrorCode.INVALID_REQUEST, "펫을 확인해주세요.");
         }
         return pet;
@@ -139,7 +139,7 @@ public class PostService {
         for (String input : request.tags()) {
             if (input == null) throw badRequest();
             String tag = input.strip();
-            if (tag.isBlank() || tag.length() > 30 || tag.codePoints().anyMatch(c -> c == '#' || java.lang.Character.isWhitespace(c) || java.lang.Character.isISOControl(c))) throw badRequest();
+            if (tag.isBlank() || tag.length() > 30 || tag.codePoints().anyMatch(c -> c == '#' || Character.isWhitespace(c) || Character.isISOControl(c))) throw badRequest();
             if (!tags.contains(tag)) tags.add(tag);
         }
         return new Draft(track, caption, tags);

@@ -31,7 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Tag("live-cache")
 class LastfmCacheBenchmarkTest {
     record Track(String artist, String title) {}
-    record Lookup(String category, Function<LastfmService, Object> call) {}
+    record Lookup(CacheCategory category, Function<LastfmService, Object> call) {}
     record Sample(String artist, String title, String category, int round, String phase,
                   double elapsedMs, int providerCalls, int resultSize, long ttlSeconds) {}
 
@@ -73,9 +73,9 @@ class LastfmCacheBenchmarkTest {
                 for (Track track : tracks) {
                     redis.delete(keys(track));
                     var lookups = List.of(
-                            new Lookup("track-tags", service -> service.getTrackTags(track.artist(), track.title())),
-                            new Lookup("listeners", service -> service.getTrackListeners(track.artist(), track.title())),
-                            new Lookup("similar-artists", service -> service.getSimilarArtists(track.artist(), 10)));
+                            new Lookup(CacheCategory.TRACK_TAGS, service -> service.getTrackTags(track.artist(), track.title())),
+                            new Lookup(CacheCategory.LISTENERS, service -> service.getTrackListeners(track.artist(), track.title())),
+                            new Lookup(CacheCategory.SIMILAR_ARTISTS, service -> service.getSimilarArtists(track.artist(), 10)));
                     for (Lookup lookup : lookups) {
                         Thread.sleep(350); // Pace real provider traffic; excluded from measurement.
                         String cacheKey = cacheKey(track, lookup.category());
@@ -87,7 +87,7 @@ class LastfmCacheBenchmarkTest {
                         int calls = requests.get() - before;
                         assertThat(calls).isPositive();
                         assertThat(redis.hasKey(cacheKey)).isTrue();
-                        samples.add(new Sample(track.artist(), track.title(), lookup.category(), round, "miss", duration,
+                        samples.add(new Sample(track.artist(), track.title(), lookup.category().key(), round, "miss", duration,
                                 calls, size(cold), redis.getExpire(cacheKey)));
                         for (int repeat = 0; repeat < 10; repeat++) {
                             before = requests.get();
@@ -97,7 +97,7 @@ class LastfmCacheBenchmarkTest {
                             calls = requests.get() - before;
                             assertThat(warm).isEqualTo(cold);
                             assertThat(calls).as("cache hit must not call Last.fm").isZero();
-                            samples.add(new Sample(track.artist(), track.title(), lookup.category(), round, "hit", duration,
+                            samples.add(new Sample(track.artist(), track.title(), lookup.category().key(), round, "hit", duration,
                                     calls, size(warm), redis.getExpire(cacheKey)));
                         }
                     }
@@ -123,13 +123,13 @@ class LastfmCacheBenchmarkTest {
         return value instanceof Collection<?> collection ? collection.size() : ((Number) value).longValue() > 0 ? 1 : 0;
     }
 
-    private static String cacheKey(Track track, String category) {
-        return MusicMetadataCache.key(category, category.equals("artist-tags") ? List.of(track.artist())
-                : category.equals("similar-artists") ? List.of(track.artist(), "10") : List.of(track.artist(), track.title()));
+    private static String cacheKey(Track track, CacheCategory category) {
+        return MusicMetadataCache.key(category, category == CacheCategory.ARTIST_TAGS ? List.of(track.artist())
+                : category == CacheCategory.SIMILAR_ARTISTS ? List.of(track.artist(), "10") : List.of(track.artist(), track.title()));
     }
 
     private static List<String> keys(Track track) {
-        return List.of("track-tags", "artist-tags", "listeners", "similar-artists").stream().map(category -> cacheKey(track, category)).toList();
+        return java.util.Arrays.stream(CacheCategory.values()).map(category -> cacheKey(track, category)).toList();
     }
 
     private static String apiKey() throws Exception {

@@ -1,10 +1,8 @@
 package com.example.demo.cache;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 import java.time.Duration;
 
-@Component
 @ConfigurationProperties(prefix = "app.music-cache")
 public class MusicCacheProperties {
     private boolean enabled = true;

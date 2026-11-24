@@ -5,7 +5,6 @@ import com.example.demo.genre.NormalizationService;
 import com.example.demo.genre.UserVectorService;
 import com.example.demo.lastfm.LastfmService;
 import com.example.demo.lastfm.LastfmTag;
-import com.example.demo.matching.CosineSimilarity;
 import com.example.demo.matching.MatchService;
 import com.example.demo.recommendation.RecommendationService;
 import com.example.demo.spotify.SpotifyService;
@@ -40,7 +39,7 @@ class AnalysisServiceTest {
     private final AnalysisStorage storage = mock(AnalysisStorage.class);
     private final RecommendationService recommendations = new RecommendationService(spotify, lastfm);
     private final AnalysisService service = new AnalysisService(spotify, lastfm,
-            new UserVectorService(normalization), new MatchService(new CosineSimilarity()), taste, recommendations, storage);
+            new UserVectorService(normalization), new MatchService(), taste, recommendations, storage);
 
     @BeforeEach
     void setup() {

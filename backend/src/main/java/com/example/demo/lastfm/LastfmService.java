@@ -1,5 +1,6 @@
 package com.example.demo.lastfm;
 
+import com.example.demo.cache.CacheCategory;
 import com.example.demo.cache.MusicMetadataCache;
 import com.fasterxml.jackson.core.type.TypeReference;
 
@@ -41,7 +42,7 @@ public class LastfmService {
      * 곡의 태그 (이름 + count). 3개 미만이면 아티스트 태그로 fallback.
      */
     public List<LastfmTag> getTrackTags(String artist, String track) {
-        List<LastfmTag> trackTags = cache.get("track-tags", List.of(artist, track), TAGS, () -> fetchTags(q -> q
+        List<LastfmTag> trackTags = cache.get(CacheCategory.TRACK_TAGS, List.of(artist, track), TAGS, () -> fetchTags(q -> q
                 .queryParam("method", "track.gettoptags")
                 .queryParam("artist", artist)
                 .queryParam("track", track)));
@@ -50,7 +51,7 @@ public class LastfmService {
             return trackTags;
         }
 
-        List<LastfmTag> artistTags = cache.get("artist-tags", List.of(artist), TAGS, () -> fetchTags(q -> q
+        List<LastfmTag> artistTags = cache.get(CacheCategory.ARTIST_TAGS, List.of(artist), TAGS, () -> fetchTags(q -> q
                 .queryParam("method", "artist.gettoptags")
                 .queryParam("artist", artist)));
         // 보충할 아티스트 정보가 없더라도 이미 확인한 곡 태그는 보존한다.
@@ -62,7 +63,7 @@ public class LastfmService {
      * 곡을 못 찾으면 0. (Spotify popularity 제거 대체 신호)
      */
     public long getTrackListeners(String artist, String track) {
-        return cache.get("listeners", List.of(artist, track), LISTENERS, () -> fetchTrackListeners(artist, track));
+        return cache.get(CacheCategory.LISTENERS, List.of(artist, track), LISTENERS, () -> fetchTrackListeners(artist, track));
     }
 
     private long fetchTrackListeners(String artist, String track) {
@@ -85,7 +86,7 @@ public class LastfmService {
     public record SimilarArtist(String name, double match) {}
 
     public List<SimilarArtist> getSimilarArtists(String artist, int limit) {
-        return cache.get("similar-artists", List.of(artist, Integer.toString(limit)), SIMILAR_ARTISTS, () -> {
+        return cache.get(CacheCategory.SIMILAR_ARTISTS, List.of(artist, Integer.toString(limit)), SIMILAR_ARTISTS, () -> {
             Map<?, ?> response = request(q -> q.queryParam("method", "artist.getsimilar")
                     .queryParam("artist", artist).queryParam("autocorrect", 1).queryParam("limit", limit));
             if ("6".equals(String.valueOf(response.get("error")))) return List.of();

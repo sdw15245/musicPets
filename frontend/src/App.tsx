@@ -9,6 +9,7 @@ import RequireAuth from './shared/components/RequireAuth'
 import NotFoundPage from './shared/components/NotFoundPage'
 import RouteBoundary from './shared/components/RouteBoundary'
 import RouteScrollRestoration from './shared/components/RouteScrollRestoration'
+import RouteTitle from './shared/components/RouteTitle'
 
 const LoginPage = lazy(() => import('./features/auth/LoginPage'))
 const OAuthCallback = lazy(() => import('./features/auth/OAuthCallback'))
@@ -27,6 +28,7 @@ function App() {
     <BrowserRouter>
       <RouteBoundary>
         <RouteScrollRestoration />
+        <RouteTitle />
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />

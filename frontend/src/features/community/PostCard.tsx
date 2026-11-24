@@ -9,8 +9,10 @@ import TrackArtwork from './TrackArtwork'
 import { getPet, type CommunityPost } from './model'
 import { useId, useState } from 'react'
 import PostComments from './PostComments'
+import CopyPostLink from './CopyPostLink'
 import DeleteConfirmDialog from '../../shared/components/ui/DeleteConfirmDialog'
 import { Link } from 'react-router-dom'
+import { activityTime, exactTime } from '../../shared/dates'
 
 interface PostCardProps {
   post: CommunityPost
@@ -24,9 +26,11 @@ interface PostCardProps {
   liking?: boolean
   initialCommentsOpen?: boolean
   focusCommentId?: string
+  /** Detail page only: the feed already links each post, so it stays without a copy action. */
+  copyLink?: boolean
 }
 
-function PostCard({ post, linkCaption, liked, onLike, onDelete, onEdit, onRequireLogin, deleting, liking, initialCommentsOpen = false, focusCommentId }: PostCardProps) {
+function PostCard({ post, linkCaption, liked, onLike, onDelete, onEdit, onRequireLogin, deleting, liking, initialCommentsOpen = false, focusCommentId, copyLink = false }: PostCardProps) {
   const commentsId = useId()
   const [commentsOpen, setCommentsOpen] = useState(initialCommentsOpen)
   const [commentsOpened, setCommentsOpened] = useState(initialCommentsOpen)
@@ -37,12 +41,10 @@ function PostCard({ post, linkCaption, liked, onLike, onDelete, onEdit, onRequir
   const postPath = `/community/posts/${encodeURIComponent(post.id)}`
   const avatar = getPet(post.avatarSlug === undefined ? post.petSlug : post.avatarSlug)
   const likeCount = post.likes
-  const dateLabel = post.createdAt
-    ? new Date(post.createdAt).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })
-    : '오늘의 추천 · 샘플'
+  const dateLabel = post.createdAt ? activityTime(post.createdAt) : '오늘의 추천 · 샘플'
   const authorAvatar = <Avatar.Root size="48" style={{ backgroundColor: avatar?.color }} aria-hidden="true">
     {avatar && <Avatar.Image src={avatar.imageUrl} alt="" />}
-    <Avatar.Fallback>{post.author === 'GUEST' ? 'GUEST' : post.author.slice(0, 1)}</Avatar.Fallback>
+    <Avatar.Fallback>{post.author.slice(0, 1)}</Avatar.Fallback>
   </Avatar.Root>
 
   return (
@@ -54,7 +56,7 @@ function PostCard({ post, linkCaption, liked, onLike, onDelete, onEdit, onRequir
             {post.own ? <Link to="/mypage" className="community-author-link" aria-label={`${post.author} — 내 프로필`}><strong>{post.author}</strong></Link> : <strong>{post.author}</strong>}
             {post.own && <Badge size="medium" tone="neutral" variant="weak">나</Badge>}
           </div>
-          <Link to={postPath} className="post-time" aria-label="글 보기" title={`${dateLabel} · 글 보기`}>{dateLabel}</Link>
+          <Link to={postPath} className="post-time" aria-label="글 보기" title={`${post.createdAt ? exactTime(post.createdAt) : dateLabel} · 글 보기`}>{dateLabel}</Link>
         </div>
         {post.own && (
           <div className="post-owner-actions"><Button variant="ghost" size="small" onClick={onEdit}>수정</Button>
@@ -96,6 +98,7 @@ function PostCard({ post, linkCaption, liked, onLike, onDelete, onEdit, onRequir
           <span>공감 <span key={`count-${likeFeedback}`} className={likeFeedback ? 'post-count-confirmed' : undefined}>{likeCount}</span></span>
         </ReactionButton>
         <Button variant="ghost" size="small" aria-expanded={commentsOpen} aria-controls={commentsOpened ? commentsId : undefined} onClick={() => { setCommentsOpened(true); setCommentsOpen(!commentsOpen) }}>댓글 {post.commentCount}개</Button>
+        {copyLink && <CopyPostLink path={postPath} trackName={post.track.name} />}
       </footer>
       {commentsOpened && <div hidden={!commentsOpen}><PostComments id={commentsId} postId={post.id} focusCommentId={focusCommentId} onRequireLogin={onRequireLogin} /></div>}
     </article>

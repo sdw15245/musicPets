@@ -29,6 +29,11 @@ export default function LoginPage() {
           sessionStorage.setItem('login-destination', loginDestination(destination))
           window.location.href = SPOTIFY_LOGIN_URL
         }}><SpotifyLogo /><span>로 계속하기</span></Button>
+        {/* Matches the backend OAuth scopes: profile, email, top tracks, playlist creation. */}
+        <ul className="login-scope" aria-label="Spotify에서 사용하는 정보">
+          <li>Spotify 프로필과 자주 들은 곡 목록만 읽어요.</li>
+          <li>플레이리스트는 직접 저장을 누를 때만 만들어요.</li>
+        </ul>
         <div className="login-secondary"><Link to={`/login?switchAccount=true${destination ? '&next=' + encodeURIComponent(destination) : ''}`}>다른 계정으로 로그인</Link></div>
       </section>}
     </main>

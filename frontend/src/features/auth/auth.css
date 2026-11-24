@@ -22,3 +22,4 @@
 .account-switch-steps .seed-action-button { width: 100%; }
 .login-copy [role="alert"] { margin-block: var(--seed-dimension-x4); }
 @media (max-width: 767px) { .login-layout { margin-top: var(--seed-dimension-x12); } }
+.login-scope { display: grid; gap: var(--seed-dimension-x1); margin: var(--seed-dimension-x4) 0 0; padding: 0; list-style: none; text-align: center; font: var(--mp-type-caption); color: var(--seed-color-fg-neutral-muted); word-break: keep-all; }

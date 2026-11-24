@@ -30,7 +30,7 @@ export function useProfile() {
     error: me.error,
     reload: me.refetch,
     saving: mutation.isPending,
-    name: signedIn ? me.data?.nickname ?? (me.data?.displayName || me.data?.spotifyId || '음악 친구') : 'GUEST',
+    name: signedIn ? me.data?.nickname ?? (me.data?.displayName || me.data?.spotifyId || '음악 친구') : '게스트',
     avatarSlug: petSlug,
     save: (name: string) => mutation.mutateAsync(name),
   }

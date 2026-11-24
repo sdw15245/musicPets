@@ -8,6 +8,7 @@ import MusicListSkeleton from '../../shared/components/ui/MusicListSkeleton'
 import RequestErrorNotice from '../../shared/components/ui/RequestErrorNotice'
 import { getPet } from '../community/model'
 import { useNotifications, useReadNotification } from './useNotifications'
+import { activityTime, exactTime } from '../../shared/dates'
 
 const messages = { LIKE: '님이 내 글에 공감했어요.', COMMENT: '님이 내 글에 댓글을 남겼어요.', REPLY: '님이 내 댓글에 답글을 남겼어요.' }
 
@@ -36,7 +37,7 @@ export default function NotificationsPage() {
           </span>
         </Link>
         <div className="personal-row-actions">
-          <time dateTime={item.createdAt} title={new Date(item.createdAt).toLocaleString('ko-KR')}>{new Date(item.createdAt).toLocaleString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</time>
+          <time dateTime={item.createdAt} title={exactTime(item.createdAt)}>{activityTime(item.createdAt)}</time>
           {!item.read && <><Badge tone="brand" variant="weak">새 알림</Badge><Button size="small" variant="ghost" disabled={read.isPending} onClick={() => read.mutate(item.id)}>읽음으로 표시</Button></>}
         </div>
       </li>

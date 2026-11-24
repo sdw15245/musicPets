@@ -19,10 +19,11 @@ const DefaultLoading = () => (
   </div>
 )
 
-const DefaultError = ({ error, resetErrorBoundary }: FallbackProps) => (
+// Raw messages (HTTP status, schema paths) belong in logs, not on screen.
+const DefaultError = ({ resetErrorBoundary }: FallbackProps) => (
   <div className="state-card">
-    <ResultSection title="데이터를 불러오지 못했습니다"
-      description={error instanceof Error ? error.message : '알 수 없는 오류'}
+    <ResultSection title="화면을 불러오지 못했어요"
+      description="연결 상태를 확인하고 다시 시도해주세요."
       actions={<Button onClick={resetErrorBoundary}>다시 시도</Button>} />
   </div>
 )

@@ -41,6 +41,8 @@ test('feed keeps post navigation without redundant copy actions or pet-name badg
   await expect(post.locator('.post-byline').getByText('멜로', { exact: true })).toHaveCount(0)
   await post.getByRole('link', { name: '글 보기' }).click()
   await expect(page).toHaveURL(/\/community\/posts\/1$/)
+  // A single post is what gets passed along, so only the detail page offers the copy action.
+  await expect(page.locator('.community-post').getByRole('button', { name: '글 링크 복사' })).toBeVisible()
 })
 
 test('comparison leads with the actual pet change and initially limits genre detail', async ({ page }) => {

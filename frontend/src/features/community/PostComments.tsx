@@ -14,6 +14,7 @@ import LoadingStatus from '../../shared/components/ui/LoadingStatus'
 import { useSuccessNotice } from '../../shared/components/ui/useSuccessNotice'
 import { Link } from 'react-router-dom'
 import CommentActionsMenu from './CommentActionsMenu'
+import { activityTime, exactTime } from '../../shared/dates'
 
 function errorMessage(error: unknown, fallback: string) {
   if (error instanceof ApiError) {
@@ -152,7 +153,7 @@ export default function PostComments({ id, postId, focusCommentId, onRequireLogi
             <div className="comment-author">
               {own ? <Link to="/mypage" className="community-author-link" aria-label={`${name} — 내 프로필`}><strong>{name}</strong></Link> : <strong>{name}</strong>}
               {own && <span className="comment-own-label">나</span>}
-              <time dateTime={comment.createdAt} title={new Date(comment.createdAt).toLocaleString('ko-KR')}>{new Date(comment.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'numeric', day: 'numeric' })}</time>
+              <time dateTime={comment.createdAt} title={exactTime(comment.createdAt)}>{activityTime(comment.createdAt)}</time>
             </div>
             {own && <CommentActionsMenu disabled={busy} onEdit={trigger => {
               formTriggerRef.current = trigger

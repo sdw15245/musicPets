@@ -1,15 +1,25 @@
 .brand-logo {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   flex-shrink: 0;
+  min-height: 1lh;
   color: var(--seed-color-fg-neutral);
-  font: 400 var(--seed-font-size-t7)/var(--seed-line-height-t7) 'DNFBitBitv2', var(--seed-font-family);
-  letter-spacing: normal;
+  font-size: var(--seed-font-size-t7);
+  line-height: var(--seed-line-height-t7);
   text-decoration: none;
   white-space: nowrap;
 }
 
-.brand-logo span {
-  color: var(--seed-color-fg-brand);
+/* The viewBox is the glyph bounds; 0.911em matches the wordmark at the original font size. */
+.brand-logo-mark {
+  display: block;
+  width: auto;
+  height: 0.911em;
+  fill: currentColor;
+}
+
+.brand-logo-accent {
+  fill: var(--seed-color-fg-brand);
 }
 
 .brand-logo--compact {

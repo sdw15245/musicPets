@@ -46,7 +46,7 @@ export default function PostDetailPage() {
         query.isPending ? <MusicListSkeleton label="글을 불러오고 있어요." /> :
         query.isError && <RequestErrorNotice error={query.error} action={blocked => <Button disabled={blocked} onClick={() => void query.refetch()}>다시 불러오기</Button>}>글을 불러오지 못했어요.</RequestErrorNotice>}
       {mutations.like.isError && <RequestErrorNotice error={mutations.like.error}>공감을 변경하지 못했어요.</RequestErrorNotice>}
-      {post && <PostCard key={`${post.id}:${focusCommentId ?? ''}`} post={post} liked={post.liked} initialCommentsOpen={params.get('comments') === '1' || !!focusCommentId} focusCommentId={focusCommentId}
+      {post && <PostCard key={`${post.id}:${focusCommentId ?? ''}`} post={post} liked={post.liked} copyLink initialCommentsOpen={params.get('comments') === '1' || !!focusCommentId} focusCommentId={focusCommentId}
         onRequireLogin={login} onLike={() => { if (!profile.signedIn) { login(); return } return mutations.likePost({ id, liked: !post.liked }) }}
         liking={mutations.pendingLikeIds.has(id)} onEdit={() => { editTrigger.current = document.activeElement as HTMLElement; setEditing({ open: true }) }} deleting={mutations.remove.isPending}
         onDelete={async () => { await mutations.remove.mutateAsync(id); navigate('/community', { replace: true }) }} />}

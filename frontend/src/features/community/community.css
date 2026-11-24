@@ -1262,3 +1262,30 @@
   .comment-form-footer { flex-wrap: wrap; gap: var(--seed-dimension-x2); }
   .comment-form-footer > .comment-actions { margin-left: auto; }
 }
+
+/* Phone-only entry into analysis; wider screens show the sidebar pet card instead. */
+.community-analyze-banner { display: none; }
+@media (max-width: 767px) {
+  .community-analyze-banner {
+    display: flex;
+    align-items: center;
+    gap: var(--seed-dimension-x3);
+    margin-bottom: var(--seed-dimension-x4);
+    padding: var(--seed-dimension-x4);
+    border-radius: var(--seed-radius-r4);
+    background: var(--seed-color-bg-brand-weak);
+    color: var(--seed-color-fg-neutral);
+    text-decoration: none;
+  }
+  .community-analyze-banner:active { background: var(--seed-color-bg-brand-weak-pressed); }
+  .community-analyze-icon { display: grid; place-items: center; flex-shrink: 0; width: 40px; height: 40px; border-radius: var(--seed-radius-full); background: var(--seed-color-bg-layer-default); color: var(--seed-color-fg-brand); }
+  .community-analyze-icon .community-icon { width: 20px; height: 20px; }
+  .community-analyze-copy { display: grid; gap: 2px; min-width: 0; flex: 1; }
+  .community-analyze-copy strong { font: var(--mp-type-label); font-weight: var(--seed-font-weight-bold); }
+  .community-analyze-copy span { color: var(--seed-color-fg-neutral-muted); font: var(--mp-type-caption); word-break: keep-all; }
+  .community-analyze-action { display: inline-flex; align-items: center; gap: var(--seed-dimension-x1); flex-shrink: 0; color: var(--seed-color-fg-brand); font: var(--mp-type-label); font-weight: var(--seed-font-weight-bold); }
+  .community-analyze-action .community-icon { width: 14px; height: 14px; }
+}
+
+/* Share stays at the trailing edge, away from the reaction controls. */
+.seed-post-actions .post-copy-link { margin-left: auto; }

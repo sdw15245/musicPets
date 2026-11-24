@@ -17,6 +17,7 @@ import SpotifyLogo from '../../shared/components/SpotifyLogo'
 import { spotifyUrl } from '../../shared/spotify'
 import MusicListSkeleton from '../../shared/components/ui/MusicListSkeleton'
 import RequestErrorNotice from '../../shared/components/ui/RequestErrorNotice'
+import { activityTime, exactTime } from '../../shared/dates'
 
 function ProfileSummary({ profile }: { profile: ReturnType<typeof useProfile> }) {
   const [editing, setEditing] = useState(false)
@@ -77,7 +78,7 @@ function RecentPosts() {
       </Link>
       <div className="mypage-post-meta">
         <div>
-        {post.createdAt && <time dateTime={post.createdAt}>{new Date(post.createdAt).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}</time>}
+        {post.createdAt && <time dateTime={post.createdAt} title={exactTime(post.createdAt)}>{activityTime(post.createdAt)}</time>}
         <span>공감 {post.likes} · 댓글 {post.commentCount}개</span>
         </div>
         <a className="mypage-spotify-link" href={spotifyUrl(post.track)} target="_blank" rel="noreferrer" aria-label={`${post.track.name} Spotify에서 듣기`}><SpotifyLogo />에서 듣기</a>

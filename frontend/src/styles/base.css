@@ -1,5 +1,4 @@
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.css');
-
+/* Pretendard is linked from index.html so it loads alongside this bundle instead of after it. */
 @import "tailwindcss";
 
 @font-face {

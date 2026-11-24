@@ -34,9 +34,9 @@ class ProfilePersistenceTest {
     private User user() { return users.save(new User(UUID.randomUUID().toString(), "", "Spotify 이름")); }
     private String bearer(User user) { return "Bearer " + tokens.createAccessToken(user.getId()); }
     private AnalysisResult result(String id, String pet) {
-        return new AnalysisResult(id, Instant.now(), new AnalysisResult.Genres(Map.of("pop", 1.0), List.of(), 1, 1),
+        return new AnalysisResult(id, Instant.now(), new AnalysisResult.Genres(Map.of("pop", 1.0), List.of(), 1, 1, "medium_term"),
                 pet == null ? null : new AnalysisResult.MatchedCharacter(pet, pet, "test", "/test.png", .9),
-                new AnalysisResult.Profile(50.0, 50.0, "저장된 설명"), List.of(), true, List.of(), null);
+                new AnalysisResult.Profile(50.0, 50.0, "저장된 설명"), List.of(), true, List.of(), null, false, false, null);
     }
 
     @Test void latestResultAndCollectionSurviveSeparateTransactionsWithoutDuplicates() {
@@ -75,8 +75,7 @@ class ProfilePersistenceTest {
     @Test void independentlyCompletedCardsMergeIntoTheSameSavedPet() throws Exception {
         User owner = user();
         var base = result("staged", "pip");
-        storage.save(owner.getId(), new AnalysisResult(base.id(), base.analyzedAt(), base.genres(), base.character(),
-                new AnalysisResult.Profile(null, null, ""), List.of(), false, List.of(), null, true, true, List.of()));
+        storage.save(owner.getId(), AnalysisResult.pending(base.id(), base.analyzedAt(), base.genres(), base.character(), List.of()));
         var artist = new com.example.demo.recommendation.RecommendationService.RecommendedArtist("가수", "spotify:artist:1", "", List.of("기준 가수"));
         var start = new java.util.concurrent.CountDownLatch(1);
         try (var workers = java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()) {

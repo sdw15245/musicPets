@@ -28,7 +28,7 @@ class MySqlMigrationTest {
 
     @Test void emptyDatabaseGetsAllTablesAndRestartDoesNotRepeatMigration() throws Exception {
         var flyway = Flyway.configure().dataSource(MYSQL.getJdbcUrl(), MYSQL.getUsername(), MYSQL.getPassword()).load();
-        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(2);
+        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(3);
         try (var connection = DriverManager.getConnection(MYSQL.getJdbcUrl(), MYSQL.getUsername(), MYSQL.getPassword());
              var statement = connection.createStatement();
              var rows = statement.executeQuery("SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME <> 'flyway_schema_history'")) {
@@ -53,7 +53,7 @@ class MySqlMigrationTest {
             ExistingDatabaseBaseline.verifySchema(connection);
         }
         var flyway = flyway(); flyway.baseline();
-        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(1);
+        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(2);
         try (var connection = connection(); var statement = connection.createStatement()) {
             try (var rows = statement.executeQuery("SELECT nickname FROM users WHERE id=1")) { rows.next(); assertThat(rows.getString(1)).isEqualTo("음악 친구"); }
             try (var rows = statement.executeQuery("SELECT result_json FROM analysis_history WHERE analysis_id='existing'")) { rows.next(); assertThat(rows.getString(1)).isEqualTo("{\"saved\":true}"); }
@@ -65,6 +65,30 @@ class MySqlMigrationTest {
             assertThatThrownBy(() -> statement.executeUpdate("INSERT INTO users(created_at,spotify_id) VALUES(NOW(6),'test-spotify')")).isInstanceOf(SQLException.class);
         }
         assertThat(flyway.migrate().migrationsExecuted).isZero();
+    }
+
+    @Test void latestResultsWithoutHistoryAreBackfilledOnceWithoutDuplicates() throws Exception {
+        Flyway.configure().dataSource(MYSQL.getJdbcUrl(), MYSQL.getUsername(), MYSQL.getPassword()).target("2").load().migrate();
+        try (var connection = connection(); var statement = connection.createStatement()) {
+            statement.executeUpdate("INSERT INTO users(id,created_at,spotify_id) VALUES(1,NOW(6),'legacy'),(2,NOW(6),'recorded')");
+            // 기록 기능 이전 사용자: 최신 결과만 있다.
+            statement.executeUpdate("INSERT INTO latest_analyses(user_id,analysis_id,result_json) VALUES(1,'old-run','{\"id\":\"old-run\"}')");
+            // 기록 기능 이후 사용자: 최신 결과가 이미 기록에 있다.
+            statement.executeUpdate("INSERT INTO latest_analyses(user_id,analysis_id,result_json) VALUES(2,'new-run','{\"id\":\"new-run\"}')");
+            statement.executeUpdate("INSERT INTO analysis_history(analysis_id,result_json,user_id) VALUES('new-run','{\"id\":\"new-run\"}',2)");
+        }
+        assertThat(flyway().migrate().migrationsExecuted).isEqualTo(1);
+        try (var connection = connection(); var statement = connection.createStatement()) {
+            try (var rows = statement.executeQuery("SELECT user_id, analysis_id, result_json FROM analysis_history ORDER BY user_id")) {
+                assertThat(rows.next()).isTrue();
+                assertThat(rows.getLong(1)).isEqualTo(1);
+                assertThat(rows.getString(2)).isEqualTo("old-run");
+                assertThat(rows.getString(3)).isEqualTo("{\"id\":\"old-run\"}");
+                assertThat(rows.next()).isTrue();
+                assertThat(rows.getLong(1)).isEqualTo(2);
+                assertThat(rows.next()).as("existing record is not duplicated").isFalse();
+            }
+        }
     }
 
     @Test void schemaCheckRejectsMissingIndexesAndUnexpectedTables() throws Exception {

@@ -18,15 +18,12 @@ class AnalysisHistoryTest {
     @Autowired MockMvc mvc;
     @Autowired UserRepository users;
     @Autowired AnalysisStorage storage;
-    @Autowired LatestAnalysisRepository latest;
-    @Autowired com.fasterxml.jackson.databind.ObjectMapper mapper;
-    @Autowired org.springframework.transaction.PlatformTransactionManager transactions;
     @Autowired JwtTokenProvider tokens;
     User user() { return users.save(new User(UUID.randomUUID().toString(), "", "기록 주인")); }
     String auth(User user) { return "Bearer " + tokens.createAccessToken(user.getId()); }
     AnalysisResult result(String id) {
-        return new AnalysisResult(id, Instant.now(), new AnalysisResult.Genres(Map.of("pop", 1.0), List.of(), 1, 1),
-            null, new AnalysisResult.Profile(50.0, 50.0, "기록"), List.of(), true, List.of(), null);
+        return new AnalysisResult(id, Instant.now(), new AnalysisResult.Genres(Map.of("pop", 1.0), List.of(), 1, 1, "medium_term"),
+            null, new AnalysisResult.Profile(50.0, 50.0, "기록"), List.of(), true, List.of(), null, false, false, null);
     }
     @Test void keepsTenSnapshotsAndUpdatesDetailsWithoutDuplicates() throws Exception {
         User owner = user();
@@ -57,7 +54,7 @@ class AnalysisHistoryTest {
         String notice = "최근 4주 청취곡이 없어 최근 6개월 기록으로 분석했어요.";
         var fallback = new AnalysisResult("fallback", Instant.now(),
             new AnalysisResult.Genres(Map.of("pop", 1.0), List.of(), 10, 20, "medium_term"),
-            null, new AnalysisResult.Profile(null, null, ""), List.of(), true, List.of(notice), null);
+            null, new AnalysisResult.Profile(null, null, ""), List.of(), true, List.of(notice), null, false, false, null);
         storage.save(owner.getId(), fallback);
         storage.updateCurrent(owner.getId(), "fallback", saved -> saved.withProfile(new AnalysisResult.Profile(50.0, 50.0, "완료"), List.of()));
         for (String path : List.of("/api/analysis/latest", "/api/analysis/history/fallback")) {
@@ -67,25 +64,13 @@ class AnalysisHistoryTest {
                 .andExpect(jsonPath("$.warnings[0]").value(notice));
         }
     }
-    @Test void resultsWithoutArtistFieldStillDecodeAsLegacyTracks() throws Exception {
-        var legacy = mapper.valueToTree(result("legacy-json"));
-        ((com.fasterxml.jackson.databind.node.ObjectNode) legacy).remove("recommendedArtists");
-        var decoded = mapper.treeToValue(legacy, AnalysisResult.class);
-        org.assertj.core.api.Assertions.assertThat(decoded.recommendedArtists()).isNull();
-        org.assertj.core.api.Assertions.assertThat(decoded.recommendations()).isEmpty();
-    }
-    @Test void legacyLatestIsIncludedAndDeletedLatestDoesNotReappear() throws Exception {
+    @Test void deletingTheLatestRecordAlsoClearsTheLatestResult() throws Exception {
         User owner = user();
-        String json = mapper.writeValueAsString(result("legacy"));
-        new org.springframework.transaction.support.TransactionTemplate(transactions).executeWithoutResult(status -> {
-            LatestAnalysis row = new LatestAnalysis(users.findById(owner.getId()).orElseThrow());
-            row.replace("legacy", json);
-            latest.save(row);
-        });
+        storage.save(owner.getId(), result("latest"));
         mvc.perform(get("/api/analysis/history").header("Authorization", auth(owner)))
-            .andExpect(status().isOk()).andExpect(jsonPath("$[0].id").value("legacy"));
-        mvc.perform(delete("/api/analysis/history/legacy").header("Authorization", auth(user()))).andExpect(status().isNotFound());
-        mvc.perform(delete("/api/analysis/history/legacy").header("Authorization", auth(owner))).andExpect(status().isNoContent());
+            .andExpect(status().isOk()).andExpect(jsonPath("$[0].id").value("latest"));
+        mvc.perform(delete("/api/analysis/history/latest").header("Authorization", auth(user()))).andExpect(status().isNotFound());
+        mvc.perform(delete("/api/analysis/history/latest").header("Authorization", auth(owner))).andExpect(status().isNoContent());
         mvc.perform(get("/api/analysis/history").header("Authorization", auth(owner))).andExpect(jsonPath("$.length()").value(0));
         mvc.perform(get("/api/analysis/latest").header("Authorization", auth(owner))).andExpect(status().isNoContent());
     }

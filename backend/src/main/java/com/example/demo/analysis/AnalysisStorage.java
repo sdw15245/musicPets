@@ -4,7 +4,6 @@ import com.example.demo.error.ApiException;
 import com.example.demo.error.ErrorCode;
 import com.example.demo.user.User;
 import com.example.demo.user.UserRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,13 +14,13 @@ import java.util.function.UnaryOperator;
 public class AnalysisStorage {
     private final LatestAnalysisRepository results;
     private final UserRepository users;
-    private final ObjectMapper mapper;
+    private final StoredAnalysisJson format;
     private final AnalysisHistoryRepository history;
 
     public AnalysisStorage(LatestAnalysisRepository results, UserRepository users, ObjectMapper mapper, AnalysisHistoryRepository history) {
         this.results = results;
         this.users = users;
-        this.mapper = mapper;
+        this.format = new StoredAnalysisJson(mapper);
         this.history = history;
     }
 
@@ -34,7 +33,6 @@ public class AnalysisStorage {
     public void save(Long userId, AnalysisResult result) {
         // 펫과 수집 기록을 같은 트랜잭션에 저장한다.
         User user = users.findForUpdate(userId).orElseThrow();
-        includeLegacy(user);
         LatestAnalysis row = results.findById(userId).orElseGet(() -> new LatestAnalysis(user));
         row.replace(result.id(), encode(result));
         results.save(row);
@@ -55,36 +53,29 @@ public class AnalysisStorage {
         return result;
     }
 
-    @Transactional
+    // 최신 결과는 저장할 때 항상 기록에도 남는다. 그 이전 데이터는 V3 마이그레이션이 옮겼다.
+    @Transactional(readOnly = true)
     public java.util.List<AnalysisResult> history(Long userId) {
-        includeLegacy(users.findForUpdate(userId).orElseThrow());
         return history.findByUserIdOrderByIdDesc(userId).stream().map(row -> decode(row.getResultJson())).toList();
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public AnalysisResult historical(Long userId, String id) {
-        includeLegacy(users.findForUpdate(userId).orElseThrow());
         return decode(requireHistory(userId, id).getResultJson());
     }
 
     @Transactional
     public void deleteHistory(Long userId, String id) {
-        includeLegacy(users.findForUpdate(userId).orElseThrow());
+        // 저장·갱신과 같은 사용자 잠금을 써서 진행 중인 분석 갱신과 엇갈리지 않게 한다.
+        users.findForUpdate(userId).orElseThrow();
         history.delete(requireHistory(userId, id));
-        // 삭제한 최신 결과가 다음 조회에서 다시 기록으로 복원되지 않도록 함께 지운다.
+        // 기록에서 지운 결과가 최신 결과 화면에 남지 않도록 함께 지운다.
         results.findById(userId).filter(row -> row.getAnalysisId().equals(id)).ifPresent(results::delete);
     }
 
     private AnalysisHistory requireHistory(Long userId, String id) {
         return history.findByUserIdAndAnalysisId(userId, id).orElseThrow(() ->
             new ApiException(ErrorCode.NOT_FOUND, "분석 기록을 찾을 수 없어요."));
-    }
-
-    private void includeLegacy(User user) {
-        results.findById(user.getId()).ifPresent(row -> {
-            if (history.findByUserIdAndAnalysisId(user.getId(), row.getAnalysisId()).isEmpty())
-                history.save(new AnalysisHistory(user, row.getAnalysisId(), row.getResultJson()));
-        });
     }
 
     private void saveSnapshot(User user, String id, String json) {
@@ -97,13 +88,12 @@ public class AnalysisStorage {
     private AnalysisResult decode(LatestAnalysis row) {
         return decode(row.getResultJson());
     }
+
     private AnalysisResult decode(String json) {
-        try { return mapper.readValue(json, AnalysisResult.class); }
-        catch (JsonProcessingException e) { throw new IllegalStateException("Cannot read stored analysis", e); }
+        return format.read(json);
     }
 
     private String encode(AnalysisResult result) {
-        try { return mapper.writeValueAsString(result); }
-        catch (JsonProcessingException e) { throw new IllegalStateException("Cannot store analysis", e); }
+        return format.write(result);
     }
 }

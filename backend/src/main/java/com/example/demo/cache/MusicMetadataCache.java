@@ -1,5 +1,6 @@
 package com.example.demo.cache;
 
+import com.example.demo.concurrency.SingleFlight;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,9 +21,6 @@ import java.util.Collection;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
@@ -35,7 +33,7 @@ public class MusicMetadataCache {
     private final MusicCacheProperties props;
     private final Clock clock;
     private final AtomicReference<Instant> retryAt = new AtomicReference<>(Instant.MIN);
-    private final ConcurrentHashMap<String, CompletableFuture<Object>> inFlight = new ConcurrentHashMap<>();
+    private final SingleFlight<String, Object> loads = new SingleFlight<>();
 
     @Autowired
     public MusicMetadataCache(StringRedisTemplate redis, ObjectMapper mapper, MusicCacheProperties props) {
@@ -49,27 +47,19 @@ public class MusicMetadataCache {
         this.clock = clock;
     }
 
+    @SuppressWarnings("unchecked") // 같은 키는 같은 category라 항상 같은 타입이다.
     public <T> T get(String category, List<String> parts, TypeReference<T> type, Supplier<T> loader) {
         if (!props.isEnabled()) return loader.get();
         String key = key(category, parts);
-        CompletableFuture<Object> pending = new CompletableFuture<>();
-        var existing = inFlight.putIfAbsent(key, pending);
-        if (existing != null) return await(existing);
-        try {
+        return (T) loads.run(key, () -> {
             T value = read(key, type);
             if (value == null) {
                 // Provider exceptions propagate and are never cached.
                 value = loader.get();
                 if (value != null) write(key, value, ttl(category, value));
             }
-            pending.complete(value);
             return value;
-        } catch (RuntimeException | Error error) {
-            pending.completeExceptionally(error);
-            throw error;
-        } finally {
-            inFlight.remove(key, pending);
-        }
+        });
     }
 
     private <T> T read(String key, TypeReference<T> type) {
@@ -120,20 +110,6 @@ public class MusicMetadataCache {
             return "musicpets:lastfm:v1:" + category + ":" + HexFormat.of().formatHex(digest);
         } catch (NoSuchAlgorithmException impossible) {
             throw new IllegalStateException("SHA-256 is unavailable", impossible);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T> T await(CompletableFuture<Object> task) {
-        try {
-            return (T) task.get();
-        } catch (InterruptedException error) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException("Music metadata lookup interrupted", error);
-        } catch (ExecutionException error) {
-            if (error.getCause() instanceof RuntimeException cause) throw cause;
-            if (error.getCause() instanceof Error cause) throw cause;
-            throw new IllegalStateException("Music metadata lookup failed", error.getCause());
         }
     }
 }

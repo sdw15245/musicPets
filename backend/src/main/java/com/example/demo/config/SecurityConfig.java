@@ -4,12 +4,14 @@ import com.example.demo.auth.OAuth2LoginSuccessHandler;
 import com.example.demo.auth.OAuth2LoginFailureHandler;
 import com.example.demo.auth.SpotifyAuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import com.example.demo.error.ErrorCode;
+import com.example.demo.error.ErrorResponseWriter;
 import com.example.demo.jwt.JwtAuthenticationEntryPoint;
 import com.example.demo.jwt.JwtAuthenticationFilter;
 import com.example.demo.ratelimit.RequestGuard;
 import com.example.demo.ratelimit.RequestLimitFilter;
 import com.example.demo.ratelimit.RequestLimits;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.DispatcherType;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -56,7 +58,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, RequestGuard requestGuard, ObjectMapper mapper,
+    public SecurityFilterChain filterChain(HttpSecurity http, RequestGuard requestGuard, ErrorResponseWriter errors,
                                            ClientRegistrationRepository clients) throws Exception {
         CookieCsrfTokenRepository csrfTokens = new CookieCsrfTokenRepository();
         csrfTokens.setCookieCustomizer(cookie -> cookie.httpOnly(true).secure(secureCookies)
@@ -69,16 +71,11 @@ public class SecurityConfig {
             .logout(AbstractHttpConfigurer::disable)
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .exceptionHandling(e -> e.authenticationEntryPoint(jwtAuthenticationEntryPoint)
-                    .accessDeniedHandler((request, response, error) -> {
-                        response.setStatus(403);
-                        response.setCharacterEncoding("UTF-8");
-                        response.setContentType("application/json");
-                        response.setHeader("Cache-Control", "no-store");
-                        response.getWriter().write(error instanceof CsrfException
-                                ? "{\"error\":\"CSRF_INVALID\",\"message\":\"요청을 확인하지 못했어요. 다시 시도해주세요.\"}"
-                                : "{\"error\":\"FORBIDDEN\",\"message\":\"접근 권한이 없어요.\"}");
-                    }))
+                    .accessDeniedHandler((request, response, error) -> errors.write(response,
+                            error instanceof CsrfException ? ErrorCode.CSRF_INVALID : ErrorCode.FORBIDDEN)))
             .authorizeHttpRequests(auth -> auth
+                // 컨테이너 오류 페이지 재전달에는 JWT 인증이 없어, 막으면 원래 상태 코드가 401로 바뀐다.
+                .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/posts", "/api/posts/{id}", "/api/posts/{postId}/comments").permitAll()
                 .requestMatchers(
                     "/api/auth/csrf", "/api/auth/refresh", "/api/auth/logout",
@@ -93,7 +90,7 @@ public class SecurityConfig {
                 .successHandler(oAuth2LoginSuccessHandler)
                 .failureHandler(oAuth2LoginFailureHandler))
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-            .addFilterAfter(new RequestLimitFilter(requestGuard, mapper), JwtAuthenticationFilter.class);
+            .addFilterAfter(new RequestLimitFilter(requestGuard, errors), JwtAuthenticationFilter.class);
 
         return http.build();
     }

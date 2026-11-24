@@ -10,12 +10,13 @@ import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.client.RestClientResponseException;
+import com.example.demo.error.ApiException;
+import com.example.demo.error.ErrorCode;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -52,17 +53,17 @@ public class PostService {
     public PostPage list(Long viewer, String view, String filter, String pet, int page, String sort, String q) {
         if (!List.of("all", "mine").contains(view) || !List.of("all", "same", "other").contains(filter)
                 || page < 0 || page > 10000) throw badRequest();
-        if (!List.of("latest", "popular").contains(sort)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "정렬 기준을 확인해주세요.");
+        if (!List.of("latest", "popular").contains(sort)) throw new ApiException(ErrorCode.INVALID_REQUEST, "정렬 기준을 확인해주세요.");
         String search = q == null ? "" : q.strip();
-        if (search.length() > 100) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "검색어는 100자 이내로 입력해주세요.");
+        if (search.length() > 100) throw new ApiException(ErrorCode.INVALID_REQUEST, "검색어는 100자 이내로 입력해주세요.");
         String term = search.replaceFirst("^#+", "").strip().toLowerCase(Locale.ROOT);
         String pattern = "%" + term.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
-        if (view.equals("mine") && viewer == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        if (view.equals("mine") && viewer == null) throw new ApiException(ErrorCode.UNAUTHORIZED);
         String filterPet = null;
         if (!filter.equals("all")) {
-            if (viewer == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
-            User user = users.findById(viewer).orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
-            if (user.getAnalyzedPet() == null) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "음악 취향 분석이 필요해요.");
+            if (viewer == null) throw new ApiException(ErrorCode.UNAUTHORIZED);
+            User user = users.findById(viewer).orElseThrow(() -> new ApiException(ErrorCode.UNAUTHORIZED));
+            if (user.getAnalyzedPet() == null) throw new ApiException(ErrorCode.FORBIDDEN, "음악 취향 분석이 필요해요.");
             filterPet = pet == null ? user.getAnalyzedPet() : pet;
             String selected = filterPet;
             if (Character.POOL.stream().noneMatch(c -> c.slug().equals(selected))) throw badRequest();
@@ -101,10 +102,10 @@ public class PostService {
 
     public PostView create(Long userId, EditPost request) {
         EditPost clean = validate(request);
-        TrackHit track = spotify.getTrack(userId, clean.trackUri().substring("spotify:track:".length()));
+        TrackHit track = fetchTrack(userId, clean.trackUri());
         // Spotify 응답을 받은 다음에만 DB 트랜잭션을 열어 연결을 오래 점유하지 않는다.
         return write.execute(status -> {
-            User author = users.findById(userId).orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+            User author = users.findById(userId).orElseThrow(() -> new ApiException(ErrorCode.UNAUTHORIZED));
             Post post = new Post(author);
             post.edit(track, clean.caption(), clean.tags());
             return view(posts.save(post), userId);
@@ -116,9 +117,9 @@ public class PostService {
         Post previous = requirePost(id);
         requireOwner(previous, userId);
         TrackHit track = previous.getTrack().uri().equals(clean.trackUri()) ? previous.getTrack()
-                : spotify.getTrack(userId, clean.trackUri().substring("spotify:track:".length()));
+                : fetchTrack(userId, clean.trackUri());
         return write.execute(status -> {
-            Post post = posts.findForUpdate(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            Post post = posts.findForUpdate(id).orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND));
             requireOwner(post, userId);
             post.edit(track, clean.caption(), clean.tags());
             return view(post, userId);
@@ -127,7 +128,7 @@ public class PostService {
 
     public void delete(Long userId, Long id) {
         write.executeWithoutResult(status -> {
-            Post post = posts.findForUpdate(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            Post post = posts.findForUpdate(id).orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND));
             requireOwner(post, userId);
             notifications.deletePost(id);
             comments.deleteRepliesByPostId(id);
@@ -137,9 +138,21 @@ public class PostService {
         });
     }
 
-    private Post requirePost(Long id) { return posts.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)); }
+    private TrackHit fetchTrack(Long userId, String trackUri) {
+        try {
+            return spotify.getTrack(userId, trackUri.substring("spotify:track:".length()));
+        } catch (RestClientResponseException e) {
+            // 사용자가 고른 곡이 Spotify에 없으면 외부 장애가 아니라 잘못된 입력이다.
+            if (e.getStatusCode().value() == 404) {
+                throw new ApiException(ErrorCode.INVALID_REQUEST, "Spotify에서 이 곡을 찾지 못했어요. 다른 곡을 선택해주세요.");
+            }
+            throw e;
+        }
+    }
+
+    private Post requirePost(Long id) { return posts.findById(id).orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND)); }
     private void requireOwner(Post post, Long userId) {
-        if (!post.getAuthor().getId().equals(userId)) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "본인 글만 변경할 수 있어요.");
+        if (!post.getAuthor().getId().equals(userId)) throw new ApiException(ErrorCode.FORBIDDEN, "본인 글만 변경할 수 있어요.");
     }
     private EditPost validate(EditPost request) {
         if (request.trackUri() == null || !request.trackUri().matches("spotify:track:[A-Za-z0-9]{22}")) throw badRequest();
@@ -154,7 +167,7 @@ public class PostService {
         }
         return new EditPost(request.trackUri(), caption, tags);
     }
-    private ResponseStatusException badRequest() { return new ResponseStatusException(HttpStatus.BAD_REQUEST, "곡·본문·태그를 확인해주세요."); }
+    private ApiException badRequest() { return new ApiException(ErrorCode.INVALID_REQUEST, "곡·본문·태그를 확인해주세요."); }
 
     private PostView view(Post post, Long viewer) {
         return view(post, viewer, viewer != null && likes.existsByPostIdAndUserId(post.getId(), viewer), comments.countByPostIdAndDeletedFalse(post.getId()));

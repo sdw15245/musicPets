@@ -1,10 +1,10 @@
 package com.example.demo.community;
 
 import com.example.demo.user.UserRepository;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
+import com.example.demo.error.ApiException;
+import com.example.demo.error.ErrorCode;
 
 @Service
 public class PostLikeService {
@@ -22,10 +22,10 @@ public class PostLikeService {
 
     @Transactional
     public LikeView setLiked(Long userId, Long postId, boolean liked) {
-        if (userId == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        if (userId == null) throw new ApiException(ErrorCode.UNAUTHORIZED);
         // Use the same lock as post deletion; repeated/concurrent requests cannot double count.
-        Post post = posts.findForUpdate(postId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        var user = users.findById(userId).orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+        Post post = posts.findForUpdate(postId).orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND));
+        var user = users.findById(userId).orElseThrow(() -> new ApiException(ErrorCode.UNAUTHORIZED));
         boolean exists = likes.existsByPostIdAndUserId(postId, userId);
         if (liked && !exists) {
             likes.save(new PostLike(post, user));

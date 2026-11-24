@@ -1,5 +1,7 @@
 package com.example.demo.analysis;
 
+import com.example.demo.error.ApiException;
+import com.example.demo.error.ErrorCode;
 import com.example.demo.user.User;
 import com.example.demo.user.UserRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -75,7 +77,7 @@ public class AnalysisStorage {
 
     private AnalysisHistory requireHistory(Long userId, String id) {
         return history.findByUserIdAndAnalysisId(userId, id).orElseThrow(() ->
-            new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND));
+            new ApiException(ErrorCode.NOT_FOUND, "분석 기록을 찾을 수 없어요."));
     }
 
     private void includeLegacy(User user) {

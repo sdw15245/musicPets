@@ -4,10 +4,10 @@ import com.example.demo.user.User;
 import com.example.demo.user.UserRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
+import com.example.demo.error.ApiException;
+import com.example.demo.error.ErrorCode;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +35,7 @@ public class CommentService {
     public CommentPage list(Long viewer, Long postId, int page, Long focus) {
         if (focus != null && page == 0) {
             Comment target = requireComment(postId, focus);
-            if (target.isDeleted()) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            if (target.isDeleted()) throw new ApiException(ErrorCode.NOT_FOUND);
             Long rootId = target.getParent() == null ? target.getId() : target.getParent().getId();
             // Root threads are ordered newest first; reply ids do not affect their position.
             page = Math.toIntExact(comments.countByPostIdAndParentIsNullAndIdGreaterThan(postId, rootId) / 20);
@@ -45,8 +45,8 @@ public class CommentService {
 
     @Transactional(readOnly = true)
     public CommentPage list(Long viewer, Long postId, int page) {
-        if (page < 0 || page > 10000) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
-        if (!posts.existsById(postId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        if (page < 0 || page > 10000) throw new ApiException(ErrorCode.INVALID_REQUEST);
+        if (!posts.existsById(postId)) throw new ApiException(ErrorCode.NOT_FOUND);
         var roots = comments.findByPostIdAndParentIsNull(postId, PageRequest.of(page, 20, Sort.by(Sort.Direction.DESC, "id")));
         var items = new ArrayList<>(roots.getContent());
         if (!items.isEmpty()) {
@@ -58,10 +58,10 @@ public class CommentService {
     public CommentView create(Long userId, Long postId, CreateComment request) {
         String body = validateBody(request.body());
         Post post = lockPost(postId);
-        User author = users.findById(userId).orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+        User author = users.findById(userId).orElseThrow(() -> new ApiException(ErrorCode.UNAUTHORIZED));
         Comment parent = request.parentId() == null ? null : requireComment(postId, request.parentId());
         if (parent != null && (parent.getParent() != null || parent.isDeleted())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "삭제되지 않은 원댓글에만 답글을 달 수 있어요.");
+            throw new ApiException(ErrorCode.INVALID_REQUEST, "삭제되지 않은 원댓글에만 답글을 달 수 있어요.");
         }
         Comment comment = comments.save(new Comment(post, author, parent, body));
         notifications.commented(comment);
@@ -73,7 +73,7 @@ public class CommentService {
         lockPost(postId);
         Comment comment = requireComment(postId, id);
         requireOwner(comment, userId);
-        if (comment.isDeleted()) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        if (comment.isDeleted()) throw new ApiException(ErrorCode.NOT_FOUND);
         comment.edit(body);
         return view(comment, userId);
     }
@@ -89,18 +89,18 @@ public class CommentService {
 
     private Post lockPost(Long postId) {
         // 게시글 삭제와 댓글 변경이 동시에 실행되지 않도록 같은 게시글 잠금을 사용한다.
-        return posts.findForUpdate(postId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        return posts.findForUpdate(postId).orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND));
     }
     private Comment requireComment(Long postId, Long id) {
         return comments.findById(id).filter(comment -> comment.getPost().getId().equals(postId))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND));
     }
     private void requireOwner(Comment comment, Long userId) {
-        if (!comment.getAuthor().getId().equals(userId)) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "본인 댓글만 변경할 수 있어요.");
+        if (!comment.getAuthor().getId().equals(userId)) throw new ApiException(ErrorCode.FORBIDDEN, "본인 댓글만 변경할 수 있어요.");
     }
     private String validateBody(String input) {
         String body = input == null ? "" : input.strip();
-        if (body.isBlank() || body.length() > 500) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "댓글은 1~500자로 입력해주세요.");
+        if (body.isBlank() || body.length() > 500) throw new ApiException(ErrorCode.INVALID_REQUEST, "댓글은 1~500자로 입력해주세요.");
         return body;
     }
     private CommentView view(Comment comment, Long viewer) {

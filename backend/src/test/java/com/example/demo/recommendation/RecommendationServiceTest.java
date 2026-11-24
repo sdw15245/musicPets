@@ -17,7 +17,7 @@ class RecommendationServiceTest {
     void savingAddsTheDisplayedUrisAndRejectsEmptyPlaylistsBeforeCreating() {
         SpotifyService spotify = mock(SpotifyService.class);
         RecommendationService service = new RecommendationService(spotify, mock(LastfmService.class));
-        assertThatThrownBy(() -> service.saveAsPlaylist(7L, "추천곡", List.of())).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> service.saveAsPlaylist(7L, "추천곡", List.of())).isInstanceOf(InvalidPlaylistException.class);
         verifyNoInteractions(spotify);
         when(spotify.createPlaylist(7L, "추천곡", "음악 캐릭터 매칭이 추천한 곡들"))
                 .thenReturn(new SpotifyService.PlaylistRef("playlist", "https://open.spotify.com/playlist/playlist"));

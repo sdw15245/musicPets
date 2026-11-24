@@ -4,10 +4,10 @@ import com.example.demo.community.Post;
 import com.example.demo.community.Comment;
 import com.example.demo.user.User;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
+import com.example.demo.error.ApiException;
+import com.example.demo.error.ErrorCode;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -51,7 +51,7 @@ public class NotificationService {
 
     @Transactional(readOnly = true)
     public NotificationPage list(Long userId, int page) {
-        if (page < 0 || page > 10000) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        if (page < 0 || page > 10000) throw new ApiException(ErrorCode.INVALID_REQUEST);
         var rows = notifications.findByRecipientIdOrderByIdDesc(userId, PageRequest.of(page, 20));
         var postIds = rows.stream().map(ActivityNotification::getPostId).distinct().toList();
         var commentIds = rows.stream().map(ActivityNotification::getCommentId).filter(Objects::nonNull).distinct().toList();
@@ -65,7 +65,7 @@ public class NotificationService {
     @Transactional(readOnly = true)
     public long unreadCount(Long userId) { return notifications.countByRecipientIdAndReadAtIsNull(userId); }
     public void read(Long userId, Long id) {
-        notifications.findByIdAndRecipientId(id, userId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)).markRead();
+        notifications.findByIdAndRecipientId(id, userId).orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND)).markRead();
     }
     public void readAll(Long userId) { notifications.markAllRead(userId, Instant.now()); }
     private NotificationView view(ActivityNotification notification, Map<Long, String> postPreviews, Map<Long, String> commentPreviews) {

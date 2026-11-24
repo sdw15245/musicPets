@@ -1,7 +1,7 @@
 package com.example.demo.spotify;
 
 import com.example.demo.analysis.AnalysisController;
-import com.example.demo.analysis.AnalysisExceptionHandler;
+import com.example.demo.error.ApiExceptionHandler;
 import com.example.demo.analysis.AnalysisService;
 import com.example.demo.analysis.AnalysisStorage;
 import com.example.demo.recommendation.RecommendationService;
@@ -71,7 +71,7 @@ class SpotifyQuotaTest {
             throw new AssertionError("Expected limit");
         });
         var mvc = MockMvcBuilders.standaloneSetup(new AnalysisController(analysis, mock(RecommendationService.class), mock(AnalysisStorage.class)))
-                .setControllerAdvice(new AnalysisExceptionHandler())
+                .setControllerAdvice(new ApiExceptionHandler())
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver()).build();
         mvc.perform(post("/api/analysis"))
                 .andExpect(status().isTooManyRequests())

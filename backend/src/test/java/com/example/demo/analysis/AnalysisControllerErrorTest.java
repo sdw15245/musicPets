@@ -1,5 +1,6 @@
 package com.example.demo.analysis;
 
+import com.example.demo.error.ApiExceptionHandler;
 import com.example.demo.recommendation.RecommendationService;
 import com.example.demo.recommendation.InvalidPlaylistException;
 import org.junit.jupiter.api.Test;
@@ -11,12 +12,12 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-class AnalysisExceptionHandlerTest {
+class AnalysisControllerErrorTest {
     private final AnalysisService analysis = mock(AnalysisService.class);
     private final RecommendationService recommendations = mock(RecommendationService.class);
     private final org.springframework.test.web.servlet.MockMvc mvc = MockMvcBuilders
             .standaloneSetup(new AnalysisController(analysis, recommendations, mock(AnalysisStorage.class)))
-            .setControllerAdvice(new AnalysisExceptionHandler())
+            .setControllerAdvice(new ApiExceptionHandler())
             .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver()).build();
 
     @Test void progressiveHeaderReturnsTheCoreWithoutInvokingTheFullPipeline() throws Exception {

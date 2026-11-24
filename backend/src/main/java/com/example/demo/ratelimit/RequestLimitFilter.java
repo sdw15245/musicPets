@@ -1,10 +1,12 @@
 package com.example.demo.ratelimit;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.demo.error.ErrorResponseWriter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
@@ -13,8 +15,8 @@ import static com.example.demo.ratelimit.RequestLimits.Operation;
 /** Added only to the security chain, after JWT authentication (not a servlet filter bean). */
 public class RequestLimitFilter extends OncePerRequestFilter {
     private final RequestGuard guard;
-    private final ObjectMapper mapper;
-    public RequestLimitFilter(RequestGuard guard, ObjectMapper mapper) { this.guard = guard; this.mapper = mapper; }
+    private final ErrorResponseWriter errors;
+    public RequestLimitFilter(RequestGuard guard, ErrorResponseWriter errors) { this.guard = guard; this.errors = errors; }
 
     @Override protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
@@ -31,12 +33,8 @@ public class RequestLimitFilter extends OncePerRequestFilter {
         RequestGuard.Permit permit;
         try { permit = guard.acquire(operation, user, request.getRemoteAddr()); }
         catch (RequestLimitException error) {
-            response.setStatus(429);
-            response.setCharacterEncoding("UTF-8");
-            response.setContentType("application/json");
-            response.setHeader("Cache-Control", "no-store");
-            response.setHeader("Retry-After", Long.toString(error.limit().retryAfterSeconds()));
-            mapper.writeValue(response.getWriter(), error.limit());
+            response.setHeader(HttpHeaders.RETRY_AFTER, Long.toString(error.limit().retryAfterSeconds()));
+            errors.write(response, HttpStatus.TOO_MANY_REQUESTS.value(), error.limit());
             return;
         }
         try (permit) { chain.doFilter(request, response); }

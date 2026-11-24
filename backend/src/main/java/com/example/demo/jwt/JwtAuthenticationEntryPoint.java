@@ -1,29 +1,29 @@
 package com.example.demo.jwt;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.demo.error.ErrorCode;
+import com.example.demo.error.ErrorResponseWriter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.Map;
 
-/** 인증 실패(401) 시 일관된 JSON 응답 반환. */
+/** 인증 실패(401) 시 다른 오류와 같은 JSON 형태로 응답한다. Spring Security 내부 문구는 노출하지 않는다. */
 @Component
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ErrorResponseWriter errors;
+
+    public JwtAuthenticationEntryPoint(ErrorResponseWriter errors) {
+        this.errors = errors;
+    }
 
     @Override
     public void commence(HttpServletRequest request,
                          HttpServletResponse response,
                          AuthenticationException authException) throws IOException {
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        objectMapper.writeValue(response.getWriter(),
-                Map.of("error", "unauthorized", "message", authException.getMessage()));
+        errors.write(response, ErrorCode.UNAUTHORIZED);
     }
 }

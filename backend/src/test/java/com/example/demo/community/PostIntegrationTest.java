@@ -114,6 +114,15 @@ class PostIntegrationTest {
         assertThat(posts.count()).isZero();
     }
 
+    @Test void trackMissingOnSpotifyIsAnInputErrorNotAnOutage() throws Exception {
+        when(spotify.getTrack(anyLong(), eq(TRACK))).thenThrow(org.springframework.web.client.HttpClientErrorException.create(
+                org.springframework.http.HttpStatus.NOT_FOUND, "Not Found", null, null, null));
+        mvc.perform(post("/api/posts").header("Authorization", auth(owner)).contentType(MediaType.APPLICATION_JSON).content(body("없는 곡")))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.error").value("INVALID_REQUEST"))
+                .andExpect(jsonPath("$.message").value("Spotify에서 이 곡을 찾지 못했어요. 다른 곡을 선택해주세요."));
+        assertThat(posts.count()).isZero();
+    }
+
     @Test void searchIsAuthenticatedAndPreservesSpotifyFailureContracts() throws Exception {
         mvc.perform(get("/api/tracks/search").param("q", "곡")).andExpect(status().isUnauthorized());
         mvc.perform(get("/api/tracks/search").param("q", " ").header("Authorization", auth(owner))).andExpect(status().isBadRequest());

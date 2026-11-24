@@ -1,5 +1,7 @@
 package com.example.demo.analysis;
 
+import com.example.demo.error.ErrorCode;
+import com.example.demo.error.FallbackError;
 import com.example.demo.recommendation.RecommendationService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,6 +16,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/analysis")
+@FallbackError(ErrorCode.ANALYSIS_FAILED)
 public class AnalysisController {
     private final AnalysisService analysis;
     private final RecommendationService recommendations;

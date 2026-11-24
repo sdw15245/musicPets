@@ -1,5 +1,6 @@
 package com.example.demo.auth;
 
+import com.example.demo.error.ApiExceptionHandler;
 import com.example.demo.jwt.JwtTokenProvider;
 import com.example.demo.spotify.SpotifyService;
 import com.example.demo.user.User;
@@ -183,7 +184,7 @@ class AuthSessionIntegrationTest {
         when(service.refresh("test-credential")).thenThrow(new IllegalStateException("private-database-detail"));
         doThrow(new IllegalStateException("private-database-detail")).when(service).logout("test-credential");
         var isolated = standaloneSetup(new AuthController(service, new AuthCookies(false, tokens)))
-                .setControllerAdvice(new AuthExceptionHandler()).build();
+                .setControllerAdvice(new ApiExceptionHandler()).build();
         for (String path : List.of("refresh", "logout")) {
             isolated.perform(post("/api/auth/" + path).cookie(credential("test-credential")))
                     .andExpect(status().isServiceUnavailable()).andExpect(jsonPath("$.error").value("AUTH_UNAVAILABLE"))

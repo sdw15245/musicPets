@@ -1,7 +1,10 @@
 package com.example.demo.recommendation;
 
-public class InvalidPlaylistException extends IllegalArgumentException {
+import com.example.demo.error.ApiException;
+import com.example.demo.error.ErrorCode;
+
+public class InvalidPlaylistException extends ApiException {
     public InvalidPlaylistException() {
-        super("저장할 Spotify 곡을 선택해주세요.");
+        super(ErrorCode.INVALID_PLAYLIST);
     }
 }

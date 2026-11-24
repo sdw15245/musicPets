@@ -28,12 +28,12 @@ for (const member of [false, true]) {
   })
 }
 
-test('visitors see blurred undiscovered pets while detailed stories stay locked', async ({ page }) => {
+test('visitors see undiscovered pets desaturated while detailed stories stay locked', async ({ page }) => {
   await page.goto('/')
   const card = page.getByRole('button', { name: '멜로 자세히 보기', exact: true })
   await card.scrollIntoViewIfNeeded()
   await expect(card.getByRole('img', { name: '멜로', exact: true })).toBeVisible()
-  await expect(card.locator('img')).toHaveCSS('filter', /blur/)
+  await expect(card.locator('img')).toHaveCSS('filter', /grayscale/)
   await expect(card).not.toContainText('아늑한 몽상가')
   await card.click()
   const dialog = page.getByRole('dialog')

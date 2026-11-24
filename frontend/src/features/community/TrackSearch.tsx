@@ -67,7 +67,7 @@ export default function TrackSearch({ onSelect }: { onSelect: (track: CommunityT
       </TextField.Root>
       <Field.Footer><Field.Description>제목이나 아티스트를 입력하면 아래에 검색 결과가 나와요.</Field.Description></Field.Footer>
     </Field.Root>
-    <Button type="button" size="small" loading={current && search.isFetching} disabled={!trimmed || composing || (current && search.isFetching) || limit?.blocked || reconnect} onClick={submit}>검색</Button>
+    <Button className="track-search-submit" type="button" size="small" loading={current && search.isFetching} disabled={!trimmed || composing || (current && search.isFetching) || limit?.blocked || reconnect} onClick={submit}>검색</Button>
     {limit ? <RequestLimitNotice limit={limit} /> : reconnect
       ? <SpotifyReconnectNotice /> : current && search.isError && <ErrorNotice>곡을 검색하지 못했어요. 다시 검색해 주세요.</ErrorNotice>}
     <div className="share-options" aria-busy={waiting || (current && search.isFetching)}>

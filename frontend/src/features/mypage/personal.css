@@ -55,12 +55,17 @@
 
 .personal-main-taste { max-width: var(--mp-shell-width); }
 .history-comparison-toggle { display: flex; justify-content: flex-end; margin-bottom: var(--seed-dimension-x4); }
-.pets-overview { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--seed-dimension-x3); }
-.pets-collection { list-style: none; margin: var(--seed-dimension-x6) 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--seed-dimension-x10); }
-.pet-collection-row { display: flex; align-items: flex-start; gap: var(--seed-dimension-x4); padding-block: var(--seed-dimension-x5); border-bottom: 1px solid var(--line); }
-.pet-collection-row > div { flex: 1; min-width: 0; }
-.pet-collection-row img { flex-shrink: 0; object-fit: contain; border-radius: var(--seed-radius-r2); }
+.pets-count { margin: 0; color: var(--ink-soft); font: var(--mp-type-label); }
+.pets-count strong { color: var(--ink); font-size: var(--seed-font-size-t7); }
+.pets-overview { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--seed-dimension-x4); margin-top: var(--seed-dimension-x2); }
+/* A collection grid: five slots across on desktop, two on phones. */
+.pets-collection { list-style: none; margin: var(--seed-dimension-x8) 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--seed-dimension-x4); align-items: start; }
+.pet-collection-row { display: grid; gap: var(--seed-dimension-x3); padding: var(--seed-dimension-x4); border-radius: var(--seed-radius-r5); background: var(--seed-color-bg-neutral-weak); }
+.pet-collection-row > div { min-width: 0; }
+.pet-collection-row img { display: block; width: 100%; height: auto; aspect-ratio: 1; object-fit: cover; border-radius: var(--seed-radius-r4); }
+.pet-collection-row.is-met img { box-shadow: 0 8px 20px color-mix(in srgb, var(--seed-color-fg-neutral) 14%, transparent); }
 .pet-collection-row h2 { margin: 0; font: var(--mp-type-section-title); }
 .pet-collection-row p { color: var(--ink-soft); font: var(--mp-type-caption); margin: var(--seed-dimension-x1) 0; }
-.pet-not-met { filter: blur(7px); opacity: .45; }
-@media (max-width: 767px) { .pets-collection { grid-template-columns: minmax(0, 1fr); } .pet-collection-row { flex-wrap: wrap; } }
+.pet-collection-row > :last-child { justify-self: start; }
+.pet-not-met { filter: grayscale(1); opacity: .55; }
+@media (max-width: 767px) { .pets-collection { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--seed-dimension-x3); } .pet-collection-row { padding: var(--seed-dimension-x3); } }

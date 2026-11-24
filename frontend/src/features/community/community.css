@@ -896,3 +896,6 @@
   0%, 30% { opacity: 1; }
   100% { opacity: 0; }
 }
+
+/* Manual search is a fallback to typing; keep it compact beside the field's end. */
+.seed-share-section > .track-search-submit { justify-self: end; }

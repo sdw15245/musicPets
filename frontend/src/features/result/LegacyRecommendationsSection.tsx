@@ -57,7 +57,7 @@ function RecommendationsContent({ data, retry, save, limit, onRestart }: Props) 
         <TrackArtwork track={track} className="reco-img" />
         <div className="reco-meta">
           <p className="reco-name">{track.name}</p><p className="reco-artist">{track.artist}</p>
-          <a className="reco-listen" href={spotifyUrl(track)} target="_blank" rel="noreferrer" aria-label={`${track.name} Spotify에서 듣기`}>Spotify에서 듣기 <IconArrowUpRightLine className="inline-icon" aria-hidden="true" /><SpotifyLogo /></a>
+          <a className="reco-listen" href={spotifyUrl(track)} target="_blank" rel="noreferrer" aria-label={`${track.name} Spotify에서 듣기`}><SpotifyLogo /><IconArrowUpRightLine className="inline-icon" aria-hidden="true" /></a>
         </div>
         <div className="reco-track-actions">
         <Button asChild size="small" variant="ghost">

@@ -152,7 +152,7 @@ function CommunityContent({ profile, initialTrack }: ContentProps) {
             <Button ref={composerTriggerRef} variant="brandSolid" onClick={() => { openedFromFloating.current = false; openComposer() }} aria-label="오늘의 한 곡 올리기" aria-haspopup="dialog" aria-expanded={composer?.open ?? false}>한 곡 올리기</Button>
           </div>
           {/* The sidebar card is hidden on phones; keep the way into analysis visible there. */}
-          {view === 'discover' && !analysis && !analysisPending && !analysisFailed && <Link className="community-analyze-banner" to="/analyze">
+          {view === 'discover' && !pet && !analysis && !analysisPending && !analysisFailed && <Link className="community-analyze-banner" to="/analyze">
             <span className="community-analyze-icon" aria-hidden="true"><CommunityIcon name="sparkles" /></span>
             <span className="community-analyze-copy"><strong>내 음악 펫은?</strong><span>청취 기록으로 나와 닮은 펫을 찾아보세요.</span></span>
             <span className="community-analyze-action">분석하기<CommunityIcon name="arrow" /></span>

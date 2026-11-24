@@ -61,8 +61,6 @@
 
 .remodeled-landing .section-pad { padding-block: 80px; }
 .remodeled-landing .section-head { grid-template-columns: minmax(0, 1fr) minmax(0, 380px); gap: var(--seed-dimension-x12); margin-bottom: var(--seed-dimension-x10); }
-.remodeled-landing .section-kicker { color: var(--seed-color-fg-neutral-muted); font: var(--mp-type-caption); }
-.remodeled-landing .section-kicker::before { display: none; }
 .remodeled-landing .wf-h2 { font: var(--seed-font-weight-bold) var(--seed-font-size-t12)/var(--seed-line-height-t12) var(--seed-font-family); }
 .remodeled-landing .wf-sub { color: var(--seed-color-fg-neutral-muted); font: var(--mp-type-article-body); }
 .steps-section { background: var(--seed-color-bg-neutral-weak); }
@@ -71,7 +69,7 @@
 .character-card { min-width: 0; border: 1px solid var(--seed-color-stroke-neutral-muted); border-radius: var(--seed-radius-r5); background: var(--seed-color-bg-layer-default); }
 .character-card-trigger {
   display: grid;
-  grid-template-columns: 96px minmax(0, 1fr);
+  grid-template-columns: 120px minmax(0, 1fr);
   align-items: center;
   gap: var(--seed-dimension-x5);
   width: 100%;
@@ -88,13 +86,13 @@
 .character-card-trigger:hover { background: var(--seed-color-bg-neutral-weak); }
 .character-card-trigger:active { background: var(--seed-color-bg-neutral-weak-pressed); }
 .character-card-trigger:focus-visible { outline: 2px solid var(--seed-color-stroke-focus-ring); outline-offset: 4px; }
-.pet-stage { position: relative; display: grid; place-items: center; width: 96px; height: 96px; border-radius: var(--seed-radius-r3); background: transparent; overflow: hidden; }
-.pet-img.is-locked, .pet-detail-image.is-locked { filter: blur(7px); opacity: .65; }
-.pet-img { display: block; width: 96px; height: 96px; max-width: 100%; object-fit: contain; }
+.pet-stage { position: relative; display: grid; place-items: center; width: 120px; height: 120px; border-radius: var(--seed-radius-r4); background: var(--seed-color-bg-neutral-weak); overflow: hidden; }
+/* Uncollected pets stay recognizable; colour is what collecting unlocks. */
+.pet-img.is-locked, .pet-detail-image.is-locked { filter: grayscale(1); opacity: .55; }
+.pet-img { display: block; width: 100%; height: 100%; object-fit: contain; }
 .character-meta { min-width: 0; }
-.character-meta strong { display: block; margin-bottom: var(--seed-dimension-x1); font: var(--mp-type-section-title); }
+.character-meta strong { display: block; margin-bottom: var(--seed-dimension-x2); font: var(--mp-type-section-title); }
 .character-meta span { color: var(--seed-color-fg-neutral-muted); font: var(--mp-type-caption); }
-.character-meta > .seed-badge { margin-top: var(--seed-dimension-x3); }
 
 .pet-detail-layer { --layer-index: 100; }
 .pet-detail-dialog { max-height: 90dvh; }
@@ -144,7 +142,7 @@
   .remodeled-landing .section-head { margin-bottom: var(--seed-dimension-x8); }
   .remodeled-landing .wf-h2 { font: var(--mp-type-screen-title); }
   .character-card-trigger { grid-template-columns: 96px minmax(0, 1fr); gap: var(--seed-dimension-x4); padding: var(--seed-dimension-x4); }
-  .pet-stage, .pet-img { width: 96px; height: 96px; }
+  .pet-stage { width: 96px; height: 96px; }
   .cta-section { padding-block: var(--seed-dimension-x10); }
   .cta-inner { flex-direction: column; align-items: flex-start; gap: var(--seed-dimension-x6); }
   .wf-footer { column-gap: var(--seed-dimension-x6); row-gap: var(--seed-dimension-x2); }

@@ -1,6 +1,7 @@
 import { characters } from '../../shared/characters'
 import { IconBarchartSquareLine, IconHeadphoneLine, IconPawprintLine } from '@karrotmarket/react-monochrome-icon'
 import SpotifyLogo from '../../shared/components/SpotifyLogo'
+import { genreLabel } from '../analysis/genreLabels'
 import './how-it-works.css'
 
 const steps = [
@@ -17,7 +18,6 @@ function HowItWorksSection() {
       <div className="section-shell">
         <div className="section-head">
           <div>
-            <div className="section-kicker">이용 방법</div>
             <h2 className="wf-h2">듣던 음악으로<br />나의 펫을 찾는 방법</h2>
           </div>
         </div>
@@ -39,7 +39,7 @@ function HowItWorksSection() {
                 </> : s.n === 2 ? <>
                   <div className="how-example-heading"><strong>주요 장르</strong><span>분석 예시</span></div>
                   <ul className="how-genre-preview">{exampleGenres.map(([genre, ratio]) => <li key={genre}>
-                    <span>{genre}</span><div><span style={{ width: `${ratio * 100}%` }} /></div>
+                    <span>{genreLabel(genre)}</span><div><span style={{ width: `${ratio * 100}%` }} /></div>
                   </li>)}</ul>
                 </> : <>
                   <div className="how-example-heading"><strong>나를 닮은 음악 펫</strong><span>결과 예시</span></div>

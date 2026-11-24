@@ -18,7 +18,7 @@ export default function ArtistRecommendations({ artists }: { artists: Recommende
         <ArtistPortrait artist={artist} />
         <span className="artist-recommendation-copy"><strong>{artist.name}</strong>
           {artist.basedOn.length > 0 && <span className="artist-recommendation-reason">{artist.basedOn.slice(0, 2).join(' · ')}와 비슷한 아티스트</span>}
-          <span className="artist-recommendation-link"><SpotifyLogo /><span>에서 듣기</span></span>
+          <span className="artist-recommendation-link"><SpotifyLogo /></span>
         </span>
         <IconArrowUpRightLine size={20} aria-hidden="true" />
       </a>

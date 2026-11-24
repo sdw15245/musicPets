@@ -71,10 +71,11 @@ test('saved results reveal chart bars once per visit and respect reduced motion'
   await page.route('**/api/analysis/latest', route => route.fulfill({ json: current }))
   await page.route('**/api/analysis/history', route => route.fulfill({ json: [] }))
   await page.goto('/result')
-  for (const selector of ['.genre-explorer', '.popularity-summary']) {
+  // Genre bars grow; the popularity marker slides along its axis.
+  for (const [selector, animation] of [['.genre-explorer', 'genre-result-in'], ['.popularity-summary', 'popularity-marker-in']]) {
     const chart = page.locator(selector)
     await chart.scrollIntoViewIfNeeded()
-    await expect(chart.locator('.genre-fill').first()).toHaveCSS('animation-name', 'genre-result-in')
+    await expect(chart.locator('.genre-fill').first()).toHaveCSS('animation-name', animation)
     await chart.locator('.genre-fill').first().evaluate(el => Promise.all(el.getAnimations().map(a => a.finished)))
     await chart.evaluate(el => el.addEventListener('animationstart', () => el.setAttribute('data-replayed', 'true')))
     await page.evaluate(() => scrollTo(0, 0))
@@ -116,20 +117,20 @@ test('community search stays secondary and only expands on request in narrow fee
   }
 })
 
-test('only discovered pets are sharp in the catalog, dialog and collection', async ({ page }) => {
+test('only discovered pets are in colour in the catalog, dialog and collection', async ({ page }) => {
   await signedInPreview(page)
   await page.goto('/')
   const met = page.getByRole('button', { name: '멜로 자세히 보기', exact: true })
   const locked = page.getByRole('button', { name: '루바 자세히 보기', exact: true })
   await expect(met.locator('img')).toHaveCSS('filter', 'none')
-  await expect(locked.locator('img')).toHaveCSS('filter', /blur/)
+  await expect(locked.locator('img')).toHaveCSS('filter', /grayscale/)
   await locked.click()
-  await expect(page.getByRole('dialog').getByRole('img')).toHaveCSS('filter', /blur/)
+  await expect(page.getByRole('dialog').getByRole('img')).toHaveCSS('filter', /grayscale/)
   await page.keyboard.press('Escape')
   await met.click()
   await expect(page.getByRole('dialog').getByRole('img')).toHaveCSS('filter', 'none')
   await page.goto('/pets')
-  await expect(page.getByRole('listitem').filter({ has: page.getByRole('heading', { name: '루바', exact: true }) }).locator('img')).toHaveCSS('filter', /blur/)
+  await expect(page.getByRole('listitem').filter({ has: page.getByRole('heading', { name: '루바', exact: true }) }).locator('img')).toHaveCSS('filter', /grayscale/)
 })
 
 test('home pet name and match percentage share the same text alignment', async ({ page }) => {

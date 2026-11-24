@@ -7,8 +7,13 @@ export default function PersonalLayout({ title, description, children, taste = f
   return <div className="personal-page">
     <AppHeader pending={pending} />
     <main className={`personal-main${taste ? ' personal-main-taste' : ''}`}>
-      <h1>{title}</h1>{description && <p className="personal-description">{description}</p>}
-      {taste && <TasteNav />}
+      {/* Taste pages share one title like /result; the tab already names the section, so its heading is for assistive tech. */}
+      {taste ? <>
+        <h1>내 취향</h1>
+        <TasteNav />
+        <h2 className="sr-only">{title}</h2>
+      </> : <h1>{title}</h1>}
+      {description && <p className="personal-description">{description}</p>}
       {children}
     </main>
   </div>

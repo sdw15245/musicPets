@@ -32,12 +32,12 @@ export default function HistoryPage() {
           <p className="history-record-period">{analysisPeriodLabel(record)} · {record.genres.trackCount}곡 분석</p>
         </div>
         <time className="history-record-date" dateTime={record.analyzedAt} title={analysisDate(record.analyzedAt)}>
-          <span>{new Date(record.analyzedAt).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })}</span>
+          <span>{new Date(record.analyzedAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
           <span>{new Date(record.analyzedAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</span>
         </time>
         <IconChevronRightLine className="history-record-arrow" size={20} aria-hidden="true" />
       </Link>
-      <Button size="small" variant="ghost" aria-label="분석 기록 삭제" aria-haspopup="dialog" onClick={() => { remove.reset(); setDeleting(record.id) }}>삭제</Button>
+      <Button size="small" variant="ghost" color="fg.critical" aria-label="분석 기록 삭제" aria-haspopup="dialog" onClick={() => { remove.reset(); setDeleting(record.id) }}>삭제</Button>
     </li>)}</ul>
     <DeleteConfirmDialog open={deleting !== null} onOpenChange={open => { if (!open) setDeleting(null) }} title="분석 기록을 삭제할까요?"
       description="이 기록은 다시 볼 수 없어요. 최신 결과를 삭제하면 최근 결과도 비워져요. 수집한 펫은 유지돼요."

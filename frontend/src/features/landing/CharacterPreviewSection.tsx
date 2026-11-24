@@ -18,7 +18,6 @@ function CharacterPreviewSection() {
       <div className="section-shell">
         <div className="section-head">
           <div>
-            <div className="section-kicker">음악 펫</div>
             <h2 className="wf-h2">어떤 펫을 만나게 될까요?</h2>
           </div>
           <div>
@@ -35,7 +34,7 @@ function CharacterPreviewSection() {
             <article key={c.slug} className="character-card">
               <ResponsiveDialog.Root>
               <ResponsiveDialog.Trigger asChild><button type="button" className="character-card-trigger" aria-label={`${c.name} 자세히 보기`}>
-              <div className="pet-stage">
+              <div className="pet-stage" style={isUnlocked ? { backgroundColor: c.color } : undefined}>
                 <img
                   className={`pet-img${isUnlocked ? '' : ' is-locked'}`}
                   src={c.imageUrl}

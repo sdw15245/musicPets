@@ -1,5 +1,7 @@
 import type { AnalysisResult } from '../analysis/schemas'
 import { analysisPeriodLabel } from '../analysis/analysisPeriod'
+import { genreLabel } from '../analysis/genreLabels'
+import { resolveCharacter } from '../../shared/characters'
 
 /** Render only the shareable summary, without account details or private result URLs. */
 export async function createResultShareImage(data: AnalysisResult): Promise<File> {
@@ -43,7 +45,9 @@ export async function createResultShareImage(data: AnalysisResult): Promise<File
   const brandContrast = color('fg-brand-contrast')
   const weak = color('bg-brand-weak')
 
-  box(0, 0, 1080, 1350, 0, weak)
+  // The pet's own colour frames the card, so shared results differ at a glance.
+  const petColor = resolveCharacter(character.slug)?.color ?? weak
+  box(0, 0, 1080, 1350, 0, petColor)
   box(48, 48, 984, 1254, 44, color('bg-layer-default'))
   ctx.textBaseline = 'middle'
   ctx.font = '400 58px "DNFBitBitv2"'
@@ -53,26 +57,39 @@ export async function createResultShareImage(data: AnalysisResult): Promise<File
   ctx.fillStyle = brand
   ctx.fillText('Pets', 104 + logoWidth, 116)
   ctx.textAlign = 'right'
-  text(`${analysisPeriodLabel(data)} 음악 취향`, 976, 116, 27, muted)
+  text(`${analysisPeriodLabel(data)} · ${data.genres.trackCount}곡`, 976, 116, 27, muted)
 
   ctx.textAlign = 'center'
-  text('내 음악 취향을 닮은 펫', 540, 218, 30, muted)
-  text(character.name, 540, 294, 80, ink, 700)
-  text(`${data.genres.trackCount}곡에서 찾은 나의 음악 취향`, 540, 358, 28, muted)
+  text('내 음악 취향을 닮은 펫', 540, 196, 30, muted)
+  text(character.name, 540, 262, 84, ink, 700)
   ctx.save()
   ctx.beginPath()
-  ctx.roundRect(324, 410, 432, 432, 36)
+  ctx.roundRect(330, 316, 420, 420, 40)
   ctx.clip()
-  const scale = Math.min(432 / image.naturalWidth, 432 / image.naturalHeight)
+  box(330, 316, 420, 420, 0, petColor)
+  const scale = Math.min(420 / image.naturalWidth, 420 / image.naturalHeight)
   const width = image.naturalWidth * scale
   const height = image.naturalHeight * scale
-  ctx.drawImage(image, 540 - width / 2, 626 - height / 2, width, height)
+  ctx.drawImage(image, 540 - width / 2, 526 - height / 2, width, height)
   ctx.restore()
-  box(420, 866, 240, 62, 31, weak)
-  text(`${Math.round(character.score * 100)}% 매칭`, 540, 897, 30, brandContrast, 700)
+  box(410, 750, 260, 60, 30, weak)
+  text(`${Math.round(character.score * 100)}% 매칭`, 540, 780, 30, brandContrast, 700)
+
+  // Top genres give the card evidence worth comparing with friends.
+  const genres = Object.entries(data.genres.vector).filter(([, ratio]) => ratio > 0).sort((a, b) => b[1] - a[1]).slice(0, 3)
+  ctx.textAlign = 'left'
+  text('많이 들은 장르', 112, 850, 26, muted, 700)
+  genres.forEach(([genre, ratio], index) => {
+    const y = 894 + index * 42
+    ctx.textAlign = 'left'
+    text(genreLabel(genre), 112, y, 28, ink)
+    box(300, y - 6, 560, 12, 6, color('bg-neutral-weak'))
+    box(300, y - 6, Math.max(12, 560 * Math.min(ratio, 1)), 12, 6, color('bg-brand-solid'))
+    ctx.textAlign = 'right'
+    text(`${Math.round(ratio * 100)}%`, 968, y, 28, ink, 700)
+  })
 
   ctx.textAlign = 'left'
-  text('나의 음악 취향', 112, 972, 27, muted, 700)
   // Use the saved interpretation, including old results; never invent a new story on share.
   const comment = (!data.profilePending && data.profile?.comment.trim())
     || '분석한 장르 비중을 비교해 만난 음악 펫이에요.'
@@ -89,12 +106,13 @@ export async function createResultShareImage(data: AnalysisResult): Promise<File
     } else line = candidate
   }
   if (line.trim()) lines.push(line.trim())
-  if (lines.length > 5) {
-    let last = lines[4]
+  // Four lines keep clear space under the genres and above the footer.
+  if (lines.length > 4) {
+    let last = lines[3]
     while (ctx.measureText(last + '…').width > 856) last = Array.from(last).slice(0, -1).join('')
-    lines[4] = last.trimEnd() + '…'
+    lines[3] = last.trimEnd() + '…'
   }
-  lines.slice(0, 5).forEach((value, index) => text(value, 112, 1024 + index * 42, 32, ink))
+  lines.slice(0, 4).forEach((value, index) => text(value, 112, 1056 + index * 42, 32, ink))
   ctx.textAlign = 'center'
   text('음악으로 만나는 나의 취향 · MusicPets', 540, 1252, 25, muted)
 

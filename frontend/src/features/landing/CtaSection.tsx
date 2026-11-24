@@ -9,7 +9,6 @@ function CtaSection({ presentation }: { presentation: LandingPresentation }) {
     <section className="cta-section">
       <div className="section-shell cta-inner">
         <div>
-          <div className="section-kicker">{personal || failed ? '내 취향' : '시작하기'}</div>
           <h2 className="wf-h2">
             {failed ? '내 음악 취향을 확인해보세요' : personal ? <>내 음악 취향과<br />나의 펫을 다시 만나보세요</> : <>지금 듣는 음악으로<br />나의 펫을 만나보세요</>}
           </h2>

@@ -1,22 +1,47 @@
-import type { ReactNode } from 'react'
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 import type { AnalysisResult } from '../analysis/schemas'
 import { analysisPeriodLabel } from '../analysis/analysisPeriod'
 import AnalysisDetailStatus from './AnalysisDetailStatus'
 import AnalysisMetricHelp from './AnalysisMetricHelp'
 import { characters } from '../../shared/characters'
 
+/** Counts up once when a fresh result arrives; saved results and reduced motion show the value at once. */
+function MatchScore({ value, animate }: { value: number; animate: boolean }) {
+  const [shown, setShown] = useState(() => animate && !window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : value)
+  useEffect(() => {
+    if (shown === value) return
+    const start = performance.now()
+    let frame = requestAnimationFrame(function step(now) {
+      const progress = Math.min((now - start) / 900, 1)
+      setShown(Math.round(value * (1 - (1 - progress) ** 3)))
+      if (progress < 1) frame = requestAnimationFrame(step)
+    })
+    return () => cancelAnimationFrame(frame)
+    // Runs once per mount: the key on ResultContent remounts for a new result.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  return <span className="analysis-match-value"><strong>{shown}%</strong> 매칭</span>
+}
+
 export default function AnalysisOverview({ data, historical = false, reveal = false, actions }: { data: AnalysisResult; historical?: boolean; reveal?: boolean; actions?: ReactNode }) {
   const pet = data.character
-  const story = characters.find(item => item.slug === pet?.slug)?.story
-  return <section className={`analysis-overview${reveal ? ' is-new-result' : ''}`} aria-label="음악 취향 요약">
-    {pet && <div className="analysis-pet"><img src={pet.imageUrl} alt={pet.name} width={224} height={224} /></div>}
+  const catalog = characters.find(item => item.slug === pet?.slug)
+  const story = catalog?.story
+  // Each pet's own colour themes its result, so results read differently at a glance and in screenshots.
+  const theme = catalog ? { '--pet-color': catalog.color } as CSSProperties : undefined
+  return <section className={`analysis-overview${reveal ? ' is-new-result' : ''}`} style={theme} aria-label="음악 취향 요약">
+    {pet && <div className="analysis-pet"><img src={pet.imageUrl} alt={pet.name} width={280} height={280} /></div>}
     <div className="analysis-story">
       <div className="analysis-identity">
       <p className="analysis-period">{analysisPeriodLabel(data)} · {data.genres.trackCount}곡 분석</p>
-      {pet ? <div className="analysis-title-row">
+      {pet ? <>
+        <p className="analysis-pet-label">나를 닮은 음악 펫</p>
         <h2 className="analysis-pet-title">{pet.name}</h2>
-        <div className="analysis-metric-label"><span>{Math.round(pet.score * 100)}% 매칭</span><AnalysisMetricHelp title="매칭 점수 안내" description="분석한 장르 비중이 펫의 기준 장르 분포와 얼마나 비슷한지 나타내요. 성격을 평가하는 점수는 아니에요." /></div>
-      </div> : <><h2>아직 음악 펫을 찾지 못했어요</h2><p>청취 기록이나 장르 정보가 부족해요. 음악을 더 듣고 다시 분석해주세요.</p></>}
+        <div className="analysis-metric-label analysis-match">
+          <MatchScore value={Math.round(pet.score * 100)} animate={reveal} />
+          <AnalysisMetricHelp title="매칭 점수 안내" description="분석한 장르 비중이 펫의 기준 장르 분포와 얼마나 비슷한지 나타내요. 성격을 평가하는 점수는 아니에요." />
+        </div>
+      </> : <><h2>아직 음악 펫을 찾지 못했어요</h2><p>청취 기록이나 장르 정보가 부족해요. 음악을 더 듣고 다시 분석해주세요.</p></>}
       </div>
       <div className="profile-card">
         {data.profilePending ? historical ? <p>취향 해설이 완료되기 전에 저장된 기록이에요.</p> : <AnalysisDetailStatus id={data.id} section="profile" /> :

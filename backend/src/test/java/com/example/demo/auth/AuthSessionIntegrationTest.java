@@ -90,8 +90,8 @@ class AuthSessionIntegrationTest {
                 .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
                 .andExpect(jsonPath("$.refresh").doesNotExist()).andReturn().getResponse();
         String access = mapper.readTree(response.getContentAsString()).get("access").asText();
-        assertThat(tokens.isAccessToken(access)).isTrue();
-        assertThat(tokens.getUserId(access)).isEqualTo(tokens.getUserId(refresh));
+        assertThat(tokens.verify(access, JwtTokenProvider.TokenType.ACCESS))
+                .isPresent().isEqualTo(tokens.verify(refresh, JwtTokenProvider.TokenType.REFRESH));
         mvc.perform(get("/api/me").header("Authorization", "Bearer " + access)).andExpect(status().isOk());
         mvc.perform(get("/api/me").cookie(credential(refresh))).andExpect(status().isUnauthorized());
     }
@@ -163,7 +163,7 @@ class AuthSessionIntegrationTest {
         assertThat(cookie.getDomain()).isNull();
         assertThat(cookie.getAttribute("SameSite")).isEqualTo("Lax");
         assertThat(cookie.getMaxAge()).isEqualTo(tokens.getRefreshExpirationMs() / 1000);
-        assertThat(tokens.isRefreshToken(cookie.getValue())).isTrue();
+        assertThat(tokens.verify(cookie.getValue(), JwtTokenProvider.TokenType.REFRESH)).isPresent();
         assertThat(refreshTokens.findByToken(cookie.getValue())).isPresent();
         assertThat(response.getContentAsString()).isEmpty();
     }

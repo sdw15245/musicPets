@@ -1,6 +1,7 @@
 package com.example.demo.jwt;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,13 +10,19 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.Optional;
 
-/** JWT access/refresh 토큰 생성·검증·파싱. jjwt 라이브러리 래핑. */
+/** JWT access/refresh 토큰 생성·검증. jjwt 라이브러리 래핑. */
 @Component
 public class JwtTokenProvider {
 
-    private static final String TYPE_ACCESS = "access";
-    private static final String TYPE_REFRESH = "refresh";
+    public enum TokenType {
+        ACCESS("access"), REFRESH("refresh");
+
+        private final String claim;
+
+        TokenType(String claim) { this.claim = claim; }
+    }
 
     private final SecretKey key;
     private final long accessExpirationMs;
@@ -35,55 +42,42 @@ public class JwtTokenProvider {
     }
 
     public String createAccessToken(Long userId) {
-        return build(userId, TYPE_ACCESS, accessExpirationMs);
+        return build(userId, TokenType.ACCESS, accessExpirationMs);
     }
 
     public String createRefreshToken(Long userId) {
-        return build(userId, TYPE_REFRESH, refreshExpirationMs);
+        return build(userId, TokenType.REFRESH, refreshExpirationMs);
     }
 
     public long getRefreshExpirationMs() {
         return refreshExpirationMs;
     }
 
-    public Long getUserId(String token) {
-        return Long.parseLong(parse(token).getSubject());
-    }
-
-    public boolean isAccessToken(String token) {
-        return TYPE_ACCESS.equals(parse(token).get("type", String.class));
-    }
-
-    public boolean isRefreshToken(String token) {
-        return TYPE_REFRESH.equals(parse(token).get("type", String.class));
-    }
-
-    public boolean validate(String token) {
+    /**
+     * 서명·만료·토큰 종류가 모두 맞으면 사용자 ID를 돌려준다. 하나라도 틀리면 empty.
+     * 토큰은 한 번만 파싱하며 실패 이유는 구분하지 않는다(호출자에게 알려줄 정보가 아니다).
+     */
+    public Optional<Long> verify(String token, TokenType expected) {
+        if (token == null || token.isBlank()) return Optional.empty();
         try {
-            parse(token);
-            return true;
-        } catch (Exception e) {
-            return false;
+            Claims claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
+            if (!expected.claim.equals(claims.get("type", String.class))) return Optional.empty();
+            return Optional.of(Long.parseLong(claims.getSubject()));
+        } catch (JwtException | IllegalArgumentException invalid) {
+            // IllegalArgumentException은 빈 토큰과 숫자가 아닌 subject(NumberFormatException)를 포함한다.
+            return Optional.empty();
         }
     }
 
-    private String build(Long userId, String type, long expirationMs) {
+    private String build(Long userId, TokenType type, long expirationMs) {
         Date now = new Date();
         Date exp = new Date(now.getTime() + expirationMs);
         return Jwts.builder()
                 .subject(String.valueOf(userId))
-                .claim("type", type)
+                .claim("type", type.claim)
                 .issuedAt(now)
                 .expiration(exp)
                 .signWith(key)
                 .compact();
-    }
-
-    private Claims parse(String token) {
-        return Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
     }
 }

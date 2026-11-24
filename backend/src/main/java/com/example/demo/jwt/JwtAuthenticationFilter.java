@@ -7,15 +7,16 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Collections;
 
-/** 매 요청마다 Authorization 헤더의 JWT를 검증해서 SecurityContext에 사용자 정보를 채움. */
-@Component
+/**
+ * 매 요청마다 Authorization 헤더의 access 토큰을 검증해서 SecurityContext에 사용자 ID를 채운다.
+ * 보안 체인에만 등록한다(SecurityConfig). 빈으로 만들면 Spring Boot가 서블릿 필터로 한 번 더 등록한다.
+ */
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String AUTH_HEADER = "Authorization";
@@ -31,15 +32,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-        String token = resolveToken(request);
-
-        if (token != null && tokenProvider.validate(token) && tokenProvider.isAccessToken(token)) {
-            Long userId = tokenProvider.getUserId(token);
+        tokenProvider.verify(resolveToken(request), JwtTokenProvider.TokenType.ACCESS).ifPresent(userId -> {
             UsernamePasswordAuthenticationToken auth =
                     new UsernamePasswordAuthenticationToken(userId, null, Collections.emptyList());
             auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(auth);
-        }
+        });
 
         filterChain.doFilter(request, response);
     }

@@ -1,9 +1,17 @@
 package com.example.demo.notification;
 
+import com.example.demo.community.CommunityEvent;
+import com.example.demo.community.CommunityEvent.CommentCreated;
+import com.example.demo.community.CommunityEvent.CommentDeleted;
+import com.example.demo.community.CommunityEvent.PostDeleted;
+import com.example.demo.community.CommunityEvent.PostLiked;
+import com.example.demo.community.CommunityEvent.PostUnliked;
 import com.example.demo.community.Post;
 import com.example.demo.community.Comment;
 import com.example.demo.user.User;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.context.event.EventListener;
+import com.example.demo.paging.Paging;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.example.demo.error.ApiException;
@@ -31,9 +39,22 @@ public class NotificationService {
                                    String postPreview, String commentPreview) {}
     public record NotificationPage(List<NotificationView> items, int page, boolean hasMore, long unreadCount) {}
 
-    // 호출자는 게시글을 잠근 같은 트랜잭션에서 실제 생성된 행동에 대해서만 알림을 만든다.
-    public void liked(Post post, User actor) { create(post.getAuthor(), actor, LIKE, post.getId(), null); }
-    public void commented(Comment comment) {
+    /**
+     * 커뮤니티 활동을 알림으로 반영한다. 활동을 만든 트랜잭션(게시글 잠금 포함) 안에서 동기로 실행되므로,
+     * 알림 저장이 실패하면 활동도 롤백된다. 실제로 생긴 활동만 발행된다(중복 공감 등은 발행되지 않음).
+     */
+    @EventListener
+    public void on(CommunityEvent event) {
+        switch (event) {
+            case PostLiked(Post post, User actor) -> create(post.getAuthor(), actor, LIKE, post.getId(), null);
+            case PostUnliked(Long postId, Long actorId) -> notifications.deleteByPostIdAndActorIdAndKind(postId, actorId, LIKE);
+            case CommentCreated(Comment comment) -> commented(comment);
+            case CommentDeleted(Long commentId) -> notifications.deleteByCommentId(commentId);
+            case PostDeleted(Long postId) -> notifications.deleteByPostId(postId);
+        }
+    }
+
+    private void commented(Comment comment) {
         var parent = comment.getParent();
         var author = comment.getAuthor();
         // 댓글 작성자가 글 작성자이기도 하면 답글 알림 하나만 전달한다.
@@ -41,18 +62,15 @@ public class NotificationService {
             create(comment.getPost().getAuthor(), author, COMMENT, comment.getPost().getId(), comment.getId());
         if (parent != null) create(parent.getAuthor(), author, REPLY, comment.getPost().getId(), comment.getId());
     }
+
     private void create(User recipient, User actor, ActivityNotification.Kind kind, Long postId, Long commentId) {
         if (!recipient.getId().equals(actor.getId()))
             notifications.save(new ActivityNotification(recipient, actor, kind, postId, commentId));
     }
-    public void unlike(Long postId, Long actorId) { notifications.deleteByPostIdAndActorIdAndKind(postId, actorId, LIKE); }
-    public void deleteComment(Long commentId) { notifications.deleteByCommentId(commentId); }
-    public void deletePost(Long postId) { notifications.deleteByPostId(postId); }
 
     @Transactional(readOnly = true)
     public NotificationPage list(Long userId, int page) {
-        if (page < 0 || page > 10000) throw new ApiException(ErrorCode.INVALID_REQUEST);
-        var rows = notifications.findByRecipientIdOrderByIdDesc(userId, PageRequest.of(page, 20));
+        var rows = notifications.findByRecipientIdOrderByIdDesc(userId, Paging.of(page, Sort.unsorted()));
         var postIds = rows.stream().map(ActivityNotification::getPostId).distinct().toList();
         var commentIds = rows.stream().map(ActivityNotification::getCommentId).filter(Objects::nonNull).distinct().toList();
         // Fetch only preview columns in two batches instead of loading each notification's entities.
@@ -70,8 +88,7 @@ public class NotificationService {
     public void readAll(Long userId) { notifications.markAllRead(userId, Instant.now()); }
     private NotificationView view(ActivityNotification notification, Map<Long, String> postPreviews, Map<Long, String> commentPreviews) {
         User actor = notification.getActor();
-        String name = actor.getNickname() != null ? actor.getNickname() : actor.getDisplayName();
-        if (name == null || name.isBlank()) name = actor.getSpotifyId();
+        String name = actor.publicName();
         return new NotificationView(notification.getId().toString(), name, actor.getAnalyzedPet(), notification.getKind(),
             notification.getPostId().toString(), notification.getCommentId() == null ? null : notification.getCommentId().toString(),
             notification.getCreatedAt(), notification.isRead(), postPreviews.get(notification.getPostId()),

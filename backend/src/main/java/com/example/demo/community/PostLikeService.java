@@ -1,6 +1,7 @@
 package com.example.demo.community;
 
 import com.example.demo.user.UserRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.example.demo.error.ApiException;
@@ -11,11 +12,11 @@ public class PostLikeService {
     private final PostRepository posts;
     private final PostLikeRepository likes;
     private final UserRepository users;
-    private final com.example.demo.notification.NotificationService notifications;
+    private final ApplicationEventPublisher events;
 
-    public PostLikeService(PostRepository posts, PostLikeRepository likes, UserRepository users, com.example.demo.notification.NotificationService notifications) {
+    public PostLikeService(PostRepository posts, PostLikeRepository likes, UserRepository users, ApplicationEventPublisher events) {
         this.posts = posts; this.likes = likes; this.users = users;
-        this.notifications = notifications;
+        this.events = events;
     }
 
     public record LikeView(long likes, boolean liked) {}
@@ -30,12 +31,12 @@ public class PostLikeService {
         if (liked && !exists) {
             likes.save(new PostLike(post, user));
             post.addLike();
-            notifications.liked(post, user);
+            events.publishEvent(new CommunityEvent.PostLiked(post, user));
         }
         if (!liked && exists) {
             likes.deleteByPostIdAndUserId(postId, userId);
             post.removeLike();
-            notifications.unlike(postId, userId);
+            events.publishEvent(new CommunityEvent.PostUnliked(postId, userId));
         }
         return new LikeView(post.getLikes(), liked);
     }

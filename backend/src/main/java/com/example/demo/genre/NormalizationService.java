@@ -46,7 +46,7 @@ public class NormalizationService {
                 result.put(raw, Optional.empty());
                 continue;
             }
-            String tag = raw.toLowerCase().trim();
+            String tag = GenreDictionary.normalizeTag(raw);
             String fromDict = dictionary.lookup(tag);
             if (fromDict != null) {
                 result.put(raw, Optional.of(fromDict));

@@ -1,5 +1,6 @@
 package com.example.demo.llm;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -29,7 +30,6 @@ public class GeminiClient {
         return generate(prompt, Map.of("thinkingConfig", Map.of("thinkingBudget", 0)));
     }
 
-    @SuppressWarnings("unchecked")
     private String generate(String prompt, Map<String, Object> generationConfig) {
         Map<String, Object> body = new HashMap<>(Map.of(
                 "contents", List.of(Map.of(
@@ -38,25 +38,33 @@ public class GeminiClient {
         ));
         if (!generationConfig.isEmpty()) body.put("generationConfig", generationConfig);
 
-        Map<String, Object> response = restClient.post()
+        GenerateResponse response = restClient.post()
                 .uri("/models/{model}:generateContent", props.getModel())
                 .header("x-goog-api-key", props.getApiKey())
                 .body(body)
                 .retrieve()
-                .body(Map.class);
+                .body(GenerateResponse.class);
+        return response == null ? "" : response.firstText();
+    }
 
-        if (response == null) return "";
+    /** 응답 중 첫 후보의 첫 텍스트만 읽는다. 빈 응답·안전 차단 등으로 없으면 빈 문자열. */
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    record GenerateResponse(List<Candidate> candidates) {
+        @JsonIgnoreProperties(ignoreUnknown = true)
+        record Candidate(Content content) {}
 
-        List<Map<String, Object>> candidates = (List<Map<String, Object>>) response.get("candidates");
-        if (candidates == null || candidates.isEmpty()) return "";
+        @JsonIgnoreProperties(ignoreUnknown = true)
+        record Content(List<Part> parts) {}
 
-        Map<String, Object> content = (Map<String, Object>) candidates.get(0).get("content");
-        if (content == null) return "";
+        @JsonIgnoreProperties(ignoreUnknown = true)
+        record Part(String text) {}
 
-        List<Map<String, Object>> parts = (List<Map<String, Object>>) content.get("parts");
-        if (parts == null || parts.isEmpty()) return "";
-
-        Object text = parts.get(0).get("text");
-        return text == null ? "" : text.toString();
+        String firstText() {
+            if (candidates == null || candidates.isEmpty() || candidates.getFirst() == null) return "";
+            Content content = candidates.getFirst().content();
+            if (content == null || content.parts() == null || content.parts().isEmpty() || content.parts().getFirst() == null) return "";
+            String text = content.parts().getFirst().text();
+            return text == null ? "" : text;
+        }
     }
 }

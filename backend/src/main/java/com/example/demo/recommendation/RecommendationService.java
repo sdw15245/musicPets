@@ -2,9 +2,11 @@ package com.example.demo.recommendation;
 
 import com.example.demo.lastfm.LastfmService;
 
+import com.example.demo.spotify.ArtistNames;
 import com.example.demo.spotify.SpotifyService;
 import com.example.demo.spotify.SpotifyService.PlaylistRef;
 import com.example.demo.spotify.SpotifyService.TopTrack;
+import com.example.demo.spotify.TrackUri;
 
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
@@ -47,7 +49,7 @@ public class RecommendationService {
             Set<String> counted = new HashSet<>();
             for (var artist : track.artists()) {
                 if (artist.name() == null || artist.name().isBlank()) continue;
-                String nameKey = SpotifyService.artistNameKey(artist.name());
+                String nameKey = ArtistNames.key(artist.name());
                 knownNames.add(nameKey);
                 if (artist.id() != null && !artist.id().isBlank()) knownIds.add(artist.id());
                 String identity = artist.id() == null || artist.id().isBlank() ? nameKey : artist.id();
@@ -62,7 +64,7 @@ public class RecommendationService {
             checkInterrupted();
             for (var similar : lastfm.getSimilarArtists(seed.name(), 10)) {
                 similarCount++;
-                String nameKey = SpotifyService.artistNameKey(similar.name());
+                String nameKey = ArtistNames.key(similar.name());
                 if (knownNames.contains(nameKey) || !Double.isFinite(similar.match()) || similar.match() <= 0) continue;
                 candidates.computeIfAbsent(nameKey, k -> new ArtistCandidate(similar.name().trim()))
                         .evidence.merge(seed.name(), similar.match(), Math::max);
@@ -75,7 +77,7 @@ public class RecommendationService {
             checkInterrupted();
             var hit = spotify.searchArtist(userId, candidate.name);
             if (hit == null || hit.id() == null || hit.uri() == null || knownIds.contains(hit.id())
-                    || knownNames.contains(SpotifyService.artistNameKey(hit.name()))) continue;
+                    || knownNames.contains(ArtistNames.key(hit.name()))) continue;
             hits.putIfAbsent(hit.id(), hit);
             var combined = resolved.computeIfAbsent(hit.id(), k -> new ArtistCandidate(hit.name()));
             candidate.evidence.forEach((seed, score) -> combined.evidence.merge(seed, score, Math::max));
@@ -102,7 +104,7 @@ public class RecommendationService {
     /** 이전 분석에 저장된 추천곡으로 Spotify 플레이리스트를 만든다. */
     public String saveAsPlaylist(Long userId, String name, List<String> uris) {
         if (uris == null || uris.isEmpty() || uris.size() > 100
-                || uris.stream().anyMatch(uri -> uri == null || !uri.matches("spotify:track:[A-Za-z0-9]+"))) {
+                || uris.stream().anyMatch(uri -> TrackUri.parse(uri).isEmpty())) {
             throw new InvalidPlaylistException();
         }
         PlaylistRef pl = spotify.createPlaylist(userId, name, "음악 캐릭터 매칭이 추천한 곡들");

@@ -1,24 +1,23 @@
 package com.example.demo.config;
 
+import com.example.demo.auth.AuthCookies;
 import com.example.demo.auth.OAuth2LoginSuccessHandler;
 import com.example.demo.auth.OAuth2LoginFailureHandler;
 import com.example.demo.auth.SpotifyAuthorizationRequestResolver;
-import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import com.example.demo.error.ErrorCode;
 import com.example.demo.error.ErrorResponseWriter;
 import com.example.demo.jwt.JwtAuthenticationEntryPoint;
 import com.example.demo.jwt.JwtAuthenticationFilter;
-import com.example.demo.ratelimit.RequestGuard;
-import com.example.demo.ratelimit.RequestLimitFilter;
-import com.example.demo.ratelimit.RequestLimits;
+import com.example.demo.jwt.JwtTokenProvider;
 import jakarta.servlet.DispatcherType;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
@@ -30,39 +29,40 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
 import java.util.List;
-import org.springframework.http.HttpMethod;
 
+/**
+ * 인증·인가 규칙. 공개 경로는 여기서만 정한다.
+ * 요청 예산은 컨트롤러 메서드의 @RateLimited로 정한다(ratelimit 패키지).
+ */
 @Configuration
-@EnableConfigurationProperties(RequestLimits.class)
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtTokenProvider tokens;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
     private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
+    private final AuthCookies cookies;
 
     @Value("${app.cors.allowed-origins}")
     private String allowedOrigins;
 
-    @Value("${app.auth.cookie-secure:true}")
-    private boolean secureCookies;
-
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
+    public SecurityConfig(JwtTokenProvider tokens,
                           JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
                           OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler,
-                          OAuth2LoginFailureHandler oAuth2LoginFailureHandler) {
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+                          OAuth2LoginFailureHandler oAuth2LoginFailureHandler,
+                          AuthCookies cookies) {
+        this.tokens = tokens;
         this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
         this.oAuth2LoginSuccessHandler = oAuth2LoginSuccessHandler;
         this.oAuth2LoginFailureHandler = oAuth2LoginFailureHandler;
+        this.cookies = cookies;
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, RequestGuard requestGuard, ErrorResponseWriter errors,
+    public SecurityFilterChain filterChain(HttpSecurity http, ErrorResponseWriter errors,
                                            ClientRegistrationRepository clients) throws Exception {
         CookieCsrfTokenRepository csrfTokens = new CookieCsrfTokenRepository();
-        csrfTokens.setCookieCustomizer(cookie -> cookie.httpOnly(true).secure(secureCookies)
-                .sameSite("Lax").path("/api/auth"));
+        csrfTokens.setCookieCustomizer(cookies::configure);
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.csrfTokenRepository(csrfTokens)
@@ -89,8 +89,8 @@ public class SecurityConfig {
                 .authorizationEndpoint(endpoint -> endpoint.authorizationRequestResolver(new SpotifyAuthorizationRequestResolver(clients)))
                 .successHandler(oAuth2LoginSuccessHandler)
                 .failureHandler(oAuth2LoginFailureHandler))
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-            .addFilterAfter(new RequestLimitFilter(requestGuard, errors), JwtAuthenticationFilter.class);
+            // 빈으로 등록하지 않는다. 빈이면 Spring Boot가 서블릿 필터로도 한 번 더 등록한다.
+            .addFilterBefore(new JwtAuthenticationFilter(tokens), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

@@ -17,7 +17,9 @@ public class PostController {
             @RequestParam(required = false) String pet,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "latest") String sort,
-            @RequestParam(defaultValue = "") String q) { return posts.list(userId, view, filter, pet, page, sort, q); }
+            @RequestParam(defaultValue = "") String q) {
+        return posts.list(userId, FeedQuery.parse(view, filter, pet, page, sort, q));
+    }
 
     @PutMapping("/{id}/like")
     public PostLikeService.LikeView like(@AuthenticationPrincipal Long userId, @PathVariable Long id) { return likes.setLiked(userId, id, true); }

@@ -67,4 +67,10 @@ public class User {
         this.email = email;
         this.displayName = displayName;
     }
+
+    /** 다른 사용자에게 보이는 이름: 별명 → Spotify 표시 이름 → Spotify ID 순. */
+    public String publicName() {
+        String name = nickname != null ? nickname : displayName;
+        return name == null || name.isBlank() ? spotifyId : name;
+    }
 }

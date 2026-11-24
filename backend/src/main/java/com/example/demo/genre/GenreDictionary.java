@@ -3,12 +3,13 @@ package com.example.demo.genre;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import static java.util.Map.entry;
 
 /**
- * Last.fm 태그 → 12 메인 장르 hard-coded 매핑.
+ * Last.fm 태그 → 13 메인 장르 hard-coded 매핑.
  * 자주 등장하는 태그만 등록. 누락 태그는 LLM fallback으로 처리.
  */
 @Component
@@ -101,6 +102,11 @@ public class GenreDictionary {
     /** 매핑된 메인 장르, 또는 null (사전에 없음). */
     public String lookup(String tag) {
         if (tag == null) return null;
-        return DICTIONARY.get(tag.toLowerCase().trim());
+        return DICTIONARY.get(normalizeTag(tag));
+    }
+
+    /** 사전·DB 캐시·LLM 응답이 같은 키를 쓰도록 태그를 맞춘다. 서버 언어 설정과 무관하게 소문자로 바꾼다. */
+    public static String normalizeTag(String tag) {
+        return tag.trim().toLowerCase(Locale.ROOT);
     }
 }

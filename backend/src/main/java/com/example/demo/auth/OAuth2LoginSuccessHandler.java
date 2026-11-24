@@ -1,10 +1,5 @@
 package com.example.demo.auth;
 
-import com.example.demo.jwt.JwtTokenProvider;
-import com.example.demo.spotify.SpotifyToken;
-import com.example.demo.spotify.SpotifyTokenRepository;
-import com.example.demo.user.User;
-import com.example.demo.user.UserRepository;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -16,91 +11,53 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
-import java.time.Instant;
 
 /**
- * Spotify 로그인 성공 후 처리: User upsert + Spotify 토큰 저장 + 우리 JWT 발급 + 프론트로 redirect.
+ * Spotify 로그인 성공 후: OAuth 결과를 AuthService에 넘기고, 받은 refresh 토큰을 쿠키로만 전달해 프론트로 redirect.
+ * 주소에는 토큰을 싣지 않는다.
  */
 @Component
 public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
-    private final UserRepository userRepository;
-    private final RefreshTokenRepository refreshTokenRepository;
-    private final SpotifyTokenRepository spotifyTokenRepository;
+    private final AuthService auth;
     private final OAuth2AuthorizedClientService authorizedClientService;
-    private final JwtTokenProvider tokenProvider;
-    private final String successRedirectUri;
     private final AuthCookies cookies;
+    private final String successRedirectUri;
 
-    public OAuth2LoginSuccessHandler(UserRepository userRepository,
-                                     RefreshTokenRepository refreshTokenRepository,
-                                     SpotifyTokenRepository spotifyTokenRepository,
+    public OAuth2LoginSuccessHandler(AuthService auth,
                                      OAuth2AuthorizedClientService authorizedClientService,
-                                     JwtTokenProvider tokenProvider,
                                      AuthCookies cookies,
                                      @Value("${app.oauth2.success-redirect}") String successRedirectUri) {
-        this.userRepository = userRepository;
-        this.refreshTokenRepository = refreshTokenRepository;
-        this.spotifyTokenRepository = spotifyTokenRepository;
+        this.auth = auth;
         this.authorizedClientService = authorizedClientService;
-        this.tokenProvider = tokenProvider;
-        this.successRedirectUri = successRedirectUri;
         this.cookies = cookies;
+        this.successRedirectUri = successRedirectUri;
     }
 
     @Override
-    @Transactional
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
                                         Authentication authentication) throws IOException, ServletException {
         OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
         OAuth2User oauthUser = oauthToken.getPrincipal();
-
-        String spotifyId = oauthUser.getName();
-        String email = oauthUser.getAttribute("email");
-        String displayName = oauthUser.getAttribute("display_name");
-
-        // 1) User upsert
-        User user = userRepository.findBySpotifyId(spotifyId)
-                .map(existing -> {
-                    existing.updateProfile(email, displayName);
-                    return existing;
-                })
-                .orElseGet(() -> userRepository.save(new User(spotifyId, email, displayName)));
-
-        // 2) Spotify access/refresh 토큰 저장
         OAuth2AuthorizedClient client = authorizedClientService.loadAuthorizedClient(
                 oauthToken.getAuthorizedClientRegistrationId(), oauthToken.getName());
-        if (client != null) {
-            String spotifyAccess = client.getAccessToken().getTokenValue();
-            Instant spotifyExpiresAt = client.getAccessToken().getExpiresAt();
-            String spotifyRefresh = client.getRefreshToken() != null
-                    ? client.getRefreshToken().getTokenValue() : null;
 
-            spotifyTokenRepository.findById(user.getId())
-                    .ifPresentOrElse(
-                            existing -> existing.update(spotifyAccess, spotifyRefresh, spotifyExpiresAt),
-                            () -> spotifyTokenRepository.save(
-                                    new SpotifyToken(user.getId(), spotifyAccess, spotifyRefresh, spotifyExpiresAt))
-                    );
-        }
-
-        // 3) 장기 토큰은 HttpOnly 쿠키로만 전달한다.
-        String refreshToken = tokenProvider.createRefreshToken(user.getId());
-
-        refreshTokenRepository.deleteByUserId(user.getId());
-        refreshTokenRepository.save(new RefreshToken(
-                refreshToken,
-                user.getId(),
-                Instant.now().plusMillis(tokenProvider.getRefreshExpirationMs())
-        ));
+        String refreshToken = auth.login(new AuthService.SpotifyLogin(oauthUser.getName(),
+                oauthUser.getAttribute("email"), oauthUser.getAttribute("display_name"), spotifyTokens(client)));
 
         cookies.set(response, refreshToken);
         response.setHeader("Cache-Control", "no-store");
         response.setHeader("Referrer-Policy", "no-referrer");
         getRedirectStrategy().sendRedirect(request, response, successRedirectUri);
+    }
+
+    private static AuthService.SpotifyTokens spotifyTokens(OAuth2AuthorizedClient client) {
+        if (client == null) return null;
+        return new AuthService.SpotifyTokens(client.getAccessToken().getTokenValue(),
+                client.getRefreshToken() == null ? null : client.getRefreshToken().getTokenValue(),
+                client.getAccessToken().getExpiresAt());
     }
 }

@@ -15,6 +15,8 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.Properties;
 
+import static com.example.demo.jwt.JwtTokenProvider.TokenType.ACCESS;
+import static com.example.demo.jwt.JwtTokenProvider.TokenType.REFRESH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -69,34 +71,31 @@ class JwtTokenProviderTest {
         JwtTokenProvider verifier = new JwtTokenProvider(secret, 60_000, 120_000);
         String access = issuer.createAccessToken(42L);
         String refresh = issuer.createRefreshToken(42L);
-        assertThat(verifier.validate(access)).isTrue();
-        assertThat(verifier.getUserId(access)).isEqualTo(42L);
-        assertThat(verifier.isAccessToken(access)).isTrue();
-        assertThat(verifier.isRefreshToken(access)).isFalse();
-        assertThat(verifier.validate(refresh)).isTrue();
-        assertThat(verifier.isRefreshToken(refresh)).isTrue();
-        assertThat(verifier.isAccessToken(refresh)).isFalse();
-        assertThat(new JwtTokenProvider(randomSecret(), 60_000, 120_000).validate(access)).isFalse();
+        assertThat(verifier.verify(access, ACCESS)).contains(42L);
+        assertThat(verifier.verify(access, REFRESH)).as("access token cannot refresh a session").isEmpty();
+        assertThat(verifier.verify(refresh, REFRESH)).contains(42L);
+        assertThat(verifier.verify(refresh, ACCESS)).as("refresh token cannot call the API").isEmpty();
+        assertThat(new JwtTokenProvider(randomSecret(), 60_000, 120_000).verify(access, ACCESS)).isEmpty();
     }
 
     @Test void tokenSignedWithLegacyDefaultCannotImpersonateUser() {
         String forged = Jwts.builder().subject("42").claim("type", "access")
                 .expiration(Date.from(Instant.now().plusSeconds(60)))
                 .signWith(Keys.hmacShaKeyFor(LEGACY_DEFAULT.getBytes(StandardCharsets.UTF_8))).compact();
-        assertThat(new JwtTokenProvider(randomSecret(), 60_000, 120_000).validate(forged)).isFalse();
+        assertThat(new JwtTokenProvider(randomSecret(), 60_000, 120_000).verify(forged, ACCESS)).isEmpty();
     }
 
     @Test void expiredAndTamperedTokensAreRejected() {
         String secret = randomSecret();
         JwtTokenProvider expired = new JwtTokenProvider(secret, -60_000, 120_000);
-        assertThat(expired.validate(expired.createAccessToken(42L))).isFalse();
+        assertThat(expired.verify(expired.createAccessToken(42L), ACCESS)).isEmpty();
         JwtTokenProvider provider = new JwtTokenProvider(secret, 60_000, 120_000);
         String[] parts = provider.createAccessToken(42L).split("\\.");
         String alteredPayload = new String(Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8)
                 .replace("\"42\"", "\"43\"");
         String tampered = parts[0] + "." + Base64.getUrlEncoder().withoutPadding()
                 .encodeToString(alteredPayload.getBytes(StandardCharsets.UTF_8)) + "." + parts[2];
-        assertThat(provider.validate(tampered)).isFalse();
-        assertThat(provider.validate("not.a.valid-token")).isFalse();
+        assertThat(provider.verify(tampered, ACCESS)).isEmpty();
+        assertThat(provider.verify("not.a.valid-token", ACCESS)).isEmpty();
     }
 }

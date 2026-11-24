@@ -64,12 +64,12 @@ public class LlmGenreClassifier {
             Map<String, String> normalized = new HashMap<>();
             parsed.forEach((k, v) -> {
                 if (v instanceof String genre) {
-                    normalized.put(k.toLowerCase().trim(), genre.toLowerCase().trim());
+                    normalized.put(GenreDictionary.normalizeTag(k), GenreDictionary.normalizeTag(genre));
                 }
             });
 
             for (String tag : tags) {
-                String genre = normalized.get(tag.toLowerCase().trim());
+                String genre = normalized.get(GenreDictionary.normalizeTag(tag));
                 if (genre != null && GenreDictionary.MAIN_GENRES.contains(genre)) {
                     result.put(tag, Optional.of(genre));
                 } else if ("none".equals(genre)) {

@@ -1,9 +1,10 @@
 package com.example.demo.community;
 
+import com.example.demo.paging.Paging;
 import com.example.demo.user.User;
 import com.example.demo.user.UserRepository;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.example.demo.error.ApiException;
@@ -18,11 +19,11 @@ public class CommentService {
     private final CommentRepository comments;
     private final PostRepository posts;
     private final UserRepository users;
-    private final com.example.demo.notification.NotificationService notifications;
+    private final ApplicationEventPublisher events;
 
-    public CommentService(CommentRepository comments, PostRepository posts, UserRepository users, com.example.demo.notification.NotificationService notifications) {
+    public CommentService(CommentRepository comments, PostRepository posts, UserRepository users, ApplicationEventPublisher events) {
         this.comments = comments; this.posts = posts; this.users = users;
-        this.notifications = notifications;
+        this.events = events;
     }
 
     public record CreateComment(String body, Long parentId) {}
@@ -38,16 +39,16 @@ public class CommentService {
             if (target.isDeleted()) throw new ApiException(ErrorCode.NOT_FOUND);
             Long rootId = target.getParent() == null ? target.getId() : target.getParent().getId();
             // Root threads are ordered newest first; reply ids do not affect their position.
-            page = Math.toIntExact(comments.countByPostIdAndParentIsNullAndIdGreaterThan(postId, rootId) / 20);
+            page = Math.toIntExact(comments.countByPostIdAndParentIsNullAndIdGreaterThan(postId, rootId) / Paging.SIZE);
         }
         return list(viewer, postId, page);
     }
 
     @Transactional(readOnly = true)
     public CommentPage list(Long viewer, Long postId, int page) {
-        if (page < 0 || page > 10000) throw new ApiException(ErrorCode.INVALID_REQUEST);
+        var newestFirst = Paging.of(page, Sort.by(Sort.Direction.DESC, "id"));
         if (!posts.existsById(postId)) throw new ApiException(ErrorCode.NOT_FOUND);
-        var roots = comments.findByPostIdAndParentIsNull(postId, PageRequest.of(page, 20, Sort.by(Sort.Direction.DESC, "id")));
+        var roots = comments.findByPostIdAndParentIsNull(postId, newestFirst);
         var items = new ArrayList<>(roots.getContent());
         if (!items.isEmpty()) {
             items.addAll(comments.findByPostIdAndParentIdInOrderByIdAsc(postId, roots.stream().map(Comment::getId).toList()));
@@ -64,7 +65,7 @@ public class CommentService {
             throw new ApiException(ErrorCode.INVALID_REQUEST, "삭제되지 않은 원댓글에만 답글을 달 수 있어요.");
         }
         Comment comment = comments.save(new Comment(post, author, parent, body));
-        notifications.commented(comment);
+        events.publishEvent(new CommunityEvent.CommentCreated(comment));
         return view(comment, userId);
     }
 
@@ -84,7 +85,7 @@ public class CommentService {
         requireOwner(comment, userId);
         // 내용만 비워 답글의 연결과 대화 순서를 보존한다.
         comment.delete();
-        notifications.deleteComment(id);
+        events.publishEvent(new CommunityEvent.CommentDeleted(id));
     }
 
     private Post lockPost(Long postId) {
@@ -105,8 +106,7 @@ public class CommentService {
     }
     private CommentView view(Comment comment, Long viewer) {
         User author = comment.getAuthor();
-        String name = author.getNickname() != null ? author.getNickname() : author.getDisplayName();
-        if (name == null || name.isBlank()) name = author.getSpotifyId();
+        String name = author.publicName();
         return new CommentView(comment.getId().toString(), comment.getPost().getId().toString(),
                 comment.getParent() == null ? null : comment.getParent().getId().toString(),
                 comment.isDeleted() ? "" : name, comment.isDeleted() ? null : author.getAnalyzedPet(), comment.getBody(), comment.getCreatedAt(),

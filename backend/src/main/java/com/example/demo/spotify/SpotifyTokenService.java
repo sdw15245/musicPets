@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
@@ -51,6 +52,14 @@ public class SpotifyTokenService {
         synchronized (refreshLocks[Math.floorMod(userId.hashCode(), refreshLocks.length)]) {
             return resolveAccessToken(userId);
         }
+    }
+
+    /** 로그인으로 받은 토큰을 저장한다. 새 refresh 토큰이 없으면 기존 것을 유지한다. */
+    @Transactional
+    public void store(Long userId, String accessToken, String refreshToken, Instant expiresAt) {
+        repository.findById(userId).ifPresentOrElse(
+                existing -> existing.update(accessToken, refreshToken, expiresAt),
+                () -> repository.save(new SpotifyToken(userId, accessToken, refreshToken, expiresAt)));
     }
 
     private String resolveAccessToken(Long userId) {

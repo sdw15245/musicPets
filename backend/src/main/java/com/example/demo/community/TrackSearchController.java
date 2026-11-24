@@ -1,5 +1,7 @@
 package com.example.demo.community;
 
+import com.example.demo.ratelimit.RateLimited;
+import com.example.demo.ratelimit.RequestLimits.Operation;
 import com.example.demo.spotify.SpotifyService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +15,7 @@ public class TrackSearchController {
     private final SpotifyService spotify;
     public TrackSearchController(SpotifyService spotify) { this.spotify = spotify; }
 
+    @RateLimited(Operation.SEARCH)
     @GetMapping("/search")
     public List<SpotifyService.TrackHit> search(@AuthenticationPrincipal Long userId, @RequestParam String q) {
         String query = q.strip();

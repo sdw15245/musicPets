@@ -10,7 +10,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.method.HandlerMethod;
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 import java.util.UUID;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -46,7 +51,7 @@ class RequestLimitIntegrationTest {
         mvc.perform(get("/api/posts").header("Forwarded", "for=192.0.2.99").header("X-Forwarded-For", "192.0.2.99")
                         .with(r -> { r.setRemoteAddr(ip); return r; }))
                 .andExpect(status().isTooManyRequests()).andExpect(jsonPath("$.operation").value("READ"));
-        verify(posts, times(3)).list(isNull(), anyString(), anyString(), isNull(), anyInt(), anyString(), anyString());
+        verify(posts, times(3)).list(isNull(), any());
     }
 
     @Test void unauthenticatedRequestsRemainUnauthorizedAndPreflightIsNotThrottled() throws Exception {
@@ -66,11 +71,28 @@ class RequestLimitIntegrationTest {
         verify(analysis).analyze(91003L);
     }
 
-    @Test void classifyEveryExpensiveRouteAndGroupCommunityMutations() {
-        org.assertj.core.api.Assertions.assertThat(RequestLimitFilter.classify("POST", "/api/analysis/recommendations/save")).isEqualTo(RequestLimits.Operation.PLAYLIST);
-        org.assertj.core.api.Assertions.assertThat(RequestLimitFilter.classify("POST", "/api/analysis/run-id/recommendations")).isEqualTo(RequestLimits.Operation.RECOMMENDATIONS);
-        org.assertj.core.api.Assertions.assertThat(RequestLimitFilter.classify("GET", "/api/tracks/search")).isEqualTo(RequestLimits.Operation.SEARCH);
-        for (String path : java.util.List.of("/api/posts", "/api/posts/1/comments", "/api/posts/1/like", "/api/me"))
-            org.assertj.core.api.Assertions.assertThat(RequestLimitFilter.classify("PUT", path)).isEqualTo(RequestLimits.Operation.WRITE);
+    @Autowired @Qualifier("requestMappingHandlerMapping") RequestMappingHandlerMapping handlers;
+
+    /** 실제 라우팅으로 찾은 컨트롤러 메서드의 예산 종류. */
+    RequestLimits.Operation operation(String method, String path, String... headers) throws Exception {
+        var request = new MockHttpServletRequest(method, path);
+        for (int i = 0; i < headers.length; i += 2) request.addHeader(headers[i], headers[i + 1]);
+        var handler = (HandlerMethod) handlers.getHandler(request).getHandler();
+        return RequestLimitInterceptor.operation(handler, method);
+    }
+
+    @Test void everyExpensiveRouteDeclaresItsBudgetAndCommunityMutationsShareWrite() throws Exception {
+        assertThat(operation("POST", "/api/analysis")).isEqualTo(RequestLimits.Operation.ANALYSIS);
+        assertThat(operation("POST", "/api/analysis", "X-Analysis-Mode", "progressive")).isEqualTo(RequestLimits.Operation.ANALYSIS);
+        assertThat(operation("POST", "/api/analysis/run-id/profile")).isEqualTo(RequestLimits.Operation.PROFILE);
+        assertThat(operation("POST", "/api/analysis/run-id/recommendations/initial")).isEqualTo(RequestLimits.Operation.RECOMMENDATIONS);
+        assertThat(operation("POST", "/api/analysis/run-id/recommendations")).isEqualTo(RequestLimits.Operation.RECOMMENDATIONS);
+        assertThat(operation("POST", "/api/analysis/recommendations/save")).isEqualTo(RequestLimits.Operation.PLAYLIST);
+        assertThat(operation("GET", "/api/tracks/search")).isEqualTo(RequestLimits.Operation.SEARCH);
+        assertThat(operation("GET", "/api/posts")).isEqualTo(RequestLimits.Operation.READ);
+        assertThat(operation("POST", "/api/posts")).isEqualTo(RequestLimits.Operation.WRITE);
+        assertThat(operation("POST", "/api/posts/1/comments")).isEqualTo(RequestLimits.Operation.WRITE);
+        assertThat(operation("PUT", "/api/posts/1/like")).isEqualTo(RequestLimits.Operation.WRITE);
+        assertThat(operation("PUT", "/api/me")).isEqualTo(RequestLimits.Operation.WRITE);
     }
 }

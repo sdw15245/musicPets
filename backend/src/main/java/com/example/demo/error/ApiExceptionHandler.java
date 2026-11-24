@@ -1,5 +1,6 @@
 package com.example.demo.error;
 
+import com.example.demo.ratelimit.RequestLimitException;
 import com.example.demo.spotify.SpotifyLimitException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,9 +38,12 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(SpotifyLimitException.class)
     public ResponseEntity<SpotifyLimitException.Limit> spotifyLimit(SpotifyLimitException e) {
-        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).cacheControl(CacheControl.noStore())
-                .header(HttpHeaders.RETRY_AFTER, Long.toString(e.limit().retryAfterSeconds()))
-                .body(e.limit());
+        return tooManyRequests(e.limit().retryAfterSeconds(), e.limit());
+    }
+
+    @ExceptionHandler(RequestLimitException.class)
+    public ResponseEntity<RequestLimitException.Limit> requestLimit(RequestLimitException e) {
+        return tooManyRequests(e.limit().retryAfterSeconds(), e.limit());
     }
 
     @ExceptionHandler(RestClientException.class)
@@ -76,6 +80,13 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         copy.putAll(headers);
         copy.setCacheControl(CacheControl.noStore());
         return new ResponseEntity<>(body, copy, status);
+    }
+
+    /** 대기 시간을 담은 본문(error, message, retryAfterSeconds, retryAt …)을 그대로 보낸다. */
+    private static <T> ResponseEntity<T> tooManyRequests(long retryAfterSeconds, T limit) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).cacheControl(CacheControl.noStore())
+                .header(HttpHeaders.RETRY_AFTER, Long.toString(retryAfterSeconds))
+                .body(limit);
     }
 
     private static ResponseEntity<ApiError> respond(ErrorCode code, String message) {

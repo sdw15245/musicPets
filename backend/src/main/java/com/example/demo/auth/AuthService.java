@@ -55,7 +55,7 @@ public class AuthService {
     @Transactional(readOnly = true)
     public String refresh(String refreshToken) {
         tokenProvider.verify(refreshToken, TokenType.REFRESH).orElseThrow(InvalidRefreshTokenException::new);
-        RefreshToken stored = refreshTokenRepository.findByToken(refreshToken)
+        RefreshToken stored = refreshTokenRepository.findByTokenHash(RefreshToken.hash(refreshToken))
                 .orElseThrow(InvalidRefreshTokenException::new);
         if (stored.isExpired()) {
             throw new InvalidRefreshTokenException();
@@ -65,14 +65,14 @@ public class AuthService {
 
     @Transactional
     public void logout(String refreshToken) {
-        if (refreshToken != null && !refreshToken.isBlank()) refreshTokenRepository.deleteByToken(refreshToken);
+        if (refreshToken != null && !refreshToken.isBlank()) refreshTokenRepository.deleteByTokenHash(RefreshToken.hash(refreshToken));
     }
 
     /** 이 사용자의 기존 refresh 토큰을 모두 지우고 새로 발급한다. 다른 기기의 로그인은 다음 갱신 때 끝난다. */
     private String startSession(Long userId) {
         String token = tokenProvider.createRefreshToken(userId);
         refreshTokenRepository.deleteByUserId(userId);
-        refreshTokenRepository.save(new RefreshToken(token, userId,
+        refreshTokenRepository.save(RefreshToken.issue(token, userId,
                 Instant.now().plusMillis(tokenProvider.getRefreshExpirationMs())));
         return token;
     }

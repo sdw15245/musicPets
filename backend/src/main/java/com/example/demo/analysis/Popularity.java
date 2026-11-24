@@ -25,6 +25,7 @@ record Popularity(Double mainstream, List<String> warnings) {
         return Math.max(0, Math.min(1, scaled)) * 100;
     }
 
+    // 주의: 프론트(analysisNotices.ts)가 "Last.fm 청취자 수" 문구로 대중성 안내를 구분한다. 문구를 바꾸면 함께 고친다.
     private static List<String> coverageWarnings(int analyzed, int counted) {
         if (counted >= analyzed) return List.of();
         if (counted == 0) {

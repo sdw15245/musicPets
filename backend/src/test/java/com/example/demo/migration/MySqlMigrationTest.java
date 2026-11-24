@@ -28,7 +28,7 @@ class MySqlMigrationTest {
 
     @Test void emptyDatabaseGetsAllTablesAndRestartDoesNotRepeatMigration() throws Exception {
         var flyway = Flyway.configure().dataSource(MYSQL.getJdbcUrl(), MYSQL.getUsername(), MYSQL.getPassword()).load();
-        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(3);
+        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(4);
         try (var connection = DriverManager.getConnection(MYSQL.getJdbcUrl(), MYSQL.getUsername(), MYSQL.getPassword());
              var statement = connection.createStatement();
              var rows = statement.executeQuery("SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME <> 'flyway_schema_history'")) {
@@ -53,7 +53,7 @@ class MySqlMigrationTest {
             ExistingDatabaseBaseline.verifySchema(connection);
         }
         var flyway = flyway(); flyway.baseline();
-        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(2);
+        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(3);
         try (var connection = connection(); var statement = connection.createStatement()) {
             try (var rows = statement.executeQuery("SELECT nickname FROM users WHERE id=1")) { rows.next(); assertThat(rows.getString(1)).isEqualTo("음악 친구"); }
             try (var rows = statement.executeQuery("SELECT result_json FROM analysis_history WHERE analysis_id='existing'")) { rows.next(); assertThat(rows.getString(1)).isEqualTo("{\"saved\":true}"); }
@@ -77,7 +77,8 @@ class MySqlMigrationTest {
             statement.executeUpdate("INSERT INTO latest_analyses(user_id,analysis_id,result_json) VALUES(2,'new-run','{\"id\":\"new-run\"}')");
             statement.executeUpdate("INSERT INTO analysis_history(analysis_id,result_json,user_id) VALUES('new-run','{\"id\":\"new-run\"}',2)");
         }
-        assertThat(flyway().migrate().migrationsExecuted).isEqualTo(1);
+        assertThat(Flyway.configure().dataSource(MYSQL.getJdbcUrl(), MYSQL.getUsername(), MYSQL.getPassword())
+                .target("3").load().migrate().migrationsExecuted).isEqualTo(1);
         try (var connection = connection(); var statement = connection.createStatement()) {
             try (var rows = statement.executeQuery("SELECT user_id, analysis_id, result_json FROM analysis_history ORDER BY user_id")) {
                 assertThat(rows.next()).isTrue();
@@ -88,6 +89,22 @@ class MySqlMigrationTest {
                 assertThat(rows.getLong(1)).isEqualTo(2);
                 assertThat(rows.next()).as("existing record is not duplicated").isFalse();
             }
+        }
+    }
+
+    @Test void storedRefreshTokensAreHashedInPlaceSoExistingSessionsSurvive() throws Exception {
+        Flyway.configure().dataSource(MYSQL.getJdbcUrl(), MYSQL.getUsername(), MYSQL.getPassword()).target("3").load().migrate();
+        String raw = "header.payload.signature-of-an-existing-session";
+        try (var connection = connection(); var statement = connection.createStatement()) {
+            statement.executeUpdate("INSERT INTO users(id,created_at,spotify_id) VALUES(1,NOW(6),'session-owner')");
+            statement.executeUpdate("INSERT INTO refresh_tokens(expires_at,token,user_id) VALUES(NOW(6),'" + raw + "',1)");
+        }
+        assertThat(flyway().migrate().migrationsExecuted).isEqualTo(1);
+        try (var connection = connection(); var statement = connection.createStatement();
+             var rows = statement.executeQuery("SELECT token FROM refresh_tokens WHERE user_id=1")) {
+            assertThat(rows.next()).isTrue();
+            // 앱이 쿠키 값으로 계산하는 해시와 같아야 기존 로그인이 유지된다.
+            assertThat(rows.getString(1)).isEqualTo(com.example.demo.auth.RefreshToken.hash(raw)).isNotEqualTo(raw);
         }
     }
 

@@ -14,6 +14,7 @@ import java.util.Optional;
  * 분석 직후의 상세 단계(AI 해설, 추천 아티스트)가 쓸 원본 트랙을 사용자별로 잠시 보관한다.
  * 개인 청취 기록이라 DB에 저장하지 않고 이 서버 메모리에만 둔다.
  * 그래서 상세 단계 요청은 분석한 서버로 와야 하고, 재시작하면 사라진다.
+ * 주의: 서버를 여러 대로 늘리면 Redis 같은 공유 저장소로 옮겨야 한다(지금은 EC2 1대).
  */
 final class RecentTracks {
     private record Entry(String analysisId, Instant expiresAt, List<TopTrack> tracks) {}

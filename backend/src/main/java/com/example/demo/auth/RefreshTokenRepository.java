@@ -4,9 +4,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
-/** RefreshToken 조회/삭제. token 단건 조회, userId로 일괄 삭제(로그아웃). */
+/** RefreshToken 조회/삭제. 토큰은 항상 RefreshToken.hash로 바꾼 값으로 찾는다. */
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
-    Optional<RefreshToken> findByToken(String token);
+    Optional<RefreshToken> findByTokenHash(String tokenHash);
     void deleteByUserId(Long userId);
-    void deleteByToken(String token);
+    void deleteByTokenHash(String tokenHash);
 }

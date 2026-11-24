@@ -64,7 +64,7 @@ class AuthSessionIntegrationTest {
     User user() { return users.save(new User("auth-" + UUID.randomUUID(), "", "Session test")); }
     String refresh(User user, Instant expiry) {
         String token = tokens.createRefreshToken(user.getId());
-        refreshTokens.save(new RefreshToken(token, user.getId(), expiry));
+        refreshTokens.save(RefreshToken.issue(token, user.getId(), expiry));
         return token;
     }
     String refresh() { return refresh(user(), Instant.now().plusSeconds(3600)); }
@@ -102,7 +102,7 @@ class AuthSessionIntegrationTest {
             mvc.perform(post("/api/auth/" + path).cookie(credential(refresh)).header("Origin", "http://127.0.0.1:5173"))
                     .andExpect(status().isForbidden()).andExpect(jsonPath("$.error").value("CSRF_INVALID"));
         }
-        assertThat(refreshTokens.findByToken(refresh)).isPresent();
+        assertThat(refreshTokens.findByTokenHash(RefreshToken.hash(refresh))).isPresent();
     }
 
     @Test void wrongCsrfAndForeignOriginCannotChangeSession() throws Exception {
@@ -112,7 +112,7 @@ class AuthSessionIntegrationTest {
                 .andExpect(status().isForbidden()).andExpect(jsonPath("$.error").value("CSRF_INVALID"));
         mvc.perform(csrf.apply(post("/api/auth/logout")).cookie(credential(refresh)).header("Origin", "https://foreign.invalid"))
                 .andExpect(status().isForbidden()).andExpect(header().doesNotExist("Access-Control-Allow-Origin"));
-        assertThat(refreshTokens.findByToken(refresh)).isPresent();
+        assertThat(refreshTokens.findByTokenHash(RefreshToken.hash(refresh))).isPresent();
     }
 
     @Test void bodyRefreshTokenCannotAuthenticate() throws Exception {
@@ -138,7 +138,7 @@ class AuthSessionIntegrationTest {
         var response = mvc.perform(csrf().apply(post("/api/auth/logout")).cookie(credential(refresh)))
                 .andExpect(status().isNoContent()).andExpect(header().string("Cache-Control", "no-store"))
                 .andReturn().getResponse();
-        assertThat(refreshTokens.findByToken(refresh)).isEmpty();
+        assertThat(refreshTokens.findByTokenHash(RefreshToken.hash(refresh))).isEmpty();
         Cookie cleared = response.getCookie(AuthCookies.REFRESH);
         assertThat(cleared.getMaxAge()).isZero();
         assertThat(cleared.isHttpOnly()).isTrue();
@@ -164,7 +164,10 @@ class AuthSessionIntegrationTest {
         assertThat(cookie.getAttribute("SameSite")).isEqualTo("Lax");
         assertThat(cookie.getMaxAge()).isEqualTo(tokens.getRefreshExpirationMs() / 1000);
         assertThat(tokens.verify(cookie.getValue(), JwtTokenProvider.TokenType.REFRESH)).isPresent();
-        assertThat(refreshTokens.findByToken(cookie.getValue())).isPresent();
+        assertThat(refreshTokens.findByTokenHash(RefreshToken.hash(cookie.getValue()))).isPresent();
+        // DB에는 원문 대신 해시만 남아, 저장값이 유출돼도 그대로 세션에 쓸 수 없다.
+        assertThat(refreshTokens.findByTokenHash(cookie.getValue())).isEmpty();
+        assertThat(RefreshToken.hash(cookie.getValue())).matches("[0-9a-f]{64}");
         assertThat(response.getContentAsString()).isEmpty();
     }
 

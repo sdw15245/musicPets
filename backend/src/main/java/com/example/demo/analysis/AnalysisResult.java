@@ -12,6 +12,8 @@ import java.util.stream.Stream;
  * 한 번의 분석에서 파생된 결과. 원본 트랙은 서버 메모리(RecentTracks)에만 보관한다.
  * 예전에 저장된 형식을 읽는 규칙은 StoredAnalysisJson에 있다.
  *
+ * @param warnings           화면에 그대로 보여줄 안내 문장. 문구 자체가 프론트와의 약속이라 바꿀 때 프론트 필터도 확인한다.
+ *                           (코드로 바꾸려면 백엔드·프론트·저장된 기록 변환을 함께 해야 해서 미뤄 둠)
  * @param recommendations    아티스트 추천 이전에 저장된 추천곡. 새 결과에서는 항상 비어 있다.
  * @param recommendedArtists 아티스트 추천 이전 결과는 null. 프론트는 null이면 예전 추천곡 화면을 보여준다.
  */

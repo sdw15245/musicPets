@@ -19,6 +19,8 @@ import java.util.function.Consumer;
  * Last.fm 태그 조회.
  * 곡 태그가 부족(<3)하면 아티스트 태그로 자동 fallback.
  * 응답의 count(0~100)를 같이 가져와 가중치로 활용.
+ * 주의: 응답을 타입 레코드가 아닌 Map으로 읽는 것은 의도다. Last.fm은 숫자를 문자열로 주거나
+ * 항목이 하나면 목록 대신 객체를 주는 등 형식이 일정하지 않아, 필드별로 방어적으로 읽는다.
  */
 @Service
 public class LastfmService {

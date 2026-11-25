@@ -39,8 +39,17 @@
 .profile-card { min-width: 0; }
 .profile-comment { max-width: 60ch; margin: var(--seed-dimension-x6) 0 0; color: var(--seed-color-fg-neutral); font: var(--mp-type-lead); white-space: pre-line; word-break: keep-all; overflow-wrap: anywhere; }
 .analysis-overview-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--seed-dimension-x2); margin-top: var(--seed-dimension-x8); }
-.analysis-story > .pet-story { margin-top: auto; padding-top: var(--seed-dimension-x6); }
-.analysis-story > .pet-story summary { border-top: 1px solid var(--mp-hairline); padding-top: var(--seed-dimension-x4); width: 100%; }
+/*
+ * The pet's story opens in a second row under the reading. The stage stays in the first row, so opening
+ * the story never stretches it (the photo stands on the stage floor and would drop with it); the
+ * overview's ::after carries that floor down beside the story instead.
+ */
+.analysis-story:has(+ .pet-story) { padding-bottom: var(--seed-dimension-x6); }
+.analysis-overview > .pet-story { grid-column: -2; margin: 0; padding: 0 var(--seed-dimension-x10) var(--seed-dimension-x8); }
+.analysis-overview > .pet-story summary { border-top: 1px solid var(--mp-hairline); padding-top: var(--seed-dimension-x4); width: 100%; }
+@media (min-width: 768px) {
+  .analysis-overview:has(> .analysis-pet):has(> .pet-story)::after { content: ''; grid-column: 1; grid-row: 2; background: var(--pet-stage-floor); }
+}
 
 /* Bento below the overview: equal cards, so each topic reads on its own. */
 .result-details-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: var(--seed-dimension-x5); margin-top: var(--seed-dimension-x5); align-items: start; }
@@ -100,7 +109,7 @@
 .result-share-frame .result-share-preview { display: block; width: 100%; height: 100%; object-fit: contain; }
 .result-share-placeholder { position: absolute; inset: 0; }
 @media (prefers-reduced-motion: no-preference) {
-  .is-new-result .analysis-pet, .is-new-result .analysis-identity {
+  .is-new-result .analysis-pet, .is-new-result.analysis-overview::after, .is-new-result .analysis-identity {
     animation: pet-result-in var(--seed-duration-d6) var(--seed-timing-function-enter) both;
   }
   .is-new-result .analysis-identity { animation-delay: 120ms; }
@@ -146,6 +155,7 @@
 @media (max-width: 1023px) {
   .analysis-overview:has(.analysis-pet) { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); }
   .analysis-story { padding: var(--seed-dimension-x8); }
+  .analysis-overview > .pet-story { padding-inline: var(--seed-dimension-x8); }
   .result-details-grid, .result-details-grid:has(.reco-empty) .result-listening-details { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 767px) {
@@ -156,6 +166,7 @@
   .analysis-overview, .analysis-overview:has(.analysis-pet) { grid-template-columns: minmax(0, 1fr); border-radius: var(--mp-radius-card); }
   .analysis-pet { min-height: 0; aspect-ratio: 4 / 3; }
   .analysis-story { padding: var(--seed-dimension-x5) var(--seed-dimension-x5) var(--seed-dimension-x6); }
+  .analysis-overview > .pet-story { padding: 0 var(--seed-dimension-x5) var(--seed-dimension-x6); }
   .analysis-period { margin-bottom: var(--seed-dimension-x3); }
   .analysis-notices { margin-bottom: var(--seed-dimension-x4); padding: var(--seed-dimension-x2) var(--seed-dimension-x3); }
   .analysis-overview .analysis-pet-title { font: var(--seed-font-weight-bold) var(--seed-font-size-t12)/var(--seed-line-height-t12) var(--seed-font-family); }

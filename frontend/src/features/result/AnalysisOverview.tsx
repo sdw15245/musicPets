@@ -53,7 +53,8 @@ export default function AnalysisOverview({ data, historical = false, reveal = fa
           <p className="profile-comment">{data.profile?.comment || '청취 기록에서 발견한 장르와 펫을 살펴보세요.'}</p>}
       </div>
       {actions && <div className="analysis-overview-actions">{actions}</div>}
-      {story && <details className="pet-story"><summary>{pet?.name}의 이야기</summary><p>{story}</p></details>}
     </div>
+    {/* Its own row, below the pet's: opening the story must not stretch the stage and drop the pet. */}
+    {story && <details className="pet-story"><summary>{pet?.name}의 이야기</summary><p>{story}</p></details>}
   </section>
 }

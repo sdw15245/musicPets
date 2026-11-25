@@ -36,8 +36,8 @@
 }
 
 :root {
-  /* rem steps, not vw: display text must still grow with the reader's font-size setting. */
-  --mp-type-display: var(--seed-font-weight-bold) 3.5rem/1.16 var(--seed-font-family);
+  /* SEED's top steps (rem, so they grow with the reader's font-size setting); never larger than t14. */
+  --mp-type-display: var(--seed-font-weight-bold) var(--seed-font-size-t14)/var(--seed-line-height-t14) var(--seed-font-family);
   --mp-type-screen-title: var(--seed-font-weight-bold) var(--seed-font-size-t10)/var(--seed-line-height-t10) var(--seed-font-family);
   --mp-type-article-body: var(--seed-font-weight-regular) var(--seed-font-size-t5)/var(--seed-line-height-t6) var(--seed-font-family);
   --mp-type-section-title: var(--seed-font-weight-bold) var(--seed-font-size-t8)/var(--seed-line-height-t8) var(--seed-font-family);
@@ -66,15 +66,15 @@
 }
 
 @media (max-width: 1100px) {
-  :root { --mp-type-display: var(--seed-font-weight-bold) 3rem/1.18 var(--seed-font-family); }
+  :root { --mp-type-display: var(--seed-font-weight-bold) var(--seed-font-size-t13)/var(--seed-line-height-t13) var(--seed-font-family); }
 }
 
 @media (max-width: 767px) {
-  :root { --mp-type-display: var(--seed-font-weight-bold) 2.5rem/1.2 var(--seed-font-family); }
+  :root { --mp-type-display: var(--seed-font-weight-bold) var(--seed-font-size-t12)/var(--seed-line-height-t12) var(--seed-font-family); }
 }
 
 @media (max-width: 479px) {
-  :root { --mp-type-display: var(--seed-font-weight-bold) 2.125rem/1.24 var(--seed-font-family); }
+  :root { --mp-type-display: var(--seed-font-weight-bold) var(--seed-font-size-t11)/var(--seed-line-height-t11) var(--seed-font-family); }
 }
 
 .inline-icon {

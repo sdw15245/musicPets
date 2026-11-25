@@ -13,10 +13,11 @@
 @media (max-width: 767px) {
   .site-header.app-header { display: flex; flex-wrap: wrap; gap: var(--seed-dimension-x2); min-height: 64px; padding-block: var(--seed-dimension-x2); }
   .app-header > .brand-logo { font-size: var(--seed-font-size-t6); }
-  .app-header > nav { justify-content: flex-end; gap: var(--seed-dimension-x3); margin-left: auto; }
+  /* .site-header.app-header outranks base.css .site-header > nav, whichever file the bundle loads first. */
+  .site-header.app-header > nav { justify-content: flex-end; gap: var(--seed-dimension-x3); margin-left: auto; }
   .app-header .site-nav-link { font-size: var(--seed-font-size-t4); }
   .app-header-account { min-width: 80px; gap: 0; }
-  .app-header--intro > nav { order: 3; flex-basis: 100%; justify-content: center; gap: var(--seed-dimension-x6); }
+  .site-header.app-header--intro > nav { order: 3; flex-basis: 100%; justify-content: center; gap: var(--seed-dimension-x6); }
   .app-header--intro .app-header-account { margin-left: auto; }
   /* Phones: equal thirds across the screen, so every tab is a full-size thumb target. */
   .taste-nav { display: flex; width: 100%; margin-block: var(--seed-dimension-x3) var(--seed-dimension-x4); }
@@ -25,5 +26,5 @@
 @media (max-width: 359px) {
   .site-header.app-header:not(.app-header--intro) { gap: var(--seed-dimension-x1); }
   .app-header:not(.app-header--intro) > .brand-logo { font-size: var(--seed-font-size-t5); }
-  .app-header:not(.app-header--intro) > nav { gap: var(--seed-dimension-x1); }
+  .site-header.app-header:not(.app-header--intro) > nav { gap: var(--seed-dimension-x1); }
 }

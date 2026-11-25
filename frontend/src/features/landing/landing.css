@@ -24,10 +24,10 @@
 }
 .music-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 500px);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 460px);
   align-items: center;
   gap: var(--seed-dimension-x16);
-  padding-block: var(--seed-dimension-x16) var(--seed-dimension-x20, 80px);
+  padding-block: var(--seed-dimension-x12) var(--seed-dimension-x16);
 }
 .music-hero-copy { min-width: 0; }
 .hero-eyebrow {
@@ -49,7 +49,7 @@
 .music-hero-copy > p { max-width: 34rem; margin: 0; color: var(--seed-color-fg-neutral-muted); font: var(--mp-type-lead); word-break: keep-all; }
 .music-hero-actions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--seed-dimension-x3); margin-top: var(--seed-dimension-x10); }
 .music-hero-copy > .hero-footnote { margin-top: var(--seed-dimension-x4); color: var(--seed-color-fg-neutral-muted); font: var(--mp-type-caption); }
-.hero-result-preview { min-width: 0; width: 100%; max-width: 500px; justify-self: end; }
+.hero-result-preview { min-width: 0; width: 100%; max-width: 460px; justify-self: end; }
 
 .remodeled-landing .section-pad { padding-block: var(--seed-dimension-x20, 80px); }
 .remodeled-landing .section-head { grid-template-columns: minmax(0, 1fr) minmax(0, 380px); gap: var(--seed-dimension-x12); margin-bottom: var(--seed-dimension-x10); }
@@ -76,7 +76,7 @@
   text-align: left;
   cursor: pointer;
 }
-.character-card-trigger .pet-stage { aspect-ratio: 4 / 3; }
+.character-card-trigger .pet-stage { aspect-ratio: 16 / 9; }
 .character-card-trigger .pet-img { transition: transform var(--seed-duration-d6) var(--seed-timing-function-easing); }
 .character-card-trigger:hover .pet-img { transform: scale(1.04); }
 .character-card-trigger:focus-visible { outline: 2px solid var(--seed-color-stroke-focus-ring); outline-offset: 4px; }
@@ -128,7 +128,7 @@
 .footer-links .nav-link:hover { color: var(--seed-color-fg-neutral); text-decoration: underline; text-underline-offset: 4px; }
 
 @media (max-width: 1100px) {
-  .music-hero { grid-template-columns: minmax(0, 1fr) minmax(0, 440px); gap: var(--seed-dimension-x10); }
+  .music-hero { grid-template-columns: minmax(0, 1fr) minmax(0, 420px); gap: var(--seed-dimension-x10); }
 }
 @media (max-width: 960px) {
   .remodeled-landing .section-head { grid-template-columns: minmax(0, 1fr); gap: var(--seed-dimension-x5); }

@@ -2,6 +2,7 @@
  * Community feed, post detail, comments and the share composer.
  * One rule per selector: change a value where it is defined instead of adding an override below.
  * Breakpoints: 1150px (narrow desktop) and 767px (phone). The 620px container query lays out the filter bar.
+ * A post always reads sentence first, then the track, at any width.
  */
 
 /* ── Page ─────────────────────────────────────────────── */
@@ -30,13 +31,13 @@
   flex-shrink: 0;
 }
 
+/* Same frame as the header and the other pages: the pet card sits under the logo, the feed ends under the account menu. */
 .community-layout {
   display: grid;
-  grid-template-columns: 208px minmax(0, 1fr);
-  gap: var(--seed-dimension-x8);
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: var(--seed-dimension-x12);
   align-items: start;
-  width: calc(100% - 2 * var(--mp-page-gutter));
-  max-width: 920px;
+  width: min(var(--mp-shell-width), calc(100% - 2 * var(--mp-page-gutter)));
   margin: 0 auto;
   padding: 40px 0 64px;
 }
@@ -74,8 +75,8 @@
 .community-petcard {
   padding: 22px;
   border: 0;
-  border-radius: var(--seed-radius-r3);
-  background: var(--seed-color-bg-layer-default);
+  border-radius: var(--mp-radius-card);
+  background: var(--mp-canvas);
   box-shadow: none;
   text-align: center;
 }
@@ -166,7 +167,7 @@
 
 .community-feedheading h1 {
   font: var(--mp-type-screen-title);
-  letter-spacing: normal;
+  letter-spacing: var(--mp-tracking-title);
   word-break: keep-all;
 }
 
@@ -196,9 +197,11 @@
   gap: var(--seed-dimension-x2);
 }
 
+/* The ghost trigger's inner padding leaves its chevron short of the button above; shift it (paint only, so the grid track keeps its full width). */
 .community-sort {
   grid-area: sort;
   justify-self: end;
+  translate: var(--seed-dimension-x3_5) 0;
   color: var(--seed-color-fg-neutral-muted);
   font-size: var(--seed-font-size-t3);
   line-height: var(--seed-line-height-t3);
@@ -261,7 +264,7 @@
 
 @container (max-width: 620px) {
   .community-filterbar { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "filters filters" "sort search"; }
-  .community-sort { justify-self: start; }
+  .community-sort { justify-self: start; translate: calc(-1 * var(--seed-dimension-x3_5)) 0; }
   .community-search-toggle { display: inline-flex; }
   .community-search-control:not(.is-expanded) .community-search { display: none; }
   .community-search-control.has-value .community-search-toggle { display: none; }
@@ -296,7 +299,6 @@
 
 .community-post {
   min-width: 0;
-  max-width: var(--mp-reading-width);
   padding: var(--seed-dimension-x5);
   border: 0;
   border-bottom: 1px solid var(--community-border);
@@ -374,6 +376,7 @@
   align-items: center;
   gap: var(--seed-dimension-x3);
   max-width: 480px;
+  width: 100%;
   padding: var(--seed-dimension-x3);
   border-radius: var(--seed-radius-r3);
   background: var(--seed-color-bg-neutral-weak);
@@ -762,9 +765,12 @@
   max-width: 100%;
 }
 
+/* The feed spans the page frame, but what people read and type keeps a reading measure. */
+.community-post .post-comments { max-width: 720px; }
+
 /* ── Narrow desktop ───────────────────────────────────── */
 @media (max-width: 1150px) {
-  .community-layout { padding-block: 30px 50px; }
+  .community-layout { grid-template-columns: 208px minmax(0, 1fr); gap: var(--seed-dimension-x8); padding-block: 30px 50px; }
   .community-petcard { padding: 19px 15px; }
 }
 

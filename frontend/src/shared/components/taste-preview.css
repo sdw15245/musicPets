@@ -58,7 +58,7 @@
   animation: detail-in var(--seed-duration-d4) var(--seed-timing-function-easing);
 }
 
-.preview-stage { aspect-ratio: 16 / 11; }
+.preview-stage { aspect-ratio: 16 / 10; }
 
 .preview-identity {
   min-width: 0;

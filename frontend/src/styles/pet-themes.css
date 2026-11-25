@@ -21,11 +21,25 @@
 /* Undiscovered pets: the whole stage is desaturated with the portrait, so backdrop and stage still meet. */
 .pet-stage[data-locked="true"] { filter: grayscale(1) brightness(1.1); }
 
+/*
+ * The backdrop gradient belongs to the photo's square, which stands on the floor. A stage taller than wide
+ * gets the gradient only behind that square and the wall colour above it, so no seam shows where the photo starts.
+ * Every stage has a definite size (aspect-ratio, fixed size or a stretched grid row), which size containment needs.
+ */
 .pet-stage {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(180deg, var(--pet-stage-top) 0%, var(--pet-stage) 55%, var(--pet-stage-floor) 100%);
+  container-type: size;
+  background: var(--pet-stage-top);
   isolation: isolate;
+}
+.pet-stage::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: auto 0 0;
+  height: min(100cqh, 100cqw);
+  background: linear-gradient(180deg, var(--pet-stage-top) 0%, var(--pet-stage) 55%, var(--pet-stage-floor) 100%);
 }
 
 /*

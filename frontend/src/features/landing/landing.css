@@ -22,6 +22,12 @@
     radial-gradient(52% 70% at 78% 46%, var(--mp-canvas) 0%, rgb(246 245 242 / 0%) 100%),
     var(--seed-color-bg-layer-default);
 }
+/* With a pet on the card, the glow takes a little of its colour. */
+.music-hero-surface[data-pet] {
+  background:
+    radial-gradient(52% 70% at 78% 46%, color-mix(in srgb, var(--pet-accent) 14%, var(--mp-canvas)) 0%, rgb(246 245 242 / 0%) 100%),
+    var(--seed-color-bg-layer-default);
+}
 .music-hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 460px);
@@ -49,7 +55,71 @@
 .music-hero-copy > p { max-width: 34rem; margin: 0; color: var(--seed-color-fg-neutral-muted); font: var(--mp-type-lead); word-break: keep-all; }
 .music-hero-actions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--seed-dimension-x3); margin-top: var(--seed-dimension-x10); }
 .music-hero-copy > .hero-footnote { margin-top: var(--seed-dimension-x4); color: var(--seed-color-fg-neutral-muted); font: var(--mp-type-caption); }
-.hero-result-preview { min-width: 0; width: 100%; max-width: 460px; justify-self: end; }
+.hero-result-preview { position: relative; min-width: 0; width: 100%; max-width: 460px; justify-self: end; }
+
+/*
+ * Genre chips scattered in the gap between the copy and the card; the card's own genres light up in the
+ * pet's colour and lean toward it, while the rest drift slightly out of focus and back, like a shallow depth
+ * of field. Only wide screens have that gap, so narrower layouts drop the chips.
+ */
+.hero-genre-chips { display: none; }
+.hero-genre-chip { position: absolute; left: var(--chip-x); top: var(--chip-y); }
+.hero-genre-chip[data-on] { translate: var(--seed-dimension-x3_5) 0; }
+.hero-genre-chip-face {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--seed-dimension-x2);
+  padding: var(--seed-dimension-x2) var(--seed-dimension-x3_5);
+  border-radius: var(--seed-radius-full);
+  color: var(--seed-color-fg-neutral-muted);
+  background: rgb(255 255 255 / 82%);
+  box-shadow: 0 1px 2px rgb(20 18 14 / 6%), 0 10px 24px -12px rgb(20 18 14 / 22%);
+  font: var(--seed-font-weight-medium) var(--seed-font-size-t4)/var(--seed-line-height-t4) var(--seed-font-family);
+  white-space: nowrap;
+  opacity: .8;
+}
+.hero-genre-chip-face::before { content: ''; width: 6px; height: 6px; border-radius: var(--seed-radius-full); background: currentColor; opacity: .5; }
+/* Darkened so white text keeps 4.5:1 on the lighter accents (orange, pink). */
+.hero-genre-chip[data-on] > .hero-genre-chip-face {
+  color: var(--seed-color-palette-static-white);
+  background: color-mix(in srgb, var(--pet-accent) 82%, #000);
+  opacity: 1;
+}
+.hero-genre-chip[data-on] > .hero-genre-chip-face::before { opacity: .85; }
+@keyframes hero-genre-chip-drift { to { transform: translate(4px, -10px); } }
+/* Sharp for a while, then a soft blur and fade, then back. */
+@keyframes hero-genre-chip-haze {
+  0%, 30% { filter: blur(0); opacity: .8; }
+  100% { filter: blur(2px); opacity: .4; }
+}
+@media (min-width: 1280px) {
+  .hero-genre-chips {
+    position: absolute;
+    z-index: 1;
+    inset-block: 0;
+    right: calc(100% - var(--seed-dimension-x9));
+    display: block;
+    width: clamp(300px, 26vw, 380px);
+    pointer-events: none;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .music-hero-surface { transition: --pet-accent var(--seed-duration-d6) var(--seed-timing-function-easing); }
+  /* Out of step on purpose: each chip drifts and hazes on its own periods and phases. */
+  .hero-genre-chip {
+    animation: hero-genre-chip-drift calc(4.5s + var(--chip-slot) * .25s) ease-in-out calc(var(--chip-slot) * -1.3s) infinite alternate;
+    transition: translate var(--seed-duration-d6) var(--seed-timing-function-easing);
+  }
+  .hero-genre-chip:not([data-on]) > .hero-genre-chip-face {
+    animation: hero-genre-chip-haze calc(5s + var(--chip-slot) * .35s) ease-in-out calc(var(--chip-slot) * -2.1s) infinite alternate;
+  }
+  .hero-genre-chip-face {
+    transition-property: color, background-color, opacity, filter;
+    transition-duration: var(--seed-duration-d6);
+    transition-timing-function: var(--seed-timing-function-easing);
+  }
+  .hero-genre-chips:not([data-moving]) :is(.hero-genre-chip, .hero-genre-chip-face) { animation-play-state: paused; }
+}
 
 .remodeled-landing .section-pad { padding-block: var(--seed-dimension-x20, 80px); }
 .remodeled-landing .section-head { grid-template-columns: minmax(0, 1fr) minmax(0, 380px); gap: var(--seed-dimension-x12); margin-bottom: var(--seed-dimension-x10); }

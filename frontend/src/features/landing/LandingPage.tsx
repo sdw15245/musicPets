@@ -26,7 +26,7 @@ function LandingPage() {
     <div id="top" className="wf remodeled-landing">
       <LandingNavbar onNavigate={scrollTo} />
       <main>
-      <div className="music-hero-surface"><HeroSection onNavigate={scrollTo} presentation={presentation} /></div>
+      <HeroSection onNavigate={scrollTo} presentation={presentation} />
       <div id="intro" ref={introRef}>
         <Reveal><HowItWorksSection /></Reveal>
       </div>

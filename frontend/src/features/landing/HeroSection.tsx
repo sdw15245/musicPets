@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Skeleton } from '@seed-design/react'
 import Button from '../../shared/components/ui/Button'
-import TastePreview from '../../shared/components/TastePreview'
+import TastePreview, { type ShownTaste } from '../../shared/components/TastePreview'
+import HeroGenreChips from './HeroGenreChips'
 import type { LandingPresentation } from './useLandingPresentation'
 
 interface HeroSectionProps {
@@ -11,7 +13,11 @@ interface HeroSectionProps {
 
 function HeroSection({ onNavigate, presentation }: HeroSectionProps) {
   const { personal, analysis, loadingPreview, failed, footnote, actionTo, actionLabel, prefetchAction } = presentation
-  return <section className="music-hero">
+  const [shown, setShown] = useState<ShownTaste | null>(null)
+  // Only a card on screen has a pet to echo; placeholders leave the hero neutral.
+  const echo = loadingPreview || failed ? null : shown
+  // The surface takes the shown pet's colours, so the glow behind the card and the chips follow the carousel.
+  return <div className="music-hero-surface" data-pet={echo?.pet ?? undefined}><section className="music-hero">
     <div className="music-hero-copy">
       <div className="hero-eyebrow">음악으로 만나는 나의 취향</div>
       <h1>{personal ? <>음악으로 발견한,<br /><em>나의 취향.</em></> : <>좋아하는 음악 속에,<br /><em>나를 닮은 펫.</em></>}</h1>
@@ -31,8 +37,11 @@ function HeroSection({ onNavigate, presentation }: HeroSectionProps) {
       </div>
     </div> : failed ? <div className="taste-preview taste-preview-placeholder">
       <div className="taste-preview-placeholder-lines"><p>저장된 음악 취향을 확인하지 못했어요.</p><Button asChild variant="neutralWeak"><Link to="/result">결과 다시 확인하기</Link></Button></div>
-    </div> : <TastePreview analysis={analysis} />}</div>
-  </section>
+    </div> : <>
+      {echo && echo.genres.length > 0 && <HeroGenreChips genres={echo.genres} moving={echo.moving} />}
+      <TastePreview analysis={analysis} onShow={setShown} />
+    </>}</div>
+  </section></div>
 }
 
 export default HeroSection

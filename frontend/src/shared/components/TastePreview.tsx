@@ -22,11 +22,21 @@ function allowsAutoplay() {
   return !document.hidden && !window.matchMedia(reducedMotionQuery).matches
 }
 
-interface TastePreviewProps {
-  analysis?: AnalysisResult | null
+/** What the card is showing right now, for the page around it to echo. */
+export interface ShownTaste {
+  pet: string | null
+  /** The card's top genres, biggest first. */
+  genres: string[]
+  /** The example carousel is advancing on its own; it stops on pause, hover, keyboard focus or reduced motion. */
+  moving: boolean
 }
 
-export default function TastePreview({ analysis }: TastePreviewProps) {
+interface TastePreviewProps {
+  analysis?: AnalysisResult | null
+  onShow?: (shown: ShownTaste) => void
+}
+
+export default function TastePreview({ analysis, onShow }: TastePreviewProps) {
   const [selected, setSelected] = useState(characters[0].slug)
   const [playing, setPlaying] = useState(true)
   const [hovered, setHovered] = useState(false)
@@ -40,6 +50,12 @@ export default function TastePreview({ analysis }: TastePreviewProps) {
   const catalogPet = characters.find(item => item.slug === pet?.slug)
   const vector: Record<string, number> = analysis ? analysis.genres.vector : example.vector
   const genres = Object.entries(vector).filter(([, value]) => value > 0).sort(([, a], [, b]) => b - a).slice(0, 3)
+  const shownPet = pet?.slug ?? null
+  const shownGenres = pet ? genres.map(([genre]) => genre).join(',') : ''
+
+  useEffect(() => {
+    onShow?.({ pet: shownPet, genres: shownGenres ? shownGenres.split(',') : [], moving: rotating })
+  }, [onShow, shownPet, shownGenres, rotating])
 
   useEffect(() => {
     if (!rotating) return

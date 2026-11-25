@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useAuthStore, useUserId } from '../auth/useAuthStore'
 import { useCurrentAnalysisState } from '../analysis/useCurrentAnalysis'
 import { freshView, saveLandingView, useLandingView } from './landingView'
+import { loadAnalyzePage, loadResultPage } from '../../routeModules'
 
 export function useLandingPresentation() {
   const { analysis, pending, failed: resultFailed } = useCurrentAnalysisState()
@@ -17,6 +18,14 @@ export function useLandingPresentation() {
     if (!signedIn) saveLandingView({ kind: 'guest', userId: null, savedAt })
     else if (userId && analysis !== undefined) saveLandingView({ kind: analysis ? 'result' : 'empty', userId, savedAt })
   }, [analysis, pending, failed, signedIn, userId])
+
+  // A saved result makes "내 취향 보기" the likely next step: fetch that screen once the page is idle.
+  const hasResult = !!analysis
+  useEffect(() => {
+    if (!hasResult) return
+    const idle = window.requestIdleCallback ?? ((run: () => void) => window.setTimeout(run, 1500))
+    idle(() => { void loadResultPage() })
+  }, [hasResult])
 
   const matching = previous?.userId === userId ? previous : null
   let view: 'error' | 'unknown' | 'guest' | 'empty' | 'result'
@@ -34,6 +43,8 @@ export function useLandingPresentation() {
     actionLabel: view === 'result' ? '내 취향 보기' : view === 'guest' || view === 'empty' ? '내 음악 취향 분석하기' : '내 취향 확인하기',
     // A display hint never starts an analysis before the server confirms the session.
     actionTo: pending || failed || analysis ? '/result' : '/analyze',
+    /** Start downloading the action's screen on hover, focus or touch. */
+    prefetchAction: () => { void (pending || failed || analysis ? loadResultPage() : loadAnalyzePage()) },
   }
 }
 export type LandingPresentation = ReturnType<typeof useLandingPresentation>

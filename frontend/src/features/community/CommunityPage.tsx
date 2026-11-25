@@ -13,6 +13,7 @@ import { useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useCurrentAnalysisState } from '../analysis/useCurrentAnalysis'
 import { useAuthStore } from '../auth/useAuthStore'
+import { useHeaderSession } from '../auth/useHeaderSession'
 import { useProfile } from '../profile/useProfile'
 import CommunityIcon from './CommunityIcon'
 import { useFloatingComposer } from './useFloatingComposer'
@@ -36,6 +37,7 @@ function CommunityContent({ profile, initialTrack }: ContentProps) {
   const pet = getPet(profile.petSlug)
   const canFilter = signedIn && !!pet
   const { analysis, pending: analysisPending, failed: analysisFailed } = useCurrentAnalysisState()
+  const { member } = useHeaderSession()
   const composerTriggerRef = useRef<HTMLButtonElement>(null)
   const floatingTriggerRef = useRef<HTMLButtonElement>(null)
   const showFloatingComposer = useFloatingComposer(composerTriggerRef)
@@ -141,7 +143,7 @@ function CommunityContent({ profile, initialTrack }: ContentProps) {
 
       <div className="community-layout">
         <aside className="community-sidebar" aria-label="음악 취향 안내">
-          <section className="community-petcard">{pet ? <><div className="community-petportrait" style={{ backgroundColor: pet.color }}><img src={pet.imageUrl} alt={pet.name} /></div><span className="community-petcontext">나의 음악 펫</span><h2>{pet.name}</h2></> : <><div className="community-unmatched"><CommunityIcon name="sparkles" /></div><h2>내 음악 펫은?</h2><p>분석을 통해 나와 닮은<br />음악 취향을 만나보세요.</p></>}
+          <section className="community-petcard">{pet ? <><div className="community-petportrait" style={{ backgroundColor: pet.color }}><img src={pet.thumbUrl} alt={pet.name} /></div><span className="community-petcontext">나의 음악 펫</span><h2>{pet.name}</h2></> : <><div className="community-unmatched"><CommunityIcon name="sparkles" /></div><h2>내 음악 펫은?</h2><p>분석을 통해 나와 닮은<br />음악 취향을 만나보세요.</p></>}
             <Link to={analysis ? '/result' : '/analyze'} className="community-petlink">{analysis ? '내 취향 보기' : '내 음악 취향 분석하기'}<CommunityIcon name="arrow" /></Link>
           </section>
         </aside>
@@ -152,16 +154,18 @@ function CommunityContent({ profile, initialTrack }: ContentProps) {
             <Button ref={composerTriggerRef} variant="brandSolid" onClick={() => { openedFromFloating.current = false; openComposer() }} aria-label="오늘의 한 곡 올리기" aria-haspopup="dialog" aria-expanded={composer?.open ?? false}>한 곡 올리기</Button>
           </div>
           {/* The sidebar card is hidden on phones; keep the way into analysis visible there. */}
-          {view === 'discover' && !pet && !analysis && !analysisPending && !analysisFailed && <Link className="community-analyze-banner" to="/analyze">
+          {/* Unless the tab was signed in, show it at once instead of late, where it pushed the feed down. */}
+          {view === 'discover' && !pet && !analysis && !analysisFailed && (!analysisPending || member !== true) && <Link className="community-analyze-banner" to="/analyze">
             <span className="community-analyze-icon" aria-hidden="true"><CommunityIcon name="sparkles" /></span>
             <span className="community-analyze-copy"><strong>내 음악 펫은?</strong><span>청취 기록으로 나와 닮은 펫을 찾아보세요.</span></span>
             <span className="community-analyze-action">분석하기<CommunityIcon name="arrow" /></span>
           </Link>}
-          <div className="community-filterbar"><RadioChipGroup className="seed-feed-filters" aria-label="취향 필터" value={filter} onValueChange={(value) => setFilter(value as PetFilter)}>
+          {/* Filters that cannot work yet are replaced by how to unlock them, not shown disabled. */}
+          <div className="community-filterbar">{canFilter ? <RadioChipGroup className="seed-feed-filters" aria-label="취향 필터" value={filter} onValueChange={(value) => setFilter(value as PetFilter)}>
             <RadioChip value="all"><RadioChipLabel>전체 음악</RadioChipLabel></RadioChip>
-            <RadioChip value="same" disabled={!canFilter}><RadioChipLabel>{requestedPet ? `${requestedPet.name}의 음악` : '나와 같은 펫'}</RadioChipLabel></RadioChip>
-            <RadioChip value="other" disabled={!canFilter}><RadioChipLabel>다른 펫</RadioChipLabel></RadioChip>
-          </RadioChipGroup>
+            <RadioChip value="same"><RadioChipLabel>{requestedPet ? `${requestedPet.name}의 음악` : '나와 같은 펫'}</RadioChipLabel></RadioChip>
+            <RadioChip value="other"><RadioChipLabel>다른 펫</RadioChipLabel></RadioChip>
+          </RadioChipGroup> : <p className="seed-feed-filters community-filter-locked">{signedIn ? '음악 취향을 분석하면 펫별로 음악을 둘러볼 수 있어요.' : '로그인하고 분석하면 펫별로 음악을 둘러볼 수 있어요.'}</p>}
             {mobileFeed ? <FeedSortSegments value={sort} onChange={setSort} /> : <FeedSortMenu value={sort} onChange={setSort} />}
               <CommunitySearch owner={signedIn ? profile.owner : null} inputRef={searchInputRef} value={searchInput} onSearch={updateSearch} onValueChange={value => {
                   setSearchDraft(current => current.pending ? { ...current, value } : { query, value, pending: false })
@@ -170,7 +174,6 @@ function CommunityContent({ profile, initialTrack }: ContentProps) {
 
           </div>
           {query && <div className="community-search-summary" role="status"><span>‘{query}’ 검색 결과</span><Button size="small" variant="ghost" onClick={clearSearch}>검색 초기화</Button></div>}
-          {!canFilter && <p className="community-filterhint">{signedIn ? '음악 취향을 분석하면 펫별로 음악을 둘러볼 수 있어요.' : '로그인하고 분석하면 펫별로 음악을 둘러볼 수 있어요.'}</p>}
           {filter !== 'all' && filterPet && <p className="community-filterhint">{filter === 'same' ? `${filterPet.name}와 같은 펫을 가진 사람들의 음악이에요.` : `${filterPet.name}와 다른 펫의 음악을 만나보세요.`}</p>}
           {feed.isPending && <MusicListSkeleton label="음악을 불러오고 있어요." />}
           {feed.isError && <RequestErrorNotice error={feed.error} action={blocked => <Button loading={feed.isFetching} disabled={feed.isFetching || blocked} onClick={() => void feed.refetch()}>다시 불러오기</Button>}>글 목록을 불러오지 못했어요.</RequestErrorNotice>}
@@ -178,7 +181,7 @@ function CommunityContent({ profile, initialTrack }: ContentProps) {
           <div className="community-posts">
             {posts.map((post) => <PostCard key={post.id} post={post} linkCaption={mobileFeed} liked={signedIn && post.liked}
               onRequireLogin={() => setLoginOpen(true)}
-              liking={pendingLikeIds.has(post.id)}
+              liking={pendingLikeIds.has(post.id) || feed.isPlaceholderData}
               onLike={() => { if (!signedIn) { setLoginOpen(true); return } return likePost({ id: post.id, liked: !post.liked }) }}
               onEdit={() => { if (post.own) setComposer(current => ({ key: (current?.key ?? 0) + 1, open: true, post })) }}
               deleting={remove.isPending && remove.variables === post.id}

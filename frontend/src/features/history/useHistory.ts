@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { z } from 'zod'
+import * as z from 'zod/mini'
 import { api } from '../../shared/api/client'
 import { normalizeError } from '../../shared/api/error'
 import { queryKeys } from '../../shared/api/queryKeys'

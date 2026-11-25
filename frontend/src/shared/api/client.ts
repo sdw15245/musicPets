@@ -1,53 +1,41 @@
-// API requests carry the in-memory Bearer token. Only authApi sends cookies.
-import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios'
+// API requests carry the in-memory Bearer token. Only the session endpoints (session.ts) send cookies.
 import { BACKEND_URL } from './config'
+import { createClient, HttpError, send, type HttpResponse, type RequestConfig } from './http'
 import { useAuthStore } from '../../features/auth/useAuthStore'
 import { refreshAccessToken, SessionChangedError } from '../../features/auth/session'
 import { loginDestination } from '../../features/auth/loginDestination'
 
-export const api = axios.create({
-  baseURL: BACKEND_URL,
-})
+const backend = { baseURL: BACKEND_URL }
 
-type AuthRequest = InternalAxiosRequestConfig & { _retry?: boolean; _authSessionId?: string }
-
-api.interceptors.request.use((config) => {
-  const request = config as AuthRequest
-  const { accessToken: token, sessionId } = useAuthStore.getState()
-  if (request._authSessionId && request._authSessionId !== sessionId) throw new SessionChangedError()
-  request._authSessionId = sessionId
-  if (token) config.headers.Authorization = `Bearer ${token}`
-  else config.headers.delete('Authorization')
-  return config
-})
-
-api.interceptors.response.use(
-  (res) => {
-    if ((res.config as AuthRequest)._authSessionId !== useAuthStore.getState().sessionId) throw new SessionChangedError()
-    return res
-  },
-  async (error: AxiosError) => {
-    const original = error.config as AuthRequest | undefined
-    const status = error.response?.status
-
-    const { accessToken: token, sessionId } = useAuthStore.getState()
-    if (original && original._authSessionId !== sessionId) return Promise.reject(new SessionChangedError())
-    if (status === 401 && original && !original._retry && token) {
-      original._retry = true
+/** A response that arrives after a login, logout or account switch belongs to another session and is dropped. */
+async function authorized<T>(config: RequestConfig, sessionId = useAuthStore.getState().sessionId, retried = false): Promise<HttpResponse<T>> {
+  const { accessToken: token, sessionId: current } = useAuthStore.getState()
+  if (current !== sessionId) throw new SessionChangedError()
+  const headers = { ...config.headers }
+  if (token) headers.Authorization = `Bearer ${token}`
+  try {
+    const response = await send<T>(backend, { ...config, headers })
+    if (useAuthStore.getState().sessionId !== sessionId) throw new SessionChangedError()
+    return response
+  } catch (error) {
+    if (error instanceof SessionChangedError) throw error
+    const latest = useAuthStore.getState()
+    if (latest.sessionId !== sessionId) throw new SessionChangedError()
+    if (!retried && latest.accessToken && error instanceof HttpError && error.response?.status === 401) {
       try {
         // A parallel request may already have replaced the expired token.
-        if (original.headers.Authorization === `Bearer ${token}`) await refreshAccessToken()
-        return api(original)
+        if (token === latest.accessToken) await refreshAccessToken()
+        return await authorized<T>(config, sessionId, true)
       } catch (e) {
-        if (!(e instanceof SessionChangedError) && axios.isAxiosError(e)
-          && e.response?.status === 401) redirectToLogin()
-        return Promise.reject(e)
+        if (!(e instanceof SessionChangedError) && e instanceof HttpError && e.response?.status === 401) redirectToLogin()
+        throw e
       }
     }
+    throw error
+  }
+}
 
-    return Promise.reject(error)
-  },
-)
+export const api = createClient(backend, authorized)
 
 function redirectToLogin() {
   if (window.location.pathname !== '/login') {

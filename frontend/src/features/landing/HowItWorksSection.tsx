@@ -43,7 +43,7 @@ function HowItWorksSection() {
                   </li>)}</ul>
                 </> : <>
                   <div className="how-example-heading"><strong>나를 닮은 음악 펫</strong><span>결과 예시</span></div>
-                  <div className="how-pet-preview"><img src={example.imageUrl} alt={example.name} width={64} height={64} loading="lazy" />
+                  <div className="how-pet-preview"><img src={example.thumbUrl} alt={example.name} width={64} height={64} loading="lazy" />
                     <div><strong>{example.name}</strong></div>
                   </div>
                 </>}

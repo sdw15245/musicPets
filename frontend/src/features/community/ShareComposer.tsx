@@ -143,7 +143,7 @@ function ShareComposer({ open, initialTrack, initialPost, authorName, pet, onClo
           <ResponsiveDialog.Footer className="share-dialog-footer">
             <div className="seed-share-footer">
               <div className="share-identity">
-                {pet && <img src={pet.imageUrl} alt={pet.name} />}
+                {pet && <img src={pet.thumbUrl} alt={pet.name} />}
                 <span>{authorName} 이름으로 {initialPost ? '수정해요.' : '공유돼요.'}
                   <small>오늘의 음악에 공개돼요.</small>
                 </span>

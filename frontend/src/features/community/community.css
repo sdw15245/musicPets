@@ -188,6 +188,7 @@
 }
 
 .community-filterbar > .seed-feed-filters { grid-area: filters; min-width: 0; }
+.community-filter-locked { align-self: center; color: var(--ink-soft); font: var(--mp-type-caption); }
 
 .seed-feed-filters {
   display: flex;
@@ -371,65 +372,49 @@
 .post-track {
   display: flex;
   align-items: center;
-  gap: 18px;
-  padding: 16px;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  transition: background 160ms;
+  gap: var(--seed-dimension-x3);
+  max-width: 480px;
+  padding: var(--seed-dimension-x3);
+  border-radius: var(--seed-radius-r3);
+  background: var(--seed-color-bg-neutral-weak);
 }
 
-.post-track:hover { background: var(--seed-color-bg-neutral-muted); }
+.post-track-link {
+  display: flex;
+  align-items: center;
+  gap: var(--seed-dimension-x3);
+  flex: 1;
+  min-width: 0;
+  color: inherit;
+  border-radius: var(--seed-radius-r2);
+}
+
+.post-track-link:hover strong { text-decoration: underline; text-underline-offset: var(--seed-dimension-x1); }
+.post-track-link:focus-visible { outline: 2px solid var(--seed-color-stroke-focus-ring); outline-offset: 2px; }
+
+.post-track .community-art {
+  flex-basis: 64px;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--seed-radius-r2);
+}
 
 .post-trackinfo {
-  flex: 1;
+  display: grid;
+  gap: 2px;
   min-width: 0;
 }
 
-.post-trackinfo strong {
-  display: block;
-  font-size: var(--seed-font-size-t7);
-  font-weight: var(--seed-font-weight-bold);
-  line-height: var(--seed-line-height-t7);
-  letter-spacing: normal;
-  overflow-wrap: anywhere;
+.post-trackinfo strong, .post-trackinfo > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.post-trackinfo > span {
-  display: block;
-  margin-top: 4px;
-  color: var(--seed-color-fg-neutral-muted);
-  font: var(--mp-type-label);
-  font-weight: var(--seed-font-weight-regular);
-}
-
-.post-trackinfo small {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 11px;
-  color: var(--seed-color-fg-brand);
-  font-size: var(--seed-font-size-t3);
-  line-height: var(--seed-line-height-t3);
-}
-
-.post-trackinfo small .community-icon {
-  width: 13px;
-  height: 13px;
-}
-
-.post-record {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  margin-right: 3px;
-  border: 1px solid var(--seed-color-stroke-neutral-muted);
-  border-radius: 50%;
-  color: var(--community-accent);
-}
-
-.post-record .community-icon { width: 15px; }
+.post-trackinfo strong { font: var(--mp-type-label); font-weight: var(--seed-font-weight-bold); }
+.post-trackinfo > span { color: var(--seed-color-fg-neutral-muted); font: var(--mp-type-caption); }
+.post-trackinfo .spotify-logo { width: 70px; min-width: 70px; margin: var(--seed-dimension-x1) 0 0; }
+.post-track-listen { flex-shrink: 0; }
 
 .community-art {
   position: relative;
@@ -466,7 +451,7 @@
   max-width: var(--mp-reading-width);
   margin: 0;
   color: var(--seed-color-fg-neutral);
-  font: var(--mp-type-article-body);
+  font: var(--mp-type-lead);
   letter-spacing: normal;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -831,12 +816,6 @@
   }
 
   .community-post { padding: var(--seed-dimension-x4); }
-  .post-track .community-art {
-    flex-basis: 73px;
-    width: 73px;
-    height: 73px;
-  }
-  .post-record { display: none; }
   .post-caption-link { display: block; color: inherit; min-height: 44px; }
 
   .comment-replies { margin-left: var(--seed-dimension-x6); }

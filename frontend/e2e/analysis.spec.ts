@@ -102,11 +102,16 @@ test('a slow analysis is shown immediately when ready and failures have no artif
     await route.fulfill({ json: result })
   })
   await page.goto('/analyze')
-  await expect(page.getByText('음악 취향을 분석하고 있어요', { exact: true })).toBeVisible()
+  // Screens load on demand and React reveals them on a timer, which this paused clock has to advance.
+  const revealed = async (locator: ReturnType<typeof page.getByText>) => expect(async () => {
+    await page.clock.runFor(100)
+    await expect(locator).toBeVisible({ timeout: 200 })
+  }).toPass()
+  await revealed(page.getByText('음악 취향을 분석하고 있어요', { exact: true }))
   await page.clock.runFor(3000)
   release()
   await expect(page).toHaveURL(/\/result$/)
-  await expect(page.getByRole('heading', { name: '루바', exact: true })).toBeVisible()
+  await revealed(page.getByRole('heading', { name: '루바', exact: true }))
   await page.route('**/api/analysis', route => route.fulfill({ status: 502, json: {} }))
   const failedResponse = page.waitForResponse('**/api/analysis')
   await page.getByRole('button', { name: '다시 분석하기' }).click()

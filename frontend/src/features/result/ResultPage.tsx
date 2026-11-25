@@ -39,9 +39,8 @@ function ResultContent({ data, onRestart }: { data: AnalysisResult; onRestart: (
   const limit = useRequestLimit([retry.error, save.error], data.recommendationLimit)
   const notices = data.warnings.filter(warning => !isPopularityNotice(warning))
   return <>
-    <div className="result-toolbar"><time dateTime={data.analyzedAt}>{analysisDate(data.analyzedAt)} 분석</time><Button variant="ghost" size="small" disabled={limit?.blocked} onClick={onRestart}>다시 분석하기</Button></div>
-    <AnalysisOverview data={data} reveal={reveal} actions={<><ResultShareDialog data={data} /><CommunityBridge petSlug={data.character?.slug} petName={data.character?.name} /></>} />
-    {notices.length > 0 && <aside className="analysis-notices" aria-label="분석 안내">{notices.map(warning => <p key={warning}>{warning}</p>)}</aside>}
+    <div className="result-toolbar"><time dateTime={data.analyzedAt}>{analysisDate(data.analyzedAt)} 분석</time><Button variant="neutralOutline" size="small" disabled={limit?.blocked} onClick={onRestart}>다시 분석하기</Button></div>
+    <AnalysisOverview data={data} reveal={reveal} notices={notices} actions={<><ResultShareDialog data={data} /><CommunityBridge petSlug={data.character?.slug} petName={data.character?.name} /></>} />
     <div className="result-details-grid">
       <RecommendationsSection data={data} retry={retry} save={save} limit={limit} onRestart={onRestart} />
       <div className="result-listening-details">

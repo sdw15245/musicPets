@@ -23,17 +23,19 @@ function MatchScore({ value, animate }: { value: number; animate: boolean }) {
   return <span className="analysis-match-value"><strong>{shown}%</strong> 매칭</span>
 }
 
-export default function AnalysisOverview({ data, historical = false, reveal = false, actions }: { data: AnalysisResult; historical?: boolean; reveal?: boolean; actions?: ReactNode }) {
+export default function AnalysisOverview({ data, historical = false, reveal = false, actions, notices = [] }: { data: AnalysisResult; historical?: boolean; reveal?: boolean; actions?: ReactNode; notices?: string[] }) {
   const pet = data.character
   const catalog = characters.find(item => item.slug === pet?.slug)
   const story = catalog?.story
   // Each pet's own colour themes its result, so results read differently at a glance and in screenshots.
   const theme = catalog ? { '--pet-color': catalog.color } as CSSProperties : undefined
   return <section className={`analysis-overview${reveal ? ' is-new-result' : ''}`} style={theme} aria-label="음악 취향 요약">
-    {pet && <div className="analysis-pet"><img src={pet.imageUrl} alt={pet.name} width={280} height={280} /></div>}
+    {pet && <div className="analysis-pet"><img src={catalog?.imageUrl ?? pet.imageUrl} alt={pet.name} width={280} height={280} /></div>}
     <div className="analysis-story">
       <div className="analysis-identity">
       <p className="analysis-period">{analysisPeriodLabel(data)} · {data.genres.trackCount}곡 분석</p>
+      {/* Notes about how this result was made belong with the period they qualify. */}
+      {!!notices.length && <aside className="analysis-notices" aria-label="분석 안내">{notices.map(warning => <p key={warning}>{warning}</p>)}</aside>}
       {pet ? <>
         <p className="analysis-pet-label">나를 닮은 음악 펫</p>
         <h2 className="analysis-pet-title">{pet.name}</h2>

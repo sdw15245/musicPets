@@ -27,7 +27,9 @@ test('reload shares authentication and starts home data in parallel', async ({ p
     await expect(page.getByRole('button', { name: '프로필', exact: true })).toBeVisible()
     // Wait for the deliberately slow /me independently of the hero.
     await meDone
-    for (const path of ['/api/auth/csrf', '/api/auth/refresh', '/api/me', '/api/analysis/latest', '/api/notifications/unread-count']) {
+    // The first load fetches a CSRF token; reloads in the same tab reuse it and go straight to refresh.
+    expect(calls.filter(call => call.path === '/api/auth/csrf'), '/api/auth/csrf').toHaveLength(i ? 0 : 1)
+    for (const path of ['/api/auth/refresh', '/api/me', '/api/analysis/latest', '/api/notifications/unread-count']) {
       expect(calls.filter(call => call.path === path), path).toHaveLength(1)
     }
     expect(calls.filter(call => call.path === '/api/analysis')).toHaveLength(0)

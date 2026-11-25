@@ -27,6 +27,7 @@ const initialGzip = scripts.filter(script => initialFiles.has(script.file))
 const largest = Math.max(...scripts.map(script => script.bytes))
 
 console.log(`Initial JavaScript: ${(initialGzip / 1000).toFixed(2)} kB gzip; largest chunk: ${(largest / 1000).toFixed(2)} kB`)
-if (initialGzip > 220_000 || largest > 500_000) {
-  throw new Error('JavaScript budget exceeded: initial gzip <= 220 kB and each chunk <= 500 kB.')
+// The landing page is the first download; other screens load on demand (src/routeModules.ts).
+if (initialGzip > 150_000 || largest > 500_000) {
+  throw new Error('JavaScript budget exceeded: initial gzip <= 150 kB and each chunk <= 500 kB.')
 }

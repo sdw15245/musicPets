@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import type { LandingPresentation } from './useLandingPresentation'
 
 function CtaSection({ presentation }: { presentation: LandingPresentation }) {
-  const { personal, failed, actionTo, actionLabel } = presentation
+  const { personal, failed, actionTo, actionLabel, prefetchAction } = presentation
   return (
     <section className="cta-section">
       <div className="section-shell cta-inner">
@@ -18,7 +18,7 @@ function CtaSection({ presentation }: { presentation: LandingPresentation }) {
               : 'Spotify를 연결하면 내 취향과 닮은 펫, 추천 아티스트를 함께 볼 수 있어요.'}
           </p>
         </div>
-        <Button asChild variant="brandSolid" size="large"><Link to={actionTo}>{actionLabel}</Link></Button>
+        <Button asChild variant="brandSolid" size="large"><Link to={actionTo} onPointerEnter={prefetchAction} onFocus={prefetchAction}>{actionLabel}</Link></Button>
       </div>
     </section>
   )

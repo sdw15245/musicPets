@@ -1,14 +1,14 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { z } from 'zod'
+import * as z from 'zod/mini'
 import { api } from '../../shared/api/client'
 import { normalizeError } from '../../shared/api/error'
 import { useAuthStore } from '../auth/useAuthStore'
 
 const NotificationSchema = z.object({
-  id: z.string(), actor: z.string(), avatarSlug: z.string().nullable(),
-  kind: z.enum(['LIKE', 'COMMENT', 'REPLY']), postId: z.string(), commentId: z.string().nullable(),
+  id: z.string(), actor: z.string(), avatarSlug: z.nullable(z.string()),
+  kind: z.enum(['LIKE', 'COMMENT', 'REPLY']), postId: z.string(), commentId: z.nullable(z.string()),
   createdAt: z.string(), read: z.boolean(),
-  postPreview: z.string().nullable().optional(), commentPreview: z.string().nullable().optional(),
+  postPreview: z.optional(z.nullable(z.string())), commentPreview: z.optional(z.nullable(z.string())),
 })
 const PageSchema = z.object({ items: z.array(NotificationSchema), page: z.number(), hasMore: z.boolean(), unreadCount: z.number() })
 

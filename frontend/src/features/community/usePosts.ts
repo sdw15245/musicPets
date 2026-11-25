@@ -1,9 +1,9 @@
-import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-query'
 import { useRef, useState } from 'react'
-import { z } from 'zod'
+import * as z from 'zod/mini'
 import { api } from '../../shared/api/client'
 import { normalizeError } from '../../shared/api/error'
-import { useAuthStore } from '../auth/useAuthStore'
+import { useGuestPlaceholder, useViewer } from '../auth/useViewer'
 import { CommunityPostSchema } from './schemas'
 import type { FeedView } from './model'
 import type { FeedSort } from './FeedSortMenu'
@@ -12,10 +12,16 @@ const PageSchema = z.object({ items: z.array(CommunityPostSchema), page: z.numbe
 const postKeys = ['posts'] as const
 export type PostInput = { trackUri: string; caption: string; tags: string[] }
 
+type PostPage = z.infer<typeof PageSchema>
+
 export function usePosts(view: FeedView, filter: string, pet: string | undefined, sort: FeedSort, query: string) {
-  const sessionId = useAuthStore(s => s.sessionId)
+  const viewer = useViewer()
+  const params = [view, filter, pet, sort, query] as const
+  const placeholderData = useGuestPlaceholder<InfiniteData<PostPage, number>>(viewer.key, [...postKeys, 'guest', ...params])
   return useInfiniteQuery({
-    queryKey: [...postKeys, sessionId, view, filter, pet, sort, query],
+    queryKey: [...postKeys, viewer.key, ...params],
+    enabled: viewer.ready,
+    placeholderData,
     initialPageParam: 0,
     queryFn: async ({ pageParam, signal }) => {
       try {

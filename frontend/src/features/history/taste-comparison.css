@@ -1,4 +1,4 @@
-.taste-comparison { max-width: 880px; margin-bottom: var(--seed-dimension-x10); padding-bottom: var(--seed-dimension-x8); border-bottom: 1px solid var(--line); }
+.taste-comparison { max-width: 880px; margin-block: var(--seed-dimension-x6) var(--seed-dimension-x10); padding-bottom: var(--seed-dimension-x8); border-bottom: 1px solid var(--line); }
 .comparison-heading h2 { margin: 0 0 var(--seed-dimension-x2); font: var(--mp-type-section-title); }
 .comparison-pet-change { display: flex; align-items: center; gap: var(--seed-dimension-x4); margin-top: var(--seed-dimension-x6); }
 .comparison-pet-change img { object-fit: contain; border-radius: var(--seed-radius-r3); }
@@ -19,6 +19,7 @@
 .comparison-highlight p { margin: 0; font: var(--mp-type-label); }
 .comparison-highlight > strong { font: var(--mp-type-label); font-variant-numeric: tabular-nums; }
 .comparison-highlight > strong > span { margin-left: var(--seed-dimension-x1); font: var(--mp-type-caption); color: var(--ink-soft); }
+.comparison-steady { font: var(--mp-type-caption); color: var(--ink-soft); }
 .comparison-genres { margin: 0; padding: 0; list-style: none; }
 .comparison-genres > li { padding-block: var(--seed-dimension-x5); border-bottom: 1px solid var(--line); }
 .comparison-genre-heading { display: flex; align-items: baseline; justify-content: space-between; gap: var(--seed-dimension-x3); margin-bottom: var(--seed-dimension-x3); }

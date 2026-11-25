@@ -6,10 +6,10 @@
   min-width: 0;
 }
 .music-list-skeleton > div { gap: var(--seed-dimension-x5); }
+/* Lists are divided rows, not boxed cards, so the skeleton has the same edges as what replaces it. */
 .music-skeleton-card {
   padding: var(--seed-dimension-x5);
-  border: 1px solid var(--seed-color-stroke-neutral-muted);
-  border-radius: var(--seed-radius-r4);
+  border-bottom: 1px solid var(--seed-color-stroke-neutral-muted);
   background: var(--seed-color-bg-layer-default);
 }
 .music-skeleton-heading {
@@ -19,9 +19,4 @@
 }
 .music-skeleton-copy { flex: 1; }
 .music-skeleton-heading > .seed-skeleton { flex-shrink: 0; }
-.music-list-skeleton.is-compact .music-skeleton-card {
-  padding-inline: 0;
-  border: 0;
-  border-bottom: 1px solid var(--seed-color-stroke-neutral-muted);
-  border-radius: 0;
-}
+.music-list-skeleton.is-compact .music-skeleton-card { padding-inline: 0; }

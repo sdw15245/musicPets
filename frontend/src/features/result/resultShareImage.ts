@@ -13,7 +13,7 @@ export async function createResultShareImage(data: AnalysisResult): Promise<File
   const family = styles.getPropertyValue('--seed-font-family').trim()
   const image = new Image()
   image.crossOrigin = 'anonymous'
-  image.src = character.imageUrl
+  image.src = resolveCharacter(character.slug)?.imageUrl ?? character.imageUrl
   await Promise.all([
     image.decode(),
     Promise.allSettled([

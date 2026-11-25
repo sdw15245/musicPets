@@ -115,7 +115,7 @@ test('SEED text scaling enlarges content without horizontal page overflow', asyn
 })
 
 test('failed author images show a fallback without losing the author identity', async ({ page }) => {
-  await page.route('**/characters/**', route => route.abort())
+  await page.route(/\/assets\/[a-z-]+-(?:192|640)-[^/]+\.webp$/, route => route.abort())
   await page.goto('/community')
   const post = page.getByRole('article', { name: '초록밤의 음악 공유' })
   await expect(post).toContainText('초록밤')

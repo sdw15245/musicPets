@@ -5,22 +5,24 @@
 .mypage-connected-account { display: flex; align-items: center; gap: var(--seed-dimension-x2); margin-top: var(--seed-dimension-x5); padding-top: var(--seed-dimension-x4); border-top: 1px solid var(--seed-color-stroke-neutral-muted); }
 .mypage-connected-account > div { flex: 1; min-width: 0; font: var(--mp-type-caption); }
 .mypage-connected-account span { color: var(--seed-color-fg-neutral-muted); }
-.mypage-connected-account strong { display: block; font-weight: var(--seed-font-weight-medium); overflow-wrap: anywhere; }
+.mypage-connected-account strong { display: block; overflow: hidden; font-weight: var(--seed-font-weight-medium); text-overflow: ellipsis; white-space: nowrap; }
 .mypage-connected-account > a { flex-shrink: 0; }
 .mypage-layout { display: grid; grid-template-columns: minmax(280px, 320px) minmax(0, 1fr); align-items: start; gap: var(--seed-dimension-x10); }
 .mypage-profile-card, .mypage-recent { min-width: 0; }
+.mypage-recent { max-width: var(--mp-reading-width); }
 .mypage-profile-card { padding: var(--seed-dimension-x5); background: var(--seed-color-bg-neutral-weak); border-radius: var(--seed-radius-r4); }
 .mypage-profile-identity { display: flex; align-items: center; gap: var(--seed-dimension-x4); }
 .mypage-profile-identity > div:last-child { min-width: 0; }
 .mypage-profile-identity h2 { margin: 0; font: var(--mp-type-section-title); overflow-wrap: anywhere; }
 .mypage-profile-description { margin: var(--seed-dimension-x1) 0 0; font: var(--mp-type-caption); color: var(--seed-color-fg-neutral-muted); }
 .mypage-profile-body { margin-top: var(--seed-dimension-x5); }
-.mypage-profile-body > button { width: 100%; }
 .mypage-profile-skeleton { display: grid; gap: var(--seed-dimension-x4); min-height: 128px; margin-top: 0; }
 .profile-editor { display: grid; gap: var(--seed-dimension-x4); margin-top: var(--seed-dimension-x5); padding-top: var(--seed-dimension-x5); border-top: 1px solid var(--seed-color-stroke-neutral-muted); }
 .profile-editor-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--seed-dimension-x2); }
 .mypage-recent-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--seed-dimension-x3); margin-bottom: var(--seed-dimension-x5); }
 .mypage-recent-heading h2 { margin: 0; font: var(--mp-type-section-title); }
+.mypage-more-link { display: inline-flex; align-items: center; gap: var(--seed-dimension-x0_5); min-height: 44px; color: var(--seed-color-fg-neutral-muted); font: var(--mp-type-label); text-decoration: none; }
+.mypage-more-link:hover { color: var(--seed-color-fg-neutral); }
 .mypage-post-preview { padding-block: var(--seed-dimension-x5); }
 .mypage-post-preview + .mypage-post-preview { border-top: 1px solid var(--seed-color-stroke-neutral-muted); }
 .mypage-post-preview:first-child { padding-top: 0; }
@@ -33,9 +35,9 @@
 .mypage-track-info > span { font: var(--mp-type-caption); color: var(--seed-color-fg-neutral-muted); }
 .mypage-track:hover h3 { text-decoration: underline; text-underline-offset: var(--seed-dimension-x1); }
 .mypage-post-caption { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; white-space: pre-wrap; margin: var(--seed-dimension-x2) 0 0; font: var(--mp-type-body); }
-.mypage-post-meta { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--seed-dimension-x2); margin-top: var(--seed-dimension-x2); padding-left: 80px; font: var(--mp-type-caption); color: var(--seed-color-fg-neutral-muted); }
-.mypage-post-meta > div { display: flex; flex-wrap: wrap; gap: var(--seed-dimension-x3); }
+.mypage-post-meta { display: flex; align-items: center; flex-wrap: wrap; gap: var(--seed-dimension-x1) var(--seed-dimension-x3); margin-top: var(--seed-dimension-x2); padding-left: 80px; font: var(--mp-type-caption); color: var(--seed-color-fg-neutral-muted); }
 .mypage-spotify-link { display: inline-flex; align-items: center; gap: var(--seed-dimension-x1); min-height: 44px; }
+.mypage-spotify-link .spotify-logo { width: 70px; min-width: 70px; margin: 0 0 0 var(--seed-dimension-x2); }
 .mypage :is(a, button, input):focus-visible { outline: 2px solid var(--seed-color-stroke-focus-ring); outline-offset: 2px; }
 @media (max-width: 1023px) {
   .mypage-layout { grid-template-columns: minmax(0, 1fr); gap: var(--seed-dimension-x8); }

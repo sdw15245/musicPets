@@ -1,11 +1,8 @@
-import { spotifyUrl, spotifyTrackId } from '../../shared/spotify'
-import SpotifyPlayer from '../../shared/components/SpotifyPlayer'
-import SpotifyLogo from '../../shared/components/SpotifyLogo'
 import Button from '../../shared/components/ui/Button'
 import { Avatar, ReactionButton, Icon } from '@seed-design/react'
 import { Badge } from 'seed-design/ui/badge'
 import CommunityIcon from './CommunityIcon'
-import TrackArtwork from './TrackArtwork'
+import PostTrack from './PostTrack'
 import { getPet, type CommunityPost } from './model'
 import { useId, useState } from 'react'
 import PostComments from './PostComments'
@@ -43,7 +40,7 @@ function PostCard({ post, linkCaption, liked, onLike, onDelete, onEdit, onRequir
   const likeCount = post.likes
   const dateLabel = post.createdAt ? activityTime(post.createdAt) : '오늘의 추천 · 샘플'
   const authorAvatar = <Avatar.Root size="48" style={{ backgroundColor: avatar?.color }} aria-hidden="true">
-    {avatar && <Avatar.Image src={avatar.imageUrl} alt="" />}
+    {avatar && <Avatar.Image src={avatar.thumbUrl} alt="" />}
     <Avatar.Fallback>{post.author.slice(0, 1)}</Avatar.Fallback>
   </Avatar.Root>
 
@@ -74,21 +71,12 @@ function PostCard({ post, linkCaption, liked, onLike, onDelete, onEdit, onRequir
           catch (cause) { setDeleteCause(cause); setDeleteError('글을 삭제하지 못했어요. 잠시 후 다시 시도해주세요.') }
         }} />}
       <div className="post-body">
-      {spotifyTrackId(post.track.uri) ? <SpotifyPlayer uri={post.track.uri} name={post.track.name} /> : <a className="post-track" href={spotifyUrl(post.track)} target="_blank" rel="noreferrer"
-        aria-label={`${post.track.name} Spotify에서 열기`}>
-        <TrackArtwork track={post.track} />
-        <div className="post-trackinfo">
-          <strong>{post.track.name}</strong>
-          <span>{post.track.artist}</span>
-          <small>Spotify에서 듣기 <CommunityIcon name="external" /></small>
-          {post.track.uri && <SpotifyLogo />}
+        {/* One song and one sentence: the sentence is the person, the song is what they share. */}
+        <div className="post-story">
+          <p className="post-caption">{linkCaption ? <Link to={postPath} className="post-caption-link">{post.caption}</Link> : post.caption}</p>
+          <div className="post-tags">{post.tags.map(tag => <span className="post-tag" key={tag}>#{tag}</span>)}</div>
         </div>
-        <span className="post-record" aria-hidden="true"><CommunityIcon name="music" /></span>
-      </a>}
-      <div className="post-story">
-        <p className="post-caption">{linkCaption ? <Link to={postPath} className="post-caption-link">{post.caption}</Link> : post.caption}</p>
-        <div className="post-tags">{post.tags.map(tag => <span className="post-tag" key={tag}>#{tag}</span>)}</div>
-      </div>
+        <PostTrack track={post.track} />
       </div>
       <footer className="seed-post-actions">
         <ReactionButton aria-label={`공감 ${likeCount}`} pressed={liked} loading={liking} disabled={liking} onPressedChange={async () => {

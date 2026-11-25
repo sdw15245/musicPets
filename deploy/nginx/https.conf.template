@@ -16,6 +16,8 @@ server {
 
 server {
     listen 8443 ssl;
+    # One multiplexed connection: the far-away API otherwise needs a new TLS handshake per parallel request.
+    http2 on;
     server_name ${DOMAIN};
     ssl_certificate /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;

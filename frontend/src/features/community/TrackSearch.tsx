@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Field, ScaleFeedback, TextField } from '@seed-design/react'
-import { z } from 'zod'
+import * as z from 'zod/mini'
 import { api } from '../../shared/api/client'
 import { normalizeError, isSpotifyReauthorizationRequired } from '../../shared/api/error'
 import { useAuthStore } from '../auth/useAuthStore'

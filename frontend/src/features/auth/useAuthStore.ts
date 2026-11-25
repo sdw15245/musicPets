@@ -36,5 +36,6 @@ export const useAuthStore = create<AuthState>()((set) => ({
       ? crypto.randomUUID() : state.sessionId,
   })),
   setStatus: (status) => set({ status }),
-  clear: () => set({ accessToken: null, status: 'ready', sessionId: crypto.randomUUID() }),
+  // A guest confirmed as a guest keeps its session, so public data loaded meanwhile stays valid.
+  clear: () => set(state => ({ accessToken: null, status: 'ready', sessionId: state.accessToken ? crypto.randomUUID() : state.sessionId })),
 }))

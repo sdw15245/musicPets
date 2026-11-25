@@ -3,14 +3,16 @@ import { lazy, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { restoreSession } from './features/auth/session'
 import LandingPage from './features/landing/LandingPage'
-import AnalyzePage from './features/analysis/AnalyzePage'
-import ResultPage from './features/result/ResultPage'
+import { loadAnalyzePage, loadResultPage } from './routeModules'
 import RequireAuth from './shared/components/RequireAuth'
 import NotFoundPage from './shared/components/NotFoundPage'
 import RouteBoundary from './shared/components/RouteBoundary'
 import RouteScrollRestoration from './shared/components/RouteScrollRestoration'
 import RouteTitle from './shared/components/RouteTitle'
 
+// Only the landing page ships in the first download; see routeModules.ts for early fetching.
+const AnalyzePage = lazy(loadAnalyzePage)
+const ResultPage = lazy(loadResultPage)
 const LoginPage = lazy(() => import('./features/auth/LoginPage'))
 const OAuthCallback = lazy(() => import('./features/auth/OAuthCallback'))
 const CommunityPage = lazy(() => import('./features/community/CommunityPage'))

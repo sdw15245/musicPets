@@ -10,14 +10,14 @@ interface HeroSectionProps {
 }
 
 function HeroSection({ onNavigate, presentation }: HeroSectionProps) {
-  const { personal, analysis, loadingPreview, failed, footnote, actionTo, actionLabel } = presentation
+  const { personal, analysis, loadingPreview, failed, footnote, actionTo, actionLabel, prefetchAction } = presentation
   return <section className="music-hero">
     <div className="music-hero-copy">
       <div className="hero-eyebrow">음악으로 만나는 나의 취향</div>
       <h1>{personal ? <>음악으로 발견한,<br /><em>나의 취향.</em></> : <>좋아하는 음악 속에,<br /><em>나를 닮은 펫.</em></>}</h1>
       <p>{personal ? <>최근 분석한 음악 취향과 추천 아티스트를<br />저장된 결과에서 다시 확인해보세요.</> : <>최근 4주, 내가 즐겨 들은 음악은 어떤 모습일까요?<br />나를 닮은 음악 펫을 찾고 친구와 나눠보세요.</>}</p>
       <div className="music-hero-actions">
-        <Button asChild variant="brandSolid" size="large"><Link to={actionTo}>{actionLabel}</Link></Button>
+        <Button asChild variant="brandSolid" size="large"><Link to={actionTo} onPointerEnter={prefetchAction} onFocus={prefetchAction}>{actionLabel}</Link></Button>
         <Button className="hero-how-link" variant="ghost" onClick={() => onNavigate?.('intro')} size="large">이용 방법 보기</Button>
       </div>
       {footnote && <p className="hero-footnote">{footnote}</p>}

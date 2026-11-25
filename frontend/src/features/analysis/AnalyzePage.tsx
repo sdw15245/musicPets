@@ -12,6 +12,7 @@ import SpotifyReconnectNotice from '../auth/SpotifyReconnectNotice'
 import { isSpotifyReauthorizationRequired } from '../../shared/api/error'
 import RequestLimitNotice from '../../shared/components/ui/RequestLimitNotice'
 import { useRequestLimit } from '../../shared/api/useRequestLimit'
+import { loadResultPage } from '../../routeModules'
 
 function AnalysisFailure({ error, retry }: { error: unknown; retry: () => void }) {
   const limit = useRequestLimit([error])
@@ -52,6 +53,8 @@ function AnalysisReady() {
 }
 
 function AnalyzePage() {
+  // An analysis takes seconds; fetch the result screen meanwhile so the reveal never waits on a download.
+  useEffect(() => { void loadResultPage() }, [])
   return (
     <main className="auth-page">
       <AsyncBoundary

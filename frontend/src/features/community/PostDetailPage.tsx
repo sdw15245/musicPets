@@ -8,7 +8,8 @@ import MusicListSkeleton from '../../shared/components/ui/MusicListSkeleton'
 import RequestErrorNotice from '../../shared/components/ui/RequestErrorNotice'
 import { api } from '../../shared/api/client'
 import { ApiError, normalizeError } from '../../shared/api/error'
-import { useAuthStore } from '../auth/useAuthStore'
+import { useGuestPlaceholder, useViewer } from '../auth/useViewer'
+import type { CommunityPost } from './model'
 import { useProfile } from '../profile/useProfile'
 import { CommunityPostSchema } from './schemas'
 import { usePostMutations } from './usePosts'
@@ -22,14 +23,15 @@ export default function PostDetailPage() {
   const [params] = useSearchParams()
   const commentParam = params.get('comment')
   const focusCommentId = commentParam && /^\d+$/.test(commentParam) ? commentParam : undefined
-  const sessionId = useAuthStore(s => s.sessionId)
+  const viewer = useViewer()
+  const placeholderData = useGuestPlaceholder<CommunityPost>(viewer.key, ['posts', 'guest', 'detail', id])
   const profile = useProfile()
   const navigate = useNavigate()
   const [editing, setEditing] = useState<{ open: boolean } | null>(null)
   const editTrigger = useRef<HTMLElement | null>(null)
   const mutations = usePostMutations()
-  const query = useQuery({
-    queryKey: ['posts', sessionId, 'detail', id], retry: false, enabled: /^\d+$/.test(id),
+  const query = useQuery<CommunityPost>({
+    queryKey: ['posts', viewer.key, 'detail', id], retry: false, enabled: viewer.ready && /^\d+$/.test(id), placeholderData,
     queryFn: async ({ signal }) => {
       try { return CommunityPostSchema.parse((await api.get('/api/posts/' + id, { signal })).data) }
       catch (error) { throw normalizeError(error) }
@@ -48,7 +50,7 @@ export default function PostDetailPage() {
       {mutations.like.isError && <RequestErrorNotice error={mutations.like.error}>공감을 변경하지 못했어요.</RequestErrorNotice>}
       {post && <PostCard key={`${post.id}:${focusCommentId ?? ''}`} post={post} liked={post.liked} copyLink initialCommentsOpen={params.get('comments') === '1' || !!focusCommentId} focusCommentId={focusCommentId}
         onRequireLogin={login} onLike={() => { if (!profile.signedIn) { login(); return } return mutations.likePost({ id, liked: !post.liked }) }}
-        liking={mutations.pendingLikeIds.has(id)} onEdit={() => { editTrigger.current = document.activeElement as HTMLElement; setEditing({ open: true }) }} deleting={mutations.remove.isPending}
+        liking={mutations.pendingLikeIds.has(id) || query.isPlaceholderData} onEdit={() => { editTrigger.current = document.activeElement as HTMLElement; setEditing({ open: true }) }} deleting={mutations.remove.isPending}
         onDelete={async () => { await mutations.remove.mutateAsync(id); navigate('/community', { replace: true }) }} />}
       {post && editing && <ShareComposer open={editing.open} initialPost={post} authorName={profile.name} pet={getPet(profile.avatarSlug)} onClose={() => setEditing({ open: false })}
         onExitComplete={() => { setEditing(null); editTrigger.current?.focus() }}

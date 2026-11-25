@@ -121,7 +121,7 @@ test('native sharing sends the generated file, treats cancellation quietly and r
 
 test('an image failure offers a working retry', async ({ page }) => {
   let fail = true
-  await page.route('**/characters/mochi.png', route => fail ? route.abort() : route.continue())
+  await page.route(/\/assets\/mochi-640-[^/]+\.webp$/, route => fail ? route.abort() : route.continue())
   await page.goto('/result')
   await page.getByRole('button', { name: '결과 공유하기', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: '음악 취향 공유 카드', exact: true })

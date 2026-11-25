@@ -3,7 +3,7 @@ import AppHeader from '../../shared/components/AppHeader'
 import TasteNav from '../result/TasteNav'
 import './personal.css'
 
-export default function PersonalLayout({ title, description, children, taste = false, pending = false }: { title: string; description?: string; children: ReactNode; taste?: boolean; pending?: boolean }) {
+export default function PersonalLayout({ title, description, actions, children, taste = false, pending = false }: { title: string; description?: string; actions?: ReactNode; children: ReactNode; taste?: boolean; pending?: boolean }) {
   return <div className="personal-page">
     <AppHeader pending={pending} />
     <main className={`personal-main${taste ? ' personal-main-taste' : ''}`}>
@@ -13,7 +13,8 @@ export default function PersonalLayout({ title, description, children, taste = f
         <TasteNav />
         <h2 className="sr-only">{title}</h2>
       </> : <h1>{title}</h1>}
-      {description && <p className="personal-description">{description}</p>}
+      {/* Page actions share the description's row, so loading and loaded pages keep the same layout. */}
+      {description && <div className="personal-intro"><p className="personal-description">{description}</p>{actions}</div>}
       {children}
     </main>
   </div>

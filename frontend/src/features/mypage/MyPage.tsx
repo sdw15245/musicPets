@@ -8,7 +8,7 @@ import { useId, useLayoutEffect, useRef, useState } from 'react'
 import { Avatar } from '@seed-design/react'
 import ProfileSkeleton from './ProfileSkeleton'
 import { ResultSection } from 'seed-design/ui/result-section'
-import { IconArrowUpRightLine, IconMusicalnoteDoubleLine } from '@karrotmarket/react-monochrome-icon'
+import { IconArrowUpRightLine, IconChevronRightLine, IconMusicalnoteDoubleLine } from '@karrotmarket/react-monochrome-icon'
 import { useProfile } from '../profile/useProfile'
 import { getPet } from '../community/model'
 import { usePosts } from '../community/usePosts'
@@ -37,7 +37,7 @@ function ProfileSummary({ profile }: { profile: ReturnType<typeof useProfile> })
   return <>
     <div className="mypage-profile-identity">
       <Avatar.Root size="64">
-        {pet && <Avatar.Image src={pet.imageUrl} alt="분석 펫 프로필 사진" />}
+        {pet && <Avatar.Image src={pet.thumbUrl} alt="분석 펫 프로필 사진" />}
         <Avatar.Fallback>{profile.name.slice(0, 1) || '?'}</Avatar.Fallback>
       </Avatar.Root>
       <div>
@@ -46,11 +46,12 @@ function ProfileSummary({ profile }: { profile: ReturnType<typeof useProfile> })
       </div>
     </div>
     <div className="mypage-profile-body">
-      <Button ref={editTrigger} size="small" aria-expanded={editing} aria-controls={editing ? editorId : undefined} disabled={profile.saving}
+      <Button ref={editTrigger} size="small" variant="neutralOutline" aria-expanded={editing} aria-controls={editing ? editorId : undefined} disabled={profile.saving}
         onClick={() => setEditing(!editing)}>이름 수정</Button>
       {editing && <div id={editorId}><ProfileEditor profile={profile} onClose={closeEditor} /></div>}
       <div className="mypage-connected-account">
-        <div><span>Spotify 계정</span><strong>{profile.spotifyId}</strong></div>
+        {/* The Spotify ID is a long machine string: one line, full value on hover. */}
+        <div><span>연결된 Spotify 계정</span><strong title={profile.spotifyId}>{profile.spotifyId}</strong></div>
         <Button asChild variant="ghost" size="small"><Link to="/login?switchAccount=true">계정 변경</Link></Button>
       </div>
     </div>
@@ -63,7 +64,8 @@ function RecentPosts() {
   return <section className="mypage-recent" aria-labelledby="recent-posts-title">
     <div className="mypage-recent-heading">
       <h2 id="recent-posts-title">최근 내 글</h2>
-      <Button asChild size="small" variant="ghost"><Link to="/community?view=mine" aria-label="내 글 전체 보기">전체 보기</Link></Button>
+      {/* Navigation reads as a quiet link with a chevron, not as an action button. */}
+      <Link className="mypage-more-link" to="/community?view=mine" aria-label="내 글 전체 보기">전체 보기<IconChevronRightLine size={16} aria-hidden="true" /></Link>
     </div>
     {feed.isPending && <MusicListSkeleton compact label="내 글을 불러오고 있어요." />}
     {feed.isError && <RequestErrorNotice error={feed.error} action={blocked => <Button size="small" disabled={blocked} loading={feed.isFetching} onClick={() => void feed.refetch()}>내 글 다시 불러오기</Button>}>내 글을 불러오지 못했어요.</RequestErrorNotice>}
@@ -77,10 +79,8 @@ function RecentPosts() {
         <div className="mypage-track-info"><h3>{post.track.name}</h3><span>{post.track.artist}</span><p className="mypage-post-caption">{post.caption}</p></div>
       </Link>
       <div className="mypage-post-meta">
-        <div>
         {post.createdAt && <time dateTime={post.createdAt} title={exactTime(post.createdAt)}>{activityTime(post.createdAt)}</time>}
         <span>공감 {post.likes} · 댓글 {post.commentCount}개</span>
-        </div>
         <a className="mypage-spotify-link" href={spotifyUrl(post.track)} target="_blank" rel="noreferrer" aria-label={`${post.track.name} Spotify에서 듣기`}><SpotifyLogo /><IconArrowUpRightLine size={16} aria-hidden="true" /></a>
       </div>
     </article>)}</div>

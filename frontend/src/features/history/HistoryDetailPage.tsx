@@ -29,8 +29,7 @@ export default function HistoryDetailPage() {
     {missing ? <ResultSection size="medium" title="기록을 찾을 수 없어요" description="삭제되었거나 보관 기간이 지난 기록일 수 있어요." /> :
       query.isError && <RequestErrorNotice error={query.error} action={blocked => <Button disabled={blocked} onClick={() => void query.refetch()}>다시 불러오기</Button>}>분석 결과를 불러오지 못했어요.</RequestErrorNotice>}
     {result && <div className="personal-detail">
-      <AnalysisOverview data={result} historical actions={<><ResultShareDialog data={result} /><CommunityBridge petSlug={result.character?.slug} petName={result.character?.name} /></>} />
-      {!!notices.length && <aside className="analysis-notices" aria-label="분석 안내">{notices.map(warning => <p key={warning}>{warning}</p>)}</aside>}
+      <AnalysisOverview data={result} historical notices={notices} actions={<><ResultShareDialog data={result} /><CommunityBridge petSlug={result.character?.slug} petName={result.character?.name} /></>} />
       {result.recommendedArtists != null ? <section aria-labelledby="history-artists"><h2 id="history-artists">그날의 추천 아티스트</h2>
         <ArtistRecommendations artists={result.recommendedArtists} />
         {!result.recommendedArtists.length && <p>{result.recommendationsPending ? '아티스트를 찾는 중에 저장된 기록이에요.' : '이 기록에는 추천 아티스트가 없어요.'}</p>}

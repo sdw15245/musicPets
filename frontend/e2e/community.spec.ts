@@ -17,8 +17,9 @@ test('public feed only reads the posts API', async ({ page }, testInfo) => {
   await expect(page.getByRole('heading', { name: '오늘, 어떤 음악 들었어요?' })).toBeVisible()
   await expect(page.getByRole('button', { name: /^(보관한 음악|내가 공유한 곡)$/ })).toHaveCount(0)
   await page.screenshot({ path: testInfo.outputPath('community-desktop.png'), fullPage: true })
-  await expect(page.getByRole('radio', { name: '나와 같은 펫', exact: true })).toBeDisabled()
-  await expect(page.getByRole('radio', { name: '다른 펫', exact: true })).toBeDisabled()
+  // Guests see how to unlock pet filters instead of disabled chips.
+  await expect(page.getByRole('radiogroup', { name: '취향 필터' })).toHaveCount(0)
+  await expect(page.getByText('로그인하고 분석하면 펫별로 음악을 둘러볼 수 있어요.', { exact: true })).toBeVisible()
   await page.getByRole('button', { name: '오늘의 한 곡 올리기' }).click()
   await expect(page.getByRole('alertdialog')).toContainText('로그인하고 함께해요')
   await page.getByRole('button', { name: '계속 둘러보기' }).click()

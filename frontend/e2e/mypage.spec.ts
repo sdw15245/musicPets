@@ -15,7 +15,7 @@ test('mypage reads the latest own posts, shows three previews and supports cance
   await page.goto('/mypage')
   const profile = page.getByRole('region', { name: '내 프로필', exact: true })
   await expect(profile.getByRole('heading', { name: '음악 친구', exact: true })).toBeVisible()
-  await expect(profile.getByRole('img', { name: '분석 펫 프로필 사진' })).toHaveAttribute('src', '/characters/mochi.png')
+  await expect(profile.getByRole('img', { name: '분석 펫 프로필 사진' })).toHaveAttribute('src', /\/assets\/mochi-192-[^/]+\.webp$/)
   await expect(profile).toContainText('멜로')
   await expect(profile).not.toContainText('dream pop')
   const recent = page.getByRole('region', { name: '최근 내 글', exact: true })

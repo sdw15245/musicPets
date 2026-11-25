@@ -1,16 +1,19 @@
-import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { z } from 'zod'
+import { useInfiniteQuery, useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-query'
+import * as z from 'zod/mini'
 import { api } from '../../shared/api/client'
 import { normalizeError } from '../../shared/api/error'
-import { useAuthStore } from '../auth/useAuthStore'
+import { useGuestPlaceholder, useViewer } from '../auth/useViewer'
 import { CommentSchema } from './schemas'
 
 const PageSchema = z.object({ items: z.array(CommentSchema), page: z.number(), hasMore: z.boolean() })
 
 export function useComments(postId: string, focusId?: string) {
-  const sessionId = useAuthStore(s => s.sessionId)
+  const viewer = useViewer()
+  const placeholderData = useGuestPlaceholder<InfiniteData<z.infer<typeof PageSchema>, number>>(viewer.key, ['comments', postId, 'guest', focusId ?? null])
   return useInfiniteQuery({
-    queryKey: ['comments', postId, sessionId, focusId ?? null],
+    queryKey: ['comments', postId, viewer.key, focusId ?? null],
+    enabled: viewer.ready,
+    placeholderData,
     initialPageParam: 0,
     queryFn: async ({ pageParam, signal }) => {
       try {

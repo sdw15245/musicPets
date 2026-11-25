@@ -10,9 +10,10 @@ export default function MusicListSkeleton({ compact = false, label, quiet = fals
           <Skeleton radius={compact ? '16' : 'full'} width="x12" height="x12" />
           <div className="music-skeleton-copy"><Skeleton radius="8" width="45%" height="lineHeight.t5" /><Skeleton radius="8" width="65%" height="lineHeight.t4" /></div>
         </div>
-        {!compact && <Skeleton radius="16" width="full" height="152px" />}
+        {/* Same order as a post: the sentence, then the compact track row. */}
         <Skeleton radius="8" width="full" height="lineHeight.t5" />
         <Skeleton radius="8" width="75%" height="lineHeight.t5" />
+        {!compact && <Skeleton radius="16" width="full" height="88px" style={{ maxWidth: 480 }} />}
       </div>)}
     </div>
   </div>

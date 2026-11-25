@@ -115,6 +115,14 @@ class AuthSessionIntegrationTest {
         assertThat(refreshTokens.findByTokenHash(RefreshToken.hash(refresh))).isPresent();
     }
 
+    @Test void allowedOriginCanCacheCredentialedPreflight() throws Exception {
+        mvc.perform(options("/api/analysis/latest").header("Origin", "http://127.0.0.1:5173")
+                        .header("Access-Control-Request-Method", "GET").header("Access-Control-Request-Headers", "authorization"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "http://127.0.0.1:5173"))
+                .andExpect(header().string("Access-Control-Max-Age", "7200"));
+    }
+
     @Test void bodyRefreshTokenCannotAuthenticate() throws Exception {
         mvc.perform(csrf().apply(post("/api/auth/refresh")).contentType("application/json")
                         .content(mapper.writeValueAsString(Map.of("refresh", refresh()))))

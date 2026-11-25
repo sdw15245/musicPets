@@ -6,7 +6,9 @@ test.beforeEach(async ({ page }) => { await mockPlayers(page); await signedInPre
 
 test('login without analysis can write and edit, but cannot use pet filters', async ({ page }) => {
   await page.goto('/community')
-  await expect(page.getByRole('radio', { name: '나와 같은 펫', exact: true })).toBeDisabled()
+  // Filters that need an analysis are replaced by how to unlock them, not shown disabled.
+  await expect(page.getByRole('radio', { name: '나와 같은 펫', exact: true })).toHaveCount(0)
+  await expect(page.getByText('음악 취향을 분석하면 펫별로 음악을 둘러볼 수 있어요.', { exact: true })).toBeVisible()
   await page.getByRole('button', { name: '오늘의 한 곡 올리기' }).click()
   await page.getByRole('textbox', { name: '곡 검색' }).fill('seasons')
   await page.getByRole('button', { name: '검색', exact: true }).click()
@@ -87,7 +89,9 @@ test('profile name persists without unlocking analysis filters and account chang
   await expect(page.locator('.profile-editor').getByRole('radio')).toHaveCount(0)
   await page.screenshot({ path: info.outputPath('profile-desktop.png') })
   await page.goto('/community')
-  await expect(page.getByRole('radio', { name: '나와 같은 펫', exact: true })).toBeDisabled()
+  // Filters that need an analysis are replaced by how to unlock them, not shown disabled.
+  await expect(page.getByRole('radio', { name: '나와 같은 펫', exact: true })).toHaveCount(0)
+  await expect(page.getByText('음악 취향을 분석하면 펫별로 음악을 둘러볼 수 있어요.', { exact: true })).toBeVisible()
   await page.getByRole('button', { name: '오늘의 한 곡 올리기' }).click()
   await page.getByRole('textbox', { name: '곡 검색' }).fill('seasons')
   await page.getByRole('button', { name: '검색', exact: true }).click()
@@ -103,18 +107,24 @@ test('profile name persists without unlocking analysis filters and account chang
   await expect(other.getByRole('button', { name: '내 글 삭제' })).toHaveCount(0)
 })
 
-test('player stays compact on desktop and fits mobile width', async ({ page }) => {
+test('the sentence leads, the track row stays compact, and the player loads only on request', async ({ page }) => {
   await page.goto('/community')
+  const post = page.getByRole('article').first()
   for (const width of [1440, 360]) {
     await page.setViewportSize({ width, height: 900 })
-    const player = await page.locator('article iframe').first().boundingBox()
-    const caption = await page.locator('.post-caption').first().boundingBox()
-    const tags = await page.locator('.post-tags').first().boundingBox()
-    expect(player!.width).toBeLessThanOrEqual(Math.min(480, width))
-    expect(caption!.y).toBeGreaterThanOrEqual(player!.y + player!.height)
+    const caption = await post.locator('.post-caption').boundingBox()
+    const tags = await post.locator('.post-tags').boundingBox()
+    const track = await post.locator('.post-track').boundingBox()
+    expect(track!.width).toBeLessThanOrEqual(Math.min(480, width))
     expect(tags!.y).toBeGreaterThanOrEqual(caption!.y + caption!.height)
+    expect(track!.y).toBeGreaterThanOrEqual(tags!.y + tags!.height)
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   }
+  await expect(page.locator('article iframe')).toHaveCount(0)
+  await post.getByRole('button', { name: /듣기$/ }).click()
+  await expect(post.locator('iframe')).toBeFocused()
+  expect((await post.locator('iframe').boundingBox())!.width).toBeLessThanOrEqual(360)
+  await expect(page.locator('article iframe')).toHaveCount(1)
 })
 
 test('guests can read comments but cannot change posts, comments or likes', async ({ page }) => {

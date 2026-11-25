@@ -19,7 +19,8 @@
 
 브라우저는 `api.musicpets.store`에 직접 API를 요청하며 Vercel API/OAuth 프록시는 사용하지 않습니다.
 Spotify 로그인 시작과 공급자 콜백도 API 주소를 사용하고, 로그인 완료 후 프론트 `/oauth/callback`으로 돌아옵니다.
-CORS는 `https://musicpets.store`만 허용합니다. refresh/CSRF 쿠키는 API 호스트에 한정된
+CORS는 `https://musicpets.store`만 허용하고, preflight 결과는 브라우저가 2시간(`Access-Control-Max-Age: 7200`) 재사용합니다.
+refresh/CSRF 쿠키는 API 호스트에 한정된
 HttpOnly/Secure/SameSite=Lax 쿠키이며 `Domain=.musicpets.store`로 범위를 넓히지 않습니다.
 프론트와 API는 HTTPS의 동일 사이트이므로 쿠키 기반 로그인 복원이 가능합니다.
 Access 토큰은 브라우저 메모리에만 두고 URL이나 영구 저장소에 기록하지 않습니다.
@@ -34,11 +35,13 @@ Access 토큰은 브라우저 메모리에만 두고 URL이나 영구 저장소�
 4. Domains에 `musicpets.store`와 `www.musicpets.store`를 연결하고, 대표 주소는 `musicpets.store`로 유지합니다.
    `frontend/vercel.json`은 www와 기존 production vercel.app 주소를 대표 주소로 이동시킵니다.
    Vercel Dashboard에 반대 방향인 apex → www 리다이렉트를 추가하지 않습니다.
-5. 운영 API 주소는 `frontend/src/shared/api/config.ts`의 `https://api.musicpets.store`입니다.
+5. 운영 API 주소는 `frontend/src/shared/api/origins.ts`의 `https://api.musicpets.store`입니다.
+   운영 빌드는 이 주소로 preconnect하는 `<link>`를 `index.html`에 넣습니다.
    Vercel에 별도의 BACKEND_ORIGIN 환경변수나 백엔드 비밀값을 입력하지 않습니다.
 6. Preview의 임의 도메인은 운영 CORS/로그인 대상이 아닙니다. OAuth 검증은 대표 도메인에서 진행합니다.
 
-`vercel.json`의 rewrite는 SPA 경로를 `index.html`로 연결하는 규칙만 남깁니다.
+`vercel.json`의 rewrite는 `/assets/`를 제외한 SPA 경로를 `index.html`로 연결하는 규칙만 남깁니다.
+파일 이름에 해시가 붙는 `/assets/*`는 `Cache-Control: public, max-age=31536000, immutable`로 제공합니다.
 API 캐시 방지와 HTTPS는 EC2 Nginx에서 처리합니다. Vercel 서버는 API 응답을 중계하지 않습니다.
 로컬 개발과 `e2e` 모드는 `http://127.0.0.1:8080`에 직접 연결합니다.
 `npm run test:production-origin`은 실제 운영 빌드의 API/OAuth 목적지를 모의 응답으로 검증합니다.
@@ -109,6 +112,8 @@ docker compose --env-file deploy/.env -f compose.production.yaml -f deploy/compo
 
 기본 Compose는 127.0.0.1에만 HTTP를 엽니다. HTTPS overlay가 있어야 외부 80/443으로 공개됩니다.
 Nginx는 자체 healthz와 API/OAuth만 전달하고 Actuator는 공개하지 않습니다.
+HTTPS 서버는 HTTP/2(`http2 on;`)로 응답해 브라우저의 동시 요청을 연결 하나로 처리합니다.
+Nginx 설정은 자동 배포 대상이 아니므로 `deploy/nginx/https.conf.template`을 바꾸면 서버에 반영하고 Nginx를 다시 띄웁니다.
 백엔드 readiness는 DB 연결을 포함합니다. Redis는 재생성 가능한 캐시입니다.
 
 ## HTTPS 인증서 자동 갱신

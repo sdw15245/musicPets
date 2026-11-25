@@ -42,8 +42,9 @@
   gap: var(--seed-dimension-x6);
   border: 0;
   border-radius: var(--seed-radius-r6);
-  background: var(--seed-color-bg-brand-weak);
+  background: var(--pet-color, var(--seed-color-bg-brand-weak));
   box-shadow: none;
+  transition: background-color var(--seed-duration-d4) var(--seed-timing-function-easing);
 }
 .hero-result-preview .preview-topline { flex-wrap: nowrap; font: var(--mp-type-caption); }
 .hero-result-preview .preview-topline > span:first-child { min-width: 0; word-break: keep-all; }

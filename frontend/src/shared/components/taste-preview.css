@@ -67,6 +67,28 @@
   word-break: keep-all;
 }
 
+.preview-identity .preview-pet-description { margin-top: var(--seed-dimension-x1); font: var(--mp-type-label); }
+
+.preview-genres {
+  display: grid;
+  gap: var(--seed-dimension-x2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font: var(--mp-type-caption);
+}
+
+.preview-genres li {
+  display: grid;
+  grid-template-columns: 5.5em minmax(0, 1fr) 4ch;
+  align-items: center;
+  gap: var(--seed-dimension-x2);
+}
+
+.preview-genres li > span:last-child { text-align: right; font-variant-numeric: tabular-nums; color: var(--seed-color-fg-neutral-muted); }
+.preview-genre-track { height: 6px; border-radius: var(--seed-radius-full); background: color-mix(in srgb, var(--seed-color-fg-neutral) 10%, transparent); overflow: hidden; }
+.preview-genre-track > span { display: block; height: 100%; border-radius: inherit; background: var(--seed-color-fg-neutral); }
+
 .preview-tag {
   display: inline-block;
   margin-top: var(--seed-dimension-x4);

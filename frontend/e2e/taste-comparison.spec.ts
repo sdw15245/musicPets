@@ -46,6 +46,20 @@ test('comparison shows dated pairs, consistent rounded differences, and switches
   }
 })
 
+test('comparison does not headline genre shifts too small to mean a change', async ({ page }) => {
+  await signedInPreview(page)
+  await page.route('**/api/analysis/history', route => route.fulfill({ json: [
+    record('new', '2026-11-04T07:52:00Z', { rock: .079, folk: .045, pop: .876 }),
+    record('old', '2026-11-02T21:47:00Z', { rock: .078, folk: .046, pop: .876 }),
+  ] }))
+  await page.goto('/history')
+  await page.getByRole('button', { name: '취향 비교하기' }).click()
+  const comparison = page.getByRole('region', { name: '취향 변화', exact: true })
+  await expect(comparison.getByText('장르 비중이 거의 그대로예요.')).toBeVisible()
+  await expect(comparison.getByText(/가장 크게/)).toHaveCount(0)
+  await expect(comparison.getByRole('list', { name: '장르 비중 변화' })).toContainText('0.1%p 증가')
+})
+
 test('empty recommendations can retry without a new analysis and expired seeds explain recovery', async ({ page }) => {
   await signedInPreview(page)
   let analyses = 0, retries = 0

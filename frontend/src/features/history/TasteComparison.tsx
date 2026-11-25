@@ -4,9 +4,12 @@ import type { AnalysisResult } from '../analysis/schemas'
 import { analysisPeriod, analysisPeriodLabel } from '../analysis/analysisPeriod'
 import { analysisDate } from './historyFormat'
 import { genreLabel } from '../analysis/genreLabels'
+import { resolveCharacter } from '../../shared/characters'
 import './taste-comparison.css'
 
 import { genrePercent as percent, genreDifference } from '../analysis/genreComparison'
+
+const NOTABLE_CHANGE = 2
 
 function PetSummary({ record }: { record: AnalysisResult }) {
   return <div className="comparison-pet">
@@ -33,13 +36,17 @@ export default function TasteComparison({ records }: { records: AnalysisResult[]
     .slice(0, 5)
   const largest = changes[0]
   const visible = expanded ? changes : changes.slice(0, 2)
+  // Shares move a little between any two analyses; below this they are not a change worth headlining.
+  const steady = !!largest && Math.abs(largest.difference) < NOTABLE_CHANGE
+  // Bars share the largest shown share as their full width, so small shares still show their difference.
+  const scale = Math.max(...changes.map(change => Math.max(change.before, change.after)), 1)
 
   return <section className="taste-comparison" aria-labelledby="comparison-title">
     <header className="comparison-heading"><h2 id="comparison-title">취향 변화</h2></header>
     <div className="comparison-pet-change">
-      {previous.character && <img src={previous.character.imageUrl} width={56} height={56} alt="" />}
+      {previous.character && <img src={resolveCharacter(previous.character.slug)?.thumbUrl ?? previous.character.imageUrl} width={56} height={56} alt="" />}
       <strong>{previous.character?.slug === latest.character?.slug && latest.character ? `${latest.character.name}를 다시 만났어요` : `${previous.character?.name ?? '펫 없음'} → ${latest.character?.name ?? '펫 없음'}`}</strong>
-      {latest.character && <img src={latest.character.imageUrl} width={56} height={56} alt="" />}
+      {latest.character && <img src={resolveCharacter(latest.character.slug)?.thumbUrl ?? latest.character.imageUrl} width={56} height={56} alt="" />}
     </div>
     <div className="comparison-periods">
       <div className="comparison-period">
@@ -59,8 +66,9 @@ export default function TasteComparison({ records }: { records: AnalysisResult[]
     {analysisPeriod(previous) !== analysisPeriod(latest) && <p className="comparison-note">두 기록의 분석 기간이 달라요. 기간 차이도 결과에 영향을 줄 수 있어요.</p>}
     {largest ? <>
       <div key={previous.id} className="comparison-highlight">
-        <p>{largest.difference === 0 ? '두 기록의 장르 비중이 같아요.' : `${largest.name} 비중이 가장 크게 ${largest.difference > 0 ? '늘었어요.' : '줄었어요.'}`}</p>
-        {largest.difference !== 0 && <strong>{Math.abs(largest.difference).toFixed(1)}<span>%p {largest.difference > 0 ? '증가' : '감소'}</span></strong>}
+        <p>{largest.difference === 0 ? '두 기록의 장르 비중이 같아요.' : steady ? '장르 비중이 거의 그대로예요.' : `${largest.name} 비중이 가장 크게 ${largest.difference > 0 ? '늘었어요.' : '줄었어요.'}`}</p>
+        {steady ? largest.difference !== 0 && <span className="comparison-steady">모든 장르의 변화가 {NOTABLE_CHANGE}%p 미만이에요.</span>
+          : <strong>{Math.abs(largest.difference).toFixed(1)}<span>%p {largest.difference > 0 ? '증가' : '감소'}</span></strong>}
       </div>
       <ol id={listId} className="comparison-genres" aria-label="장르 비중 변화">
         {visible.map(change => <li key={change.genre}>
@@ -68,8 +76,8 @@ export default function TasteComparison({ records }: { records: AnalysisResult[]
             {change.difference === 0 ? '변화 없음' : `${Math.abs(change.difference).toFixed(1)}%p ${change.difference > 0 ? '증가' : '감소'}`}
           </span></div>
           <div className="comparison-bars">
-            <div className="comparison-bar-row"><span>이전 <strong>{change.before.toFixed(1)}%</strong></span><span className="comparison-bar-track" aria-hidden="true"><span style={{ width: Math.min(change.before, 100) + '%' }} /></span></div>
-            <div className="comparison-bar-row is-recent"><span>최근 <strong>{change.after.toFixed(1)}%</strong></span><span className="comparison-bar-track" aria-hidden="true"><span style={{ width: Math.min(change.after, 100) + '%' }} /></span></div>
+            <div className="comparison-bar-row"><span>이전 <strong>{change.before.toFixed(1)}%</strong></span><span className="comparison-bar-track" aria-hidden="true"><span style={{ width: change.before / scale * 100 + '%' }} /></span></div>
+            <div className="comparison-bar-row is-recent"><span>최근 <strong>{change.after.toFixed(1)}%</strong></span><span className="comparison-bar-track" aria-hidden="true"><span style={{ width: change.after / scale * 100 + '%' }} /></span></div>
           </div>
         </li>)}
       </ol>

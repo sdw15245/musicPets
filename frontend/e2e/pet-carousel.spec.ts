@@ -75,6 +75,8 @@ test('reduced motion keeps examples still while arrow controls remain keyboard a
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
   const preview = page.getByRole('region', { name: '음악 펫 결과 예시' })
+  // Let the session check settle first: requests time out on this clock, so 20 s of it would end them.
+  await expect(preview.getByRole('img', { name: '멜로', exact: true })).toBeVisible()
   await page.clock.runFor(20000)
   await expect(preview.getByRole('img', { name: '멜로', exact: true })).toBeVisible()
   await expect(preview.getByRole('button', { name: /자동 전환/ })).toHaveCount(0)

@@ -141,7 +141,7 @@ export default function PostComments({ id, postId, focusCommentId, onRequireLogi
     const parent = comment.parentId ? comments.find(item => item.id === comment.parentId) : undefined
     const replyTarget = parent && !parent.deleted ? (profile.signedIn && parent.own ? profile.name : parent.author) : null
     const authorAvatar = <Avatar.Root size="36" aria-hidden="true">
-      {avatar && <Avatar.Image src={avatar.imageUrl} alt="" />}
+      {avatar && <Avatar.Image src={avatar.thumbUrl} alt="" />}
       <Avatar.Fallback>{name.slice(0, 1)}</Avatar.Fallback>
     </Avatar.Root>
     return <li id={`comment-${postId}-${comment.id}`} tabIndex={-1} key={comment.id} className="post-comment" ref={confirmation?.id === comment.id ? confirmedCommentRef : undefined}>

@@ -25,7 +25,8 @@ test('saved result survives refresh and home navigation without starting analysi
   await expect(summary.getByRole('img', { name: '루바', exact: true })).toBeVisible()
   await expect(summary).toContainText('90% 매칭')
   await expect(summary).toContainText(result.profile.comment)
-  await expect(summary.getByRole('listitem')).toHaveCount(0)
+  // A personal summary lists its own top genres; it is not a carousel of example pets.
+  await expect(summary.getByRole('list', { name: '주요 장르' })).toBeVisible()
   await expect(summary.getByRole('radiogroup')).toHaveCount(0)
   await expect(summary.getByRole('button', { name: '다음 펫 보기' })).toHaveCount(0)
   await page.clock.install()
@@ -99,7 +100,7 @@ test('server analysis pet supplies the profile photo despite old avatar preferen
   await page.goto('/mypage')
   await page.getByRole('button', { name: '이름 수정', exact: true }).click()
   await expect(page.getByRole('textbox', { name: '이름', exact: true })).toHaveValue('저장한 이름')
-  await expect(page.getByRole('img', { name: '분석 펫 프로필 사진' })).toHaveAttribute('src', '/characters/pip.png')
+  await expect(page.getByRole('img', { name: '분석 펫 프로필 사진' })).toHaveAttribute('src', /\/assets\/pip-192-[^/]+\.webp$/)
   await expect(page.locator('.profile-editor').getByRole('radio')).toHaveCount(0)
   await page.locator('.mypage-profile-card').screenshot({ path: info.outputPath('automatic-pet-profile.png') })
   await page.getByRole('link', { name: 'MusicPets', exact: true }).click()

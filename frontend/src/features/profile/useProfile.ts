@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useAuthStore, useUserId } from '../auth/useAuthStore'
+import { useAuthStore } from '../auth/useAuthStore'
+import { useViewer } from '../auth/useViewer'
 import { useMe } from '../auth/useAuth'
 import { MeSchema } from '../auth/schemas'
 import { api } from '../../shared/api/client'
@@ -9,8 +10,7 @@ import { queryKeys } from '../../shared/api/queryKeys'
 export function useProfile() {
   const signedIn = useAuthStore(s => !!s.accessToken)
   const sessionId = useAuthStore(s => s.sessionId)
-  const userId = useUserId()
-  const owner = userId ? `user:${userId}` : signedIn ? `session:${sessionId}` : 'guest'
+  const owner = useViewer().key
   const me = useMe()
   const queryClient = useQueryClient()
   const mutation = useMutation({

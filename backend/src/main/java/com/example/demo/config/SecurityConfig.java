@@ -103,6 +103,8 @@ public class SecurityConfig {
         config.setAllowedHeaders(List.of("*"));
         config.setExposedHeaders(List.of("Retry-After"));
         config.setAllowCredentials(true);
+        // Browsers re-check every credentialed API path otherwise (Chrome: after 5 s); 2 h is Chrome's cap.
+        config.setMaxAge(7200L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);

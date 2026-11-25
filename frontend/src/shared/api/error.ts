@@ -1,5 +1,5 @@
-// 모든 API 에러를 ApiError로 정규화. axios/일반 Error 모두 통일된 형태로 변환.
-import axios from 'axios'
+// 모든 API 에러를 ApiError로 정규화. HTTP 오류/일반 Error 모두 통일된 형태로 변환.
+import { HttpError } from './http'
 
 export class ApiError extends Error {
   status: number
@@ -23,11 +23,12 @@ export function isSpotifyReauthorizationRequired(error: unknown): boolean {
 
 export function normalizeError(error: unknown): ApiError {
   if (error instanceof ApiError) return error
-  if (axios.isAxiosError(error)) {
+  if (error instanceof HttpError) {
     const status = error.response?.status ?? 0
-    const data = error.response?.data as { message?: string; error?: string; retryAfterSeconds?: number } | undefined
+    const body = error.response?.data
+    const data = typeof body === 'object' && body !== null ? body as { message?: string; error?: string; retryAfterSeconds?: number } : undefined
     const message = data?.message ?? data?.error ?? error.message
-    const retryAfter = data?.retryAfterSeconds ?? Number(error.response?.headers['retry-after'])
+    const retryAfter = data?.retryAfterSeconds ?? Number(error.response?.headers.get('retry-after') ?? undefined)
     return new ApiError(message, status, data?.error, retryAfter)
   }
   if (error instanceof Error) {

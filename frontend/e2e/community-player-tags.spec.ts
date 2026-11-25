@@ -38,6 +38,8 @@ test('Enter creates removable tags without submitting, and tags and player persi
   await page.reload()
   const post = page.getByRole('article').filter({ hasText: '새 태그와 함께 공유해요.' })
   await expect(post.locator('.post-tag')).toHaveText(['#밤산책', '#휴식'])
+  await expect(post.locator('iframe')).toHaveCount(0)
+  await post.getByRole('button', { name: 'seasons 듣기', exact: true }).click()
   await expect(post.locator('iframe')).toHaveAttribute('src', 'https://open.spotify.com/embed/track/5VBjyOQzqlPNgdRPMM6prF')
   await expect(post.locator('iframe')).toHaveAttribute('title', 'seasons Spotify 플레이어')
 })

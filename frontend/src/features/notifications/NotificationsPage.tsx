@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Avatar } from '@seed-design/react'
-import { Badge } from 'seed-design/ui/badge'
+import { IconMusicalnoteDoubleLine } from '@karrotmarket/react-monochrome-icon'
 import { ResultSection } from 'seed-design/ui/result-section'
 import PersonalLayout from '../mypage/PersonalLayout'
 import Button from '../../shared/components/ui/Button'
@@ -17,7 +17,7 @@ export default function NotificationsPage() {
   const read = useReadNotification()
   const items = feed.data?.pages.flatMap(page => page.items) ?? []
   const count = feed.data?.pages[0]?.unreadCount
-  return <PersonalLayout title="알림">
+  return <PersonalLayout title="알림" description="내 글과 이야기에 남겨진 반응을 확인해요.">
     <div className="notification-toolbar">
       <p>{count === undefined ? '알림을 확인하고 있어요.' : '읽지 않은 알림 ' + count + '개'}</p>
       <Button size="small" variant="ghost" disabled={!count || read.isPending} loading={read.isPending && read.variables === null} onClick={() => read.mutate(null)}>모두 읽음</Button>
@@ -26,20 +26,21 @@ export default function NotificationsPage() {
     {feed.isError && <RequestErrorNotice error={feed.error} action={blocked => <Button disabled={blocked} loading={feed.isFetching} onClick={() => void feed.refetch()}>다시 불러오기</Button>}>알림을 불러오지 못했어요.</RequestErrorNotice>}
     {read.isError && <RequestErrorNotice error={read.error}>읽음 상태를 변경하지 못했어요. 다시 시도해주세요.</RequestErrorNotice>}
     {!feed.isPending && !feed.isError && !items.length && <ResultSection size="medium" title="새로운 알림이 없어요" description="내 글의 댓글과 공감, 내 댓글의 답글이 여기에 모여요." actions={<Button asChild><Link to="/community">커뮤니티 둘러보기</Link></Button>} />}
-    <ul className="personal-list">{items.map(item => {
+    {/* Unread rows are tinted and dotted; opening one marks it read, so rows need no per-item buttons. */}
+    <ul className="notification-list">{items.map(item => {
       const pet = getPet(item.avatarSlug)
-      return <li className="personal-card notification-card" data-unread={!item.read} key={item.id}>
+      return <li className="notification-card" data-unread={!item.read} key={item.id}>
         <Link className="notification-link" to={'/community/posts/' + item.postId + '?comments=1' + (item.commentId ? '&comment=' + encodeURIComponent(item.commentId) : '')} onClick={() => { if (!item.read) read.mutate(item.id) }}>
-          <Avatar.Root size="48">{pet && <Avatar.Image src={pet.imageUrl} alt="" />}<Avatar.Fallback>{item.actor.slice(0, 1)}</Avatar.Fallback></Avatar.Root>
+          <Avatar.Root size="48" style={{ backgroundColor: pet?.color }}>{pet && <Avatar.Image src={pet.thumbUrl} alt="" />}<Avatar.Fallback>{item.actor.slice(0, 1)}</Avatar.Fallback></Avatar.Root>
           <span className="notification-copy"><span><strong>{item.actor}</strong>{messages[item.kind]}</span>
-            {item.postPreview && <span className="notification-post-preview">{item.postPreview}</span>}
             {item.commentPreview && <span className="notification-comment-preview">{item.commentPreview}</span>}
+            <span className="notification-meta">
+              {item.postPreview && <span className="notification-post-preview"><IconMusicalnoteDoubleLine size={12} aria-hidden="true" />{item.postPreview}</span>}
+              <time dateTime={item.createdAt} title={exactTime(item.createdAt)}>{activityTime(item.createdAt)}</time>
+            </span>
           </span>
+          {!item.read && <><span className="notification-dot-unread" aria-hidden="true" /><span className="sr-only">읽지 않음</span></>}
         </Link>
-        <div className="personal-row-actions">
-          <time dateTime={item.createdAt} title={exactTime(item.createdAt)}>{activityTime(item.createdAt)}</time>
-          {!item.read && <><Badge tone="brand" variant="weak">새 알림</Badge><Button size="small" variant="ghost" disabled={read.isPending} onClick={() => read.mutate(item.id)}>읽음으로 표시</Button></>}
-        </div>
       </li>
     })}</ul>
     {feed.hasNextPage && <Button disabled={feed.isFetchingNextPage} loading={feed.isFetchingNextPage} onClick={() => void feed.fetchNextPage()}>알림 더 보기</Button>}

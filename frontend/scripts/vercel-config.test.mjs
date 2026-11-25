@@ -19,8 +19,17 @@ test('deployment routing is static and every rewrite has a literal destination',
 
 test('Vercel serves the SPA without forwarding API or OAuth requests', async () => {
   const config = await load()
-  assert.deepEqual(config.rewrites, [{ source: '/(.*)', destination: '/index.html' }])
-  assert.equal(config.headers?.some(rule => rule.source.startsWith('/api')), undefined)
+  // Missing hashed assets stay 404s instead of becoming index.html cached for a year.
+  assert.deepEqual(config.rewrites, [{ source: '/((?!assets/).*)', destination: '/index.html' }])
+  assert.equal(config.headers?.some(rule => rule.source.startsWith('/api')) ?? false, false)
+})
+
+test('only hashed build assets are cached as immutable', async () => {
+  const config = await load()
+  assert.deepEqual(config.headers, [{
+    source: '/assets/(.*)',
+    headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+  }])
 })
 
 test('old frontend and www hosts redirect to the canonical domain with their paths', async () => {

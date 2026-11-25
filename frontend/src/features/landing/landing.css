@@ -86,7 +86,13 @@
   opacity: 1;
 }
 .hero-genre-chip[data-on] > .hero-genre-chip-face::before { opacity: .85; }
-@keyframes hero-genre-chip-drift { to { transform: translate(4px, -10px); } }
+/* A gentle float: it changes direction so it reads as alive, at about 4px/s so it stays calm. */
+@keyframes hero-genre-chip-drift {
+  0% { transform: translate(0, 0); }
+  33% { transform: translate(5px, -9px); }
+  66% { transform: translate(-4px, -14px); }
+  100% { transform: translate(2px, -5px); }
+}
 /* Sharp for a while, then a soft blur and fade, then back. */
 @keyframes hero-genre-chip-haze {
   0%, 30% { filter: blur(0); opacity: .8; }
@@ -107,7 +113,7 @@
   .music-hero-surface { transition: --pet-accent var(--seed-duration-d6) var(--seed-timing-function-easing); }
   /* Out of step on purpose: each chip drifts and hazes on its own periods and phases. */
   .hero-genre-chip {
-    animation: hero-genre-chip-drift calc(4.5s + var(--chip-slot) * .25s) ease-in-out calc(var(--chip-slot) * -1.3s) infinite alternate;
+    animation: hero-genre-chip-drift calc(7.5s + var(--chip-slot) * .35s) ease-in-out calc(var(--chip-slot) * -2.3s) infinite alternate;
     transition: translate var(--seed-duration-d6) var(--seed-timing-function-easing);
   }
   .hero-genre-chip:not([data-on]) > .hero-genre-chip-face {

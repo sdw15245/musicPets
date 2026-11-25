@@ -35,7 +35,7 @@
 .analysis-match { display: grid; grid-template-columns: auto auto minmax(0, 1fr); align-items: center; column-gap: var(--seed-dimension-x2); row-gap: var(--seed-dimension-x2); max-width: 420px; margin-top: var(--seed-dimension-x6); }
 .analysis-match-value { display: inline-flex; align-items: baseline; gap: var(--seed-dimension-x1); color: var(--seed-color-fg-neutral-muted); font: var(--mp-type-label); }
 .analysis-match-value strong { color: var(--seed-color-fg-neutral); font-size: var(--seed-font-size-t9); line-height: var(--seed-line-height-t9); letter-spacing: var(--mp-tracking-title); font-variant-numeric: tabular-nums; }
-.analysis-match-meter { grid-column: 1 / -1; grid-row: 2; display: block; height: 6px; overflow: hidden; border-radius: var(--seed-radius-full); background: var(--mp-canvas-strong); }
+.analysis-match-meter { grid-column: 1 / -1; grid-row: 2; display: block; height: 10px; overflow: hidden; border-radius: var(--seed-radius-full); background: var(--mp-canvas-strong); }
 .analysis-match-meter > span { display: block; height: 100%; border-radius: inherit; background: var(--pet-accent); }
 .profile-card { min-width: 0; }
 /* Read as prose: a size up from body text and Korean-friendly leading. */
@@ -90,17 +90,17 @@
 .genre-track { display: block; height: 8px; border-radius: var(--seed-radius-full); background: var(--mp-canvas-strong); overflow: hidden; }
 .genre-fill { display: block; height: 100%; background: var(--pet-accent); border-radius: inherit; }
 /*
- * Liquid genre bars (a "liquid" or "wave" progress bar). On first reveal each share pours in a little past
- * its value and sways back while its leading edge ripples like a water surface, a front wave and a fainter
- * back wave out of phase, then settles flat; about two seconds in all. Pure CSS: a sine-wave SVG mask on
- * the end of the fill (one wavelength, x = 6 + 4 sin(2πy / 24)).
+ * Liquid bars (a "liquid" or "wave" progress bar) for the match meter and the genre shares. When a bar
+ * first fills, its leading edge is a water surface: the ripple runs fast and slows down while the swell
+ * dies away to a flat end, about two seconds in all. Genre bars also pour a little past their share and
+ * sway back, with a fainter back wave out of phase. Pure CSS: a sine-wave SVG mask on the end of the fill
+ * (one wavelength, x = 6 + 4 sin(2πy / 24)); `--liquid-wave` is the width of that rippling end.
  */
-@property --genre-wave { syntax: '<length>'; inherits: false; initial-value: 0px; }
-.genre-explorer .genre-track {
-  --genre-wave-edge: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='24'%3E%3Cpath d='M0 0L6 0L8 2L9.5 4L10 6L9.5 8L8 10L6 12L4 14L2.5 16L2 18L2.5 20L4 22L6 24L0 24Z'/%3E%3C/svg%3E");
-  position: relative;
-  height: 12px;
+@property --liquid-wave { syntax: '<length>'; inherits: false; initial-value: 0px; }
+.analysis-overview, .genre-explorer {
+  --liquid-edge: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='24'%3E%3Cpath d='M0 0L6 0L7.04 1L8 2L8.83 3L9.46 4L9.86 5L10 6L9.86 7L9.46 8L8.83 9L8 10L7.04 11L6 12L4.96 13L4 14L3.17 15L2.54 16L2.14 17L2 18L2.14 19L2.54 20L3.17 21L4 22L4.96 23L6 24L0 24Z'/%3E%3C/svg%3E");
 }
+.genre-explorer .genre-track { position: relative; height: 12px; }
 .genre-explorer .genre-fill { position: relative; width: var(--genre-share); }
 .genre-explorer .genre-track::before {
   content: '';
@@ -182,22 +182,30 @@
     animation: result-content-in var(--seed-duration-d3) var(--seed-timing-function-easing) both;
   }
   .analysis-match-meter > span { transition: width 120ms linear; }
+  /* The score's meter fills as the number counts up (from 680ms), its end rippling until it settles. */
+  .is-new-result .analysis-match-meter > span {
+    -webkit-mask: linear-gradient(#000 0 0) left / calc(100% - var(--liquid-wave) + 1px) 100% no-repeat, var(--liquid-edge) right 0 top 0 / var(--liquid-wave) 24px repeat-y;
+    mask: linear-gradient(#000 0 0) left / calc(100% - var(--liquid-wave) + 1px) 100% no-repeat, var(--liquid-edge) right 0 top 0 / var(--liquid-wave) 24px repeat-y;
+    animation: liquid-ripple 2.4s cubic-bezier(.25, .55, .35, 1) 680ms both, liquid-calm 2.4s ease-out 680ms both;
+  }
   .genre-explorer[data-animate="true"][data-revealed="false"] .genre-fill { transform: scaleX(0); }
   .popularity-summary[data-animate="true"][data-revealed="false"] .profile-meter .genre-fill { max-width: 0; }
+  /* Glides from the left to its own width and eases into place (an animation may override the inline width). */
   .popularity-summary[data-animate="true"][data-revealed="true"] .profile-meter .genre-fill {
-    animation: popularity-marker-in 520ms var(--seed-timing-function-easing) both;
+    animation: popularity-marker-in 1100ms cubic-bezier(.16, 1, .3, 1) both;
   }
   .genre-explorer[data-animate="true"][data-revealed="true"] .genre-fill {
-    -webkit-mask: linear-gradient(#000 0 0) left / calc(100% - var(--genre-wave) + 1px) 100% no-repeat, var(--genre-wave-edge) right 0 top 0 / var(--genre-wave) 24px repeat-y;
-    mask: linear-gradient(#000 0 0) left / calc(100% - var(--genre-wave) + 1px) 100% no-repeat, var(--genre-wave-edge) right 0 top 0 / var(--genre-wave) 24px repeat-y;
-    animation: genre-result-in 900ms linear var(--genre-delay) both, genre-ripple 520ms linear var(--genre-delay) 4, genre-calm 2s ease-out var(--genre-delay) both;
+    -webkit-mask: linear-gradient(#000 0 0) left / calc(100% - var(--liquid-wave) + 1px) 100% no-repeat, var(--liquid-edge) right 0 top 0 / var(--liquid-wave) 24px repeat-y;
+    mask: linear-gradient(#000 0 0) left / calc(100% - var(--liquid-wave) + 1px) 100% no-repeat, var(--liquid-edge) right 0 top 0 / var(--liquid-wave) 24px repeat-y;
+    animation: genre-result-in 900ms linear var(--genre-delay) both, liquid-ripple 2.4s cubic-bezier(.25, .55, .35, 1) var(--genre-delay) both,
+      liquid-calm 2.4s ease-out var(--genre-delay) both;
   }
   .genre-explorer[data-animate="true"][data-revealed="true"] .genre-track::before {
-    -webkit-mask: linear-gradient(#000 0 0) left / calc(100% - var(--genre-wave) + 1px) 100% no-repeat, var(--genre-wave-edge) right 0 top 12px / var(--genre-wave) 24px repeat-y;
-    mask: linear-gradient(#000 0 0) left / calc(100% - var(--genre-wave) + 1px) 100% no-repeat, var(--genre-wave-edge) right 0 top 12px / var(--genre-wave) 24px repeat-y;
+    -webkit-mask: linear-gradient(#000 0 0) left / calc(100% - var(--liquid-wave) + 1px) 100% no-repeat, var(--liquid-edge) right 0 top 12px / var(--liquid-wave) 24px repeat-y;
+    mask: linear-gradient(#000 0 0) left / calc(100% - var(--liquid-wave) + 1px) 100% no-repeat, var(--liquid-edge) right 0 top 12px / var(--liquid-wave) 24px repeat-y;
     translate: 4px 0;
-    animation: genre-result-in 900ms linear var(--genre-delay) both, genre-ripple-back 680ms linear var(--genre-delay) 3,
-      genre-calm 2s ease-out var(--genre-delay) both, genre-swell 2s ease-out var(--genre-delay) both;
+    animation: genre-result-in 900ms linear var(--genre-delay) both, liquid-ripple-back 2.4s cubic-bezier(.25, .55, .35, 1) var(--genre-delay) both,
+      liquid-calm 2.4s ease-out var(--genre-delay) both, liquid-swell 2.4s ease-out var(--genre-delay) both;
   }
   .genre-fill { transform-origin: left; }
 }
@@ -217,17 +225,19 @@
   82% { transform: scaleX(1.008); animation-timing-function: ease-in-out; }
   100% { transform: scaleX(1); }
 }
-@keyframes genre-ripple {
+/* Four wavelengths over one decelerating run: quick ripples at first, slowing as the water settles. */
+@keyframes liquid-ripple {
   from { -webkit-mask-position: left top, right 0 top 0; mask-position: left top, right 0 top 0; }
-  to { -webkit-mask-position: left top, right 0 top 24px; mask-position: left top, right 0 top 24px; }
+  to { -webkit-mask-position: left top, right 0 top 96px; mask-position: left top, right 0 top 96px; }
 }
-@keyframes genre-ripple-back {
+@keyframes liquid-ripple-back {
   from { -webkit-mask-position: left top, right 0 top 12px; mask-position: left top, right 0 top 12px; }
-  to { -webkit-mask-position: left top, right 0 top -12px; mask-position: left top, right 0 top -12px; }
+  to { -webkit-mask-position: left top, right 0 top -84px; mask-position: left top, right 0 top -84px; }
 }
-@keyframes genre-calm { 0%, 45% { --genre-wave: 12px; } 100% { --genre-wave: 0px; } }
-@keyframes genre-swell { 0%, 50% { opacity: 1; } 100% { opacity: 0; } }
-@keyframes popularity-marker-in { from { max-width: 0; } to { max-width: 100%; } }
+/* The swell holds briefly, then dies away to a flat end. */
+@keyframes liquid-calm { 0%, 25% { --liquid-wave: 12px; } 100% { --liquid-wave: 0px; } }
+@keyframes liquid-swell { 0%, 40% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes popularity-marker-in { from { width: 0; } }
 .taste-reading-lines { display: grid; gap: var(--seed-dimension-x3); }
 .taste-reading-loading-text { font: var(--mp-type-caption); color: var(--seed-color-fg-neutral-muted); }
 .match-splash { display: grid; justify-items: center; gap: var(--seed-dimension-x6); width: min(100%, 520px); text-align: center; padding: var(--seed-dimension-x6); }

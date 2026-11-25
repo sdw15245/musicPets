@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import { genreLabel } from '../analysis/genreLabels'
 import { Link } from 'react-router-dom'
 import { useChartReveal } from './useChartReveal'
@@ -31,7 +32,8 @@ export default function GenreExplorer({ vector, trackCount, animate = true, prev
     {previous && <p className="genre-comparison-date"><Link to={`/history/${encodeURIComponent(previous.id)}`}>이전 분석 · {analysisDate(previous.analyzedAt)}</Link> 대비</p>}
     {differentPeriod && <p className="genre-comparison-date">이전 기록과 분석 기간이 달라 비교를 생략했어요.</p>}
     {!genres.length ? <p>장르 정보가 충분하지 않아요.</p> : <ol className="genre-breakdown">{genres.map(([genre, ratio], index) => <li key={genre}>
-      <details><summary><span>{genreLabel(genre)}</span><span className="genre-track" aria-hidden="true"><span className="genre-fill" style={{ width: Math.min(ratio * 100, 100) + '%', animationDelay: `${index * 45}ms` }} /></span><span className="genre-value"><strong>{(ratio * 100).toFixed(1)}%</strong>{previous && <GenreChange before={previous.genres.vector[genre]} after={ratio} />}</span></summary><p>{genreInfo[genre]?.[1] ?? '청취 기록에서 발견한 음악 장르예요.'}</p></details>
+      <details><summary><span>{genreLabel(genre)}</span><span className="genre-track" aria-hidden="true"
+        style={{ '--genre-share': Math.min(ratio * 100, 100) + '%', '--genre-delay': `${index * 45}ms` } as CSSProperties}><span className="genre-fill" /></span><span className="genre-value"><strong>{(ratio * 100).toFixed(1)}%</strong>{previous && <GenreChange before={previous.genres.vector[genre]} after={ratio} />}</span></summary><p>{genreInfo[genre]?.[1] ?? '청취 기록에서 발견한 음악 장르예요.'}</p></details>
     </li>)}</ol>}
   </section>
 }

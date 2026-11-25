@@ -19,12 +19,13 @@ test.beforeEach(async ({ page }) => {
 test('pet reveal runs only for new results; charts reveal once on each visit', async ({ page }) => {
   await page.goto('/analyze')
   await expect(page).toHaveURL(/\/result$/)
-  await expect(page.locator('.analysis-pet')).toHaveCSS('animation-name', 'pet-result-in')
+  await expect(page.locator('.analysis-pet')).toHaveCSS('animation-name', 'pet-stage-lights')
+  await expect(page.locator('.analysis-pet .pet-photo')).toHaveCSS('animation-name', 'pet-result-in')
   await expect(page.getByRole('button', { name: '결과 공유하기', exact: true })).toBeEnabled()
   const genres = page.getByRole('region', { name: '청취 기록의 장르 분석' })
   await genres.scrollIntoViewIfNeeded()
   await expect(genres).toHaveAttribute('data-revealed', 'true')
-  await expect(genres.locator('.genre-fill').first()).toHaveCSS('animation-name', 'genre-result-in')
+  await expect(genres.locator('.genre-fill').first()).toHaveCSS('animation-name', /^genre-result-in, genre-ripple, genre-calm$/)
   await genres.locator('.genre-fill').first().evaluate(element => Promise.all(element.getAnimations().map(animation => animation.finished)))
   await page.evaluate(() => {
     document.querySelector('.genre-fill')!.addEventListener('animationstart', () => {
@@ -37,7 +38,7 @@ test('pet reveal runs only for new results; charts reveal once on each visit', a
   await page.reload()
   await expect(page.locator('.analysis-pet')).toHaveCSS('animation-name', 'none')
   await genres.scrollIntoViewIfNeeded()
-  await expect(page.locator('.genre-fill').first()).toHaveCSS('animation-name', 'genre-result-in')
+  await expect(page.locator('.genre-fill').first()).toHaveCSS('animation-name', /^genre-result-in, genre-ripple, genre-calm$/)
   await page.goto('/history/motion-result')
   await expect(page.locator('.analysis-pet')).toHaveCSS('animation-name', 'none')
 })

@@ -5,14 +5,17 @@ import AnalysisDetailStatus from './AnalysisDetailStatus'
 import AnalysisMetricHelp from './AnalysisMetricHelp'
 import { characters } from '../../shared/characters'
 
+// The reveal brings the score's line in at 680ms (`.is-new-result .analysis-match` in result.css).
+const matchLineDelay = 680
+
 /** Counts up once when a fresh result arrives; saved results and reduced motion show the value at once. */
 function MatchScore({ value, animate }: { value: number; animate: boolean }) {
   const [shown, setShown] = useState(() => animate && !window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : value)
   useEffect(() => {
     if (shown === value) return
-    const start = performance.now()
+    const start = performance.now() + matchLineDelay
     let frame = requestAnimationFrame(function step(now) {
-      const progress = Math.min((now - start) / 900, 1)
+      const progress = Math.min(Math.max(now - start, 0) / 900, 1)
       setShown(Math.round(value * (1 - (1 - progress) ** 3)))
       if (progress < 1) frame = requestAnimationFrame(step)
     })
@@ -34,10 +37,11 @@ export default function AnalysisOverview({ data, historical = false, reveal = fa
   return <section className={`analysis-overview${reveal ? ' is-new-result' : ''}`} data-pet={pet?.slug} aria-label="음악 취향 요약">
     {pet && <div className="analysis-pet pet-stage"><img className="pet-photo" src={catalog?.imageUrl ?? pet.imageUrl} alt={pet.name} width={640} height={640} /></div>}
     <div className="analysis-story">
-      <div className="analysis-identity">
       <p className="analysis-period">{analysisPeriodLabel(data)} · {data.genres.trackCount}곡 분석</p>
       {/* Notes about how this result was made belong with the period they qualify. */}
       {!!notices.length && <aside className="analysis-notices" aria-label="분석 안내">{notices.map(warning => <p key={warning}>{warning}</p>)}</aside>}
+      {/* Wide screens set who and how closely beside why and what next (result.css). */}
+      <div className="analysis-identity">
       {pet ? <>
         <p className="analysis-pet-label">나를 닮은 음악 펫</p>
         <h2 className="analysis-pet-title">{pet.name}</h2>

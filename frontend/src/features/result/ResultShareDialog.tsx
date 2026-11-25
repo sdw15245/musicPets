@@ -82,7 +82,7 @@ export default function ResultShareDialog({ data }: { data: AnalysisResult }) {
   if (!data.character) return null
   return <Dialog.Root size="medium" open={open} onOpenChange={setOpen}>
     <Dialog.Trigger asChild>
-      <Button variant="brandSolid" size="large"><Icon svg={<IconAndroidshareLine />} />결과 공유하기</Button>
+      <Button variant="brandSolid" size="medium"><Icon svg={<IconAndroidshareLine />} />결과 공유하기</Button>
     </Dialog.Trigger>
     <Portal><Dialog.Positioner><Dialog.Backdrop /><Dialog.Content className="result-share-dialog">
       <Dialog.Header>

@@ -71,8 +71,8 @@ test('saved results reveal chart bars once per visit and respect reduced motion'
   await page.route('**/api/analysis/latest', route => route.fulfill({ json: current }))
   await page.route('**/api/analysis/history', route => route.fulfill({ json: [] }))
   await page.goto('/result')
-  // Genre bars grow; the popularity marker slides along its axis.
-  for (const [selector, animation] of [['.genre-explorer', 'genre-result-in'], ['.popularity-summary', 'popularity-marker-in']]) {
+  // Genre bars pour in with a rippling edge; the popularity marker slides along its axis.
+  for (const [selector, animation] of [['.genre-explorer', 'genre-result-in, genre-ripple, genre-calm'], ['.popularity-summary', 'popularity-marker-in']]) {
     const chart = page.locator(selector)
     await chart.scrollIntoViewIfNeeded()
     await expect(chart.locator('.genre-fill').first()).toHaveCSS('animation-name', animation)

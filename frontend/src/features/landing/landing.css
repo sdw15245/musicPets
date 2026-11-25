@@ -213,16 +213,19 @@
   .music-hero-copy > p { font: var(--mp-type-article-body); }
   .music-hero-actions { gap: var(--seed-dimension-x2); margin-top: var(--seed-dimension-x6); }
   .hero-result-preview { max-width: none; justify-self: stretch; }
-  .remodeled-landing .section-pad { padding-block: var(--seed-dimension-x12); }
+  /* Phones get more air between sections and pets, not less: the page is one long column. */
+  .remodeled-landing .section-pad { padding-block: var(--seed-dimension-x16); }
   .remodeled-landing .section-head { margin-bottom: var(--seed-dimension-x8); }
   .remodeled-landing .wf-h2 { font: var(--mp-type-screen-title); letter-spacing: var(--mp-tracking-title); }
-  .character-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--seed-dimension-x3); }
-  .character-meta { padding: var(--seed-dimension-x3) var(--seed-dimension-x4) var(--seed-dimension-x4); }
+  .character-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--seed-dimension-x4); }
+  /* Taller stages keep the pets readable at half width; the status sits under the name. */
+  .character-card-trigger .pet-stage { aspect-ratio: 4 / 3; }
+  .character-meta { flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: var(--seed-dimension-x1_5); padding: var(--seed-dimension-x3) var(--seed-dimension-x4) var(--seed-dimension-x4); }
   .character-meta strong { font: var(--seed-font-weight-bold) var(--seed-font-size-t6)/var(--seed-line-height-t6) var(--seed-font-family); }
   .character-cta { padding: var(--seed-dimension-x5); }
   .character-cta strong { font: var(--seed-font-weight-bold) var(--seed-font-size-t6)/var(--seed-line-height-t6) var(--seed-font-family); }
   .character-cta p { font: var(--mp-type-caption); }
-  .cta-section { padding-block: var(--seed-dimension-x12); }
+  .cta-section { padding-block: var(--seed-dimension-x16); }
   .cta-inner { flex-direction: column; align-items: flex-start; gap: var(--seed-dimension-x6); }
   .wf-footer { column-gap: var(--seed-dimension-x6); row-gap: var(--seed-dimension-x2); }
 }

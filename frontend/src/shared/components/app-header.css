@@ -1,13 +1,15 @@
-.app-header-surface { position: sticky; top: 0; z-index: 50; width: 100%; background: var(--seed-color-bg-layer-default); border-bottom: 1px solid var(--seed-color-stroke-neutral-muted); }
+.app-header-surface { position: sticky; top: 0; z-index: 50; width: 100%; background: rgb(255 255 255 / 86%); -webkit-backdrop-filter: blur(16px) saturate(1.6); backdrop-filter: blur(16px) saturate(1.6); border-bottom: 1px solid var(--mp-hairline); }
 .site-header.app-header { border-bottom: 0; }
 .app-header-account { display: flex; align-items: center; gap: var(--seed-dimension-x2); flex-shrink: 0; min-width: 88px; justify-content: flex-end; }
 .app-header-account:empty { display: none; }
 .notification-entry { position: relative; }
-.notification-dot { position: absolute; top: 6px; right: 6px; width: 6px; height: 6px; border-radius: var(--seed-radius-full); background: var(--seed-color-fg-brand); }
+.notification-dot { position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; border-radius: var(--seed-radius-full); background: var(--seed-color-fg-critical); box-shadow: 0 0 0 2px var(--seed-color-bg-layer-default); }
 .app-header .landing-nav-account { margin: 0; }
-.taste-nav { display: flex; gap: var(--seed-dimension-x6); border-bottom: 1px solid var(--seed-color-stroke-neutral-muted); margin: var(--seed-dimension-x8) 0; }
-.taste-nav a { padding: var(--seed-dimension-x3) 0; min-height: 44px; color: var(--seed-color-fg-neutral-muted); font: var(--mp-type-label); white-space: nowrap; border-bottom: 2px solid transparent; }
-.taste-nav a[aria-current] { border-bottom-color: var(--seed-color-fg-brand); color: var(--seed-color-fg-brand); }
+/* One sub-navigation for the taste pages: a segmented control, as in most commercial dashboards. */
+.taste-nav { display: inline-flex; gap: var(--seed-dimension-x1); max-width: 100%; margin: var(--seed-dimension-x6) 0 var(--seed-dimension-x8); padding: var(--seed-dimension-x1); overflow-x: auto; border-radius: var(--seed-radius-full); background: var(--mp-canvas-strong); scrollbar-width: none; }
+.taste-nav a { display: inline-flex; align-items: center; min-height: 40px; padding: 0 var(--seed-dimension-x4); border-radius: var(--seed-radius-full); color: var(--seed-color-fg-neutral-muted); font: var(--mp-type-label); text-decoration: none; white-space: nowrap; transition: background-color var(--seed-duration-d3) var(--seed-timing-function-easing), color var(--seed-duration-d3) var(--seed-timing-function-easing); }
+.taste-nav a:hover { color: var(--seed-color-fg-neutral); }
+.taste-nav a[aria-current] { color: var(--seed-color-fg-neutral); background: var(--seed-color-bg-layer-default); box-shadow: 0 1px 3px rgb(20 18 14 / 10%); font-weight: var(--seed-font-weight-bold); }
 @media (max-width: 767px) {
   .site-header.app-header { display: flex; flex-wrap: wrap; gap: var(--seed-dimension-x2); min-height: 64px; padding-block: var(--seed-dimension-x2); }
   .app-header > .brand-logo { font-size: var(--seed-font-size-t6); }
@@ -16,7 +18,9 @@
   .app-header-account { min-width: 80px; gap: 0; }
   .app-header--intro > nav { order: 3; flex-basis: 100%; justify-content: center; gap: var(--seed-dimension-x6); }
   .app-header--intro .app-header-account { margin-left: auto; }
-  .taste-nav { gap: var(--seed-dimension-x5); margin-block: var(--seed-dimension-x4); }
+  /* Phones: equal thirds across the screen, so every tab is a full-size thumb target. */
+  .taste-nav { display: flex; width: 100%; margin-block: var(--seed-dimension-x3) var(--seed-dimension-x4); }
+  .taste-nav a { flex: 1 1 0; justify-content: center; min-height: 44px; padding-inline: var(--seed-dimension-x2); }
 }
 @media (max-width: 359px) {
   .site-header.app-header:not(.app-header--intro) { gap: var(--seed-dimension-x1); }

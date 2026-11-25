@@ -19,7 +19,7 @@
 }
 
 .brand-logo-accent {
-  fill: var(--seed-color-fg-brand);
+  fill: var(--mp-ink-subtle);
 }
 
 .brand-logo--compact {

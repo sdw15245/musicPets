@@ -20,13 +20,18 @@ export default function PetsPage() {
       </div>
       <ul className="pets-collection">{characters.map(pet => {
         const discovered = met.includes(pet)
-        // Collected pets take their own colour; the rest wait in grey.
-        return <li key={pet.slug} className={`pet-collection-row${discovered ? ' is-met' : ''}`} style={discovered ? { backgroundColor: pet.color } : undefined}>
-          <img src={pet.imageUrl} alt="" width={240} height={240} className={discovered ? undefined : 'pet-not-met'} />
-          <div><h2>{pet.name}</h2>{discovered
-            ? <details className="pet-story"><summary>펫 이야기</summary><p>{pet.story}</p></details>
-            : <p>펫을 만나면 이야기가 열려요.</p>}</div>
-          <Badge tone={discovered ? 'brand' : 'neutral'} variant="weak">{discovered ? '만난 펫' : '아직 만나기 전'}</Badge>
+        // Collected pets stand on their own stage; the rest wait in grey.
+        return <li key={pet.slug} className={`pet-collection-row${discovered ? ' is-met' : ''}`}>
+          <div className="pet-stage" data-pet={pet.slug} data-locked={!discovered || undefined}>
+            <img src={pet.imageUrl} alt="" width={640} height={640} className={`pet-photo${discovered ? '' : ' pet-not-met'}`} />
+          </div>
+          <div className="pet-collection-body">
+            <div className="pet-collection-name"><h2>{pet.name}</h2><Badge tone={discovered ? 'brand' : 'neutral'} variant="weak">{discovered ? '만난 펫' : '아직 만나기 전'}</Badge></div>
+            {discovered ? <>
+              <p>{pet.description}</p>
+              <details className="pet-story"><summary>펫 이야기</summary><p>{pet.story}</p></details>
+            </> : <p>펫을 만나면 이야기가 열려요.</p>}
+          </div>
         </li>
       })}</ul>
     </>}

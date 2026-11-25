@@ -18,15 +18,16 @@ MusicPets의 로그인·음악 분석·결과 공유·추천 아티스트·커�
 - `src/features/`: landing, auth, analysis, result, community, history, notifications, profile, mypage 기능별 화면·훅·스키마. `library/`에는 이전 링크를 위한 종료 안내 화면만 남긴다.
 - `src/shared/`: API 클라이언트, 공통 UI, 캐릭터 데이터와 도감 상태.
 - `src/styles/base.css`: 초기화·공통 레이아웃·공통 텍스트 스타일.
-- `src/styles/theme.css`: 색상·간격·타이포그래피 변수.
+- `src/styles/theme.css`: 색상·간격·타이포그래피 변수. 브랜드 색은 잉크(검정)이고, SEED의 brand·neutral-weak 토큰을 여기서 한 번만 덮어쓴다.
+- `src/styles/pet-themes.css`: 펫별 무대(`--pet-stage-*`)와 포인트 색(`--pet-accent`). 요소에 `data-pet="<slug>"`를 붙이면 안쪽이 그 펫의 색을 쓴다.
 - `src/features/*/*.css`: 기능별 스타일과 반응형 규칙.
 - `src/shared/components/taste-preview.css`: 랜딩의 음악 펫 결과 미리보기.
 
 펫 이미지는 `shared/characters.json`의 1024px PNG(`imageUrl`, 백엔드 응답용)를 화면에 그대로 쓰지 않는다. `src/shared/characters.ts`가 `src/assets/characters/`의 WebP 사본으로 바꿔 `imageUrl`(640px)과 `thumbUrl`(192px, 96 CSS px 이하의 아바타·썸네일용)을 제공한다. 원본을 바꾸거나 펫을 추가하면 `frontend/`에서 `python scripts/optimize-character-images.py`(Pillow 필요)로 사본을 다시 만든다. 스키마와 Node에서 도는 테스트는 번들러 기능이 없는 `src/shared/characterCatalog.ts`를 쓴다.
 
-펫마다 `shared/characters.json`의 `color`가 있다. 결과 요약 카드, 공유 이미지, 만난 펫 카드는 그 펫의 색을 배경으로 쓰고, 아직 만나지 않은 펫은 흑백(`grayscale`)으로 보여주며 이야기는 잠근다. 화면 문구에는 전체 펫 수를 적지 않는다. Spotify 로고는 출처 표시로만 쓰고 "에서 듣기" 같은 문장 일부로 붙이지 않는다.
+펫 이미지는 각자 스튜디오 배경(위가 어둡고 바닥이 밝은 세로 그라데이션) 위에 렌더링되어 있다. 그래서 화면은 무채색으로 두고, 펫이 나오는 큰 면(랜딩 미리보기, 결과 요약, 도감·만난 펫 카드, 공유 이미지)은 그 배경에서 추출한 무대 그라데이션(`.pet-stage`)을 깔고 이미지(`.pet-photo`)의 가장자리를 흐려 배경과 이어지게 한다. 파스텔 단색 위에 이미지 상자를 올리지 않는다. 장르 막대·매칭 점수처럼 그 펫의 데이터는 `--pet-accent`로 칠한다. `shared/characters.json`의 `color`는 무대 중간색과 같게 두어 작은 아바타 배경에 쓴다. 펫 이미지를 바꾸면 `pet-themes.css`의 무대 색도 다시 추출한다. 아직 만나지 않은 펫은 무대째 흑백(`grayscale`)으로 보여주며 이야기는 잠근다. 화면 문구에는 전체 펫 수를 적지 않는다. Spotify 로고는 출처 표시로만 쓰고 "에서 듣기" 같은 문장 일부로 붙이지 않는다.
 
-`community.css`는 선택자마다 규칙을 한 번만 두고, 화면 폭 기준은 1150px(좁은 데스크톱)과 767px(휴대폰) 두 가지만 쓴다. 다른 기능 CSS에는 아직 1100·1023·960·880·639·560·479·359px 기준이 남아 있으니, 새로 만드는 규칙은 767px 기준을 우선 쓴다. 본문 글꼴 Pretendard는 `index.html`에서 버전을 고정한 링크(`pretendard@v1.3.9`)로 불러온다.
+`community.css`는 선택자마다 규칙을 한 번만 두고, 화면 폭 기준은 1150px(좁은 데스크톱)과 767px(휴대폰) 두 가지만 쓴다. 다른 기능 CSS에는 아직 1100·1023·960·880·560·479·359px 기준이 남아 있으니, 새로 만드는 규칙은 767px 기준을 우선 쓴다. 본문 글꼴 Pretendard는 `index.html`에서 버전을 고정한 링크(`pretendard@v1.3.9`)로 불러온다.
 
 기능 전용 타입을 다른 화면이나 임시 테스트 폴더에 두지 않는다. 같은 파일에 속한 스타일을 수정하며, 개편 때마다 별도 덮어쓰기 CSS를 추가하지 않는다. `main.tsx`는 SEED 컴포넌트 스타일 이후 제품 스타일을 불러온다.
 

@@ -21,7 +21,7 @@
   left: calc(var(--seed-dimension-x12) + var(--seed-dimension-x4));
   right: calc(0px - var(--seed-dimension-x4));
   height: 1px;
-  background: var(--seed-color-stroke-neutral-weak);
+  background: var(--seed-color-stroke-neutral-muted);
 }
 
 .how-step-icon {
@@ -31,14 +31,16 @@
   height: var(--seed-dimension-x12);
   flex-shrink: 0;
   border-radius: var(--seed-radius-r4);
-  color: var(--seed-color-fg-brand-contrast);
-  background: var(--seed-color-bg-brand-weak);
+  color: var(--seed-color-fg-neutral);
+  background: var(--seed-color-bg-layer-default);
+  box-shadow: inset 0 0 0 1px var(--mp-hairline);
 }
 
 .how-step h3 {
   margin: var(--seed-dimension-x5) 0 0;
   color: var(--seed-color-fg-neutral);
   font: var(--mp-type-section-title);
+  letter-spacing: var(--mp-tracking-title);
   word-break: keep-all;
 }
 
@@ -54,9 +56,9 @@
   margin-top: auto;
   min-height: 168px;
   padding: var(--seed-dimension-x5);
-  border: 1px solid var(--seed-color-stroke-neutral-muted);
-  border-radius: var(--seed-radius-r4);
+  border-radius: var(--mp-radius-card);
   background: var(--seed-color-bg-layer-default);
+  box-shadow: var(--mp-elevation-card);
 }
 
 .how-example-heading {
@@ -111,14 +113,14 @@
   height: var(--seed-dimension-x2);
   overflow: hidden;
   border-radius: var(--seed-radius-full);
-  background: var(--seed-color-bg-neutral-muted);
+  background: var(--mp-canvas-strong);
 }
 
 .how-genre-preview li > div > span {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: var(--seed-color-bg-brand-solid);
+  background: var(--pet-accent);
 }
 
 .how-pet-preview {
@@ -128,26 +130,45 @@
   margin-top: var(--seed-dimension-x4);
 }
 
-.how-pet-preview img {
+.how-pet-preview > .pet-stage {
   width: 64px;
   height: 64px;
   flex-shrink: 0;
   border-radius: var(--seed-radius-r3);
-  object-fit: contain;
 }
+.how-pet-preview img { -webkit-mask-image: none; mask-image: none; object-fit: cover; }
 
-.how-pet-preview div {
+.how-pet-preview > div {
   display: grid;
   gap: var(--seed-dimension-x1);
   font: var(--mp-type-body);
 }
 
-.how-pet-preview div > span {
+.how-pet-preview > div > span {
   color: var(--seed-color-fg-neutral-muted);
   font: var(--mp-type-caption);
 }
 
+/* Phones: the three steps become a swipeable row of cards instead of a long stack. */
 @media (max-width: 767px) {
-  .how-flow { grid-template-columns: minmax(0, 1fr); }
+  .how-flow {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: 84%;
+    gap: var(--seed-dimension-x3);
+    margin-inline: calc(-1 * var(--mp-page-gutter));
+    padding: var(--seed-dimension-x1) var(--mp-page-gutter) var(--seed-dimension-x3);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--mp-page-gutter);
+    scrollbar-width: none;
+  }
+  .how-flow::-webkit-scrollbar { display: none; }
+  .how-step { scroll-snap-align: start; padding: var(--seed-dimension-x5); border-radius: var(--mp-radius-card); background: var(--seed-color-bg-layer-default); box-shadow: var(--mp-elevation-card); }
   .how-step:not(:last-child)::after { display: none; }
+  .how-step-icon { width: var(--seed-dimension-x10); height: var(--seed-dimension-x10); background: var(--mp-canvas); box-shadow: none; }
+  .how-step h3 { margin-top: var(--seed-dimension-x4); }
+  .how-step-description { margin-bottom: var(--seed-dimension-x4); }
+  .how-example { min-height: 0; padding: var(--seed-dimension-x4); background: var(--mp-canvas); box-shadow: none; }
 }

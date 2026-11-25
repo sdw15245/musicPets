@@ -17,8 +17,8 @@ test('collection portraits stay anchored when a story opens and closes', async (
     const row = page.getByRole('listitem').filter({ has: page.getByRole('heading', { name: '멜로', exact: true }) })
     await expect(row).toBeVisible()
     await page.evaluate(() => document.fonts.ready)
-    const offsets = () => page.locator('.pet-collection-row > img').evaluateAll(images => images.map(image =>
-      image.getBoundingClientRect().top - image.parentElement!.getBoundingClientRect().top))
+    const offsets = () => page.locator('.pet-collection-row .pet-photo').evaluateAll(images => images.map(image =>
+      image.getBoundingClientRect().top - image.closest('.pet-collection-row')!.getBoundingClientRect().top))
     const before = await offsets()
     await row.getByText('펫 이야기', { exact: true }).click()
     await expect(row.getByText(characters[0].story, { exact: true })).toBeVisible()

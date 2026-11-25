@@ -22,11 +22,16 @@ function HeroSection({ onNavigate, presentation }: HeroSectionProps) {
       </div>
       {footnote && <p className="hero-footnote">{footnote}</p>}
     </div>
-    <div className="hero-result-preview">{loadingPreview ? <div className="taste-preview" role="status" aria-label="음악 취향을 불러오는 중">
-      {personal ? <div className="preview-topline"><span>나의 음악 펫</span></div> : <Skeleton radius="8" width="40%" height="lineHeight.t5" />}
-      <Skeleton radius="16" width="full" height="176px" />
-      <Skeleton radius="8" width="75%" height="lineHeight.t5" />
-    </div> : failed ? <div className="taste-preview"><p>저장된 음악 취향을 확인하지 못했어요.</p><Button asChild variant="ghost"><Link to="/result">결과 다시 확인하기</Link></Button></div> : <TastePreview analysis={analysis} />}</div>
+    <div className="hero-result-preview">{loadingPreview ? <div className="taste-preview taste-preview-placeholder" role="status" aria-label="음악 취향을 불러오는 중">
+      {personal && <div className="preview-topline"><span className="preview-chip">나의 음악 펫</span></div>}
+      <Skeleton radius="0" width="full" height="auto" className="preview-stage" />
+      <div className="taste-preview-placeholder-lines">
+        <Skeleton radius="8" width="40%" height="lineHeight.t8" />
+        <Skeleton radius="8" width="75%" height="lineHeight.t5" />
+      </div>
+    </div> : failed ? <div className="taste-preview taste-preview-placeholder">
+      <div className="taste-preview-placeholder-lines"><p>저장된 음악 취향을 확인하지 못했어요.</p><Button asChild variant="neutralWeak"><Link to="/result">결과 다시 확인하기</Link></Button></div>
+    </div> : <TastePreview analysis={analysis} />}</div>
   </section>
 }
 

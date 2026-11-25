@@ -12,9 +12,13 @@ import { genrePercent as percent, genreDifference } from '../analysis/genreCompa
 const NOTABLE_CHANGE = 2
 
 function PetSummary({ record }: { record: AnalysisResult }) {
+  const pet = record.character
   return <div className="comparison-pet">
-    <span>{record.character?.name ?? '펫 정보 없음'}</span>
-    <span className="comparison-track-count">{analysisPeriodLabel(record)} · {record.genres.trackCount}곡 분석</span>
+    <span className="comparison-pet-image pet-stage" data-pet={pet?.slug} aria-hidden="true">
+      {pet && <img src={resolveCharacter(pet.slug)?.thumbUrl ?? pet.imageUrl} alt="" width={56} height={56} />}
+    </span>
+    <span className="comparison-pet-copy"><strong>{pet?.name ?? '펫 정보 없음'}</strong>
+      <span className="comparison-track-count">{pet && `${Math.round(pet.score * 100)}% 매칭 · `}{analysisPeriodLabel(record)} · {record.genres.trackCount}곡</span></span>
   </div>
 }
 
@@ -41,26 +45,24 @@ export default function TasteComparison({ records }: { records: AnalysisResult[]
   // Bars share the largest shown share as their full width, so small shares still show their difference.
   const scale = Math.max(...changes.map(change => Math.max(change.before, change.after)), 1)
 
-  return <section className="taste-comparison" aria-labelledby="comparison-title">
-    <header className="comparison-heading"><h2 id="comparison-title">취향 변화</h2></header>
-    <div className="comparison-pet-change">
-      {previous.character && <img src={resolveCharacter(previous.character.slug)?.thumbUrl ?? previous.character.imageUrl} width={56} height={56} alt="" />}
-      <strong>{previous.character?.slug === latest.character?.slug && latest.character ? `${latest.character.name}를 다시 만났어요` : `${previous.character?.name ?? '펫 없음'} → ${latest.character?.name ?? '펫 없음'}`}</strong>
-      {latest.character && <img src={resolveCharacter(latest.character.slug)?.thumbUrl ?? latest.character.imageUrl} width={56} height={56} alt="" />}
-    </div>
+  const samePet = previous.character?.slug === latest.character?.slug && !!latest.character
+  return <section className="taste-comparison" data-pet={latest.character?.slug} aria-labelledby="comparison-title">
+    <header className="comparison-heading"><h2 id="comparison-title">취향 변화</h2>
+      <p className="comparison-pet-change">{samePet ? `${latest.character!.name}를 다시 만났어요` : `${previous.character?.name ?? '펫 없음'} → ${latest.character?.name ?? '펫 없음'}`}</p>
+    </header>
     <div className="comparison-periods">
       <div className="comparison-period">
         <label htmlFor={selectId}>이전 기록</label>
+        <PetSummary record={previous} />
         <select id={selectId} aria-label="비교할 이전 기록" value={previous.id} onChange={event => { setSelected(event.target.value); setExpanded(false) }}>
           {records.slice(1).map(record => <option value={record.id} key={record.id}>{analysisDate(record.analyzedAt)}</option>)}
         </select>
-        <PetSummary record={previous} />
       </div>
-      <span className="comparison-arrow" aria-hidden="true">→</span>
-      <div className="comparison-period">
+      <span className="comparison-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 6l6 6-6 6" /></svg></span>
+      <div className="comparison-period is-recent">
         <span className="comparison-period-label">최근 기록</span>
-        <time dateTime={latest.analyzedAt}>{analysisDate(latest.analyzedAt)}</time>
         <PetSummary record={latest} />
+        <time dateTime={latest.analyzedAt}>{analysisDate(latest.analyzedAt)}</time>
       </div>
     </div>
     {analysisPeriod(previous) !== analysisPeriod(latest) && <p className="comparison-note">두 기록의 분석 기간이 달라요. 기간 차이도 결과에 영향을 줄 수 있어요.</p>}
@@ -72,7 +74,7 @@ export default function TasteComparison({ records }: { records: AnalysisResult[]
       </div>
       <ol id={listId} className="comparison-genres" aria-label="장르 비중 변화">
         {visible.map(change => <li key={change.genre}>
-          <div className="comparison-genre-heading"><h3>{change.name}</h3><span className="comparison-difference">
+          <div className="comparison-genre-heading"><h3>{change.name}</h3><span className="comparison-difference" data-trend={change.difference > 0 ? 'up' : change.difference < 0 ? 'down' : undefined}>
             {change.difference === 0 ? '변화 없음' : `${Math.abs(change.difference).toFixed(1)}%p ${change.difference > 0 ? '증가' : '감소'}`}
           </span></div>
           <div className="comparison-bars">

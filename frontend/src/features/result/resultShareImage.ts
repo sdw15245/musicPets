@@ -41,20 +41,35 @@ export async function createResultShareImage(data: AnalysisResult): Promise<File
   }
   const ink = color('fg-neutral')
   const muted = color('fg-neutral-muted')
-  const brand = color('fg-brand')
-  const brandContrast = color('fg-brand-contrast')
-  const weak = color('bg-brand-weak')
+  const weak = color('bg-neutral-weak')
+  // Read the pet's stage and accent from the same tokens the screens use (pet-themes.css).
+  const probe = document.createElement('div')
+  probe.dataset.pet = character.slug
+  probe.hidden = true
+  document.body.append(probe)
+  const petStyles = getComputedStyle(probe)
+  const pet = (name: string, fallback: string) => petStyles.getPropertyValue(`--pet-${name}`).trim() || fallback
+  const stageTop = pet('stage-top', weak), stage = pet('stage', weak), stageFloor = pet('stage-floor', weak), accent = pet('accent', ink)
+  probe.remove()
+  const subtle = styles.getPropertyValue('--mp-ink-subtle').trim() || muted
+  const stageFill = (top: number, height: number) => {
+    const gradient = ctx.createLinearGradient(0, top, 0, top + height)
+    gradient.addColorStop(0, stageTop)
+    gradient.addColorStop(0.55, stage)
+    gradient.addColorStop(1, stageFloor)
+    return gradient
+  }
 
-  // The pet's own colour frames the card, so shared results differ at a glance.
-  const petColor = resolveCharacter(character.slug)?.color ?? weak
-  box(0, 0, 1080, 1350, 0, petColor)
+  // The pet's own backdrop frames the card, so shared results differ at a glance.
+  ctx.fillStyle = stageFill(0, 1350)
+  ctx.fillRect(0, 0, 1080, 1350)
   box(48, 48, 984, 1254, 44, color('bg-layer-default'))
   ctx.textBaseline = 'middle'
   ctx.font = '400 58px "DNFBitBitv2"'
   ctx.fillStyle = ink
   ctx.fillText('Music', 104, 116)
   const logoWidth = ctx.measureText('Music').width
-  ctx.fillStyle = brand
+  ctx.fillStyle = subtle
   ctx.fillText('Pets', 104 + logoWidth, 116)
   ctx.textAlign = 'right'
   text(`${analysisPeriodLabel(data)} · ${data.genres.trackCount}곡`, 976, 116, 27, muted)
@@ -66,14 +81,15 @@ export async function createResultShareImage(data: AnalysisResult): Promise<File
   ctx.beginPath()
   ctx.roundRect(330, 316, 420, 420, 40)
   ctx.clip()
-  box(330, 316, 420, 420, 0, petColor)
+  ctx.fillStyle = stageFill(316, 420)
+  ctx.fillRect(330, 316, 420, 420)
   const scale = Math.min(420 / image.naturalWidth, 420 / image.naturalHeight)
   const width = image.naturalWidth * scale
   const height = image.naturalHeight * scale
   ctx.drawImage(image, 540 - width / 2, 526 - height / 2, width, height)
   ctx.restore()
-  box(410, 750, 260, 60, 30, weak)
-  text(`${Math.round(character.score * 100)}% 매칭`, 540, 780, 30, brandContrast, 700)
+  box(410, 750, 260, 60, 30, ink)
+  text(`${Math.round(character.score * 100)}% 매칭`, 540, 780, 30, color('fg-neutral-inverted'), 700)
 
   // Top genres give the card evidence worth comparing with friends.
   const genres = Object.entries(data.genres.vector).filter(([, ratio]) => ratio > 0).sort((a, b) => b[1] - a[1]).slice(0, 3)
@@ -83,8 +99,8 @@ export async function createResultShareImage(data: AnalysisResult): Promise<File
     const y = 894 + index * 42
     ctx.textAlign = 'left'
     text(genreLabel(genre), 112, y, 28, ink)
-    box(300, y - 6, 560, 12, 6, color('bg-neutral-weak'))
-    box(300, y - 6, Math.max(12, 560 * Math.min(ratio, 1)), 12, 6, color('bg-brand-solid'))
+    box(300, y - 6, 560, 12, 6, weak)
+    box(300, y - 6, Math.max(12, 560 * Math.min(ratio, 1)), 12, 6, accent)
     ctx.textAlign = 'right'
     text(`${Math.round(ratio * 100)}%`, 968, y, 28, ink, 700)
   })

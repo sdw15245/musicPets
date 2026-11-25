@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import type { AnalysisResult } from '../analysis/schemas'
 import { analysisPeriodLabel } from '../analysis/analysisPeriod'
 import AnalysisDetailStatus from './AnalysisDetailStatus'
@@ -20,17 +20,19 @@ function MatchScore({ value, animate }: { value: number; animate: boolean }) {
     // Runs once per mount: the key on ResultContent remounts for a new result.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-  return <span className="analysis-match-value"><strong>{shown}%</strong> 매칭</span>
+  return <>
+    <span className="analysis-match-value"><strong>{shown}%</strong> 매칭</span>
+    <span className="analysis-match-meter" aria-hidden="true"><span style={{ width: shown + '%' }} /></span>
+  </>
 }
 
 export default function AnalysisOverview({ data, historical = false, reveal = false, actions, notices = [] }: { data: AnalysisResult; historical?: boolean; reveal?: boolean; actions?: ReactNode; notices?: string[] }) {
   const pet = data.character
   const catalog = characters.find(item => item.slug === pet?.slug)
   const story = catalog?.story
-  // Each pet's own colour themes its result, so results read differently at a glance and in screenshots.
-  const theme = catalog ? { '--pet-color': catalog.color } as CSSProperties : undefined
-  return <section className={`analysis-overview${reveal ? ' is-new-result' : ''}`} style={theme} aria-label="음악 취향 요약">
-    {pet && <div className="analysis-pet"><img src={catalog?.imageUrl ?? pet.imageUrl} alt={pet.name} width={280} height={280} /></div>}
+  // The pet stands on its own studio backdrop and its accent marks the result's data (pet-themes.css).
+  return <section className={`analysis-overview${reveal ? ' is-new-result' : ''}`} data-pet={pet?.slug} aria-label="음악 취향 요약">
+    {pet && <div className="analysis-pet pet-stage"><img className="pet-photo" src={catalog?.imageUrl ?? pet.imageUrl} alt={pet.name} width={640} height={640} /></div>}
     <div className="analysis-story">
       <div className="analysis-identity">
       <p className="analysis-period">{analysisPeriodLabel(data)} · {data.genres.trackCount}곡 분석</p>
@@ -39,6 +41,7 @@ export default function AnalysisOverview({ data, historical = false, reveal = fa
       {pet ? <>
         <p className="analysis-pet-label">나를 닮은 음악 펫</p>
         <h2 className="analysis-pet-title">{pet.name}</h2>
+        {catalog?.description && <p className="analysis-pet-description">{catalog.description}</p>}
         <div className="analysis-metric-label analysis-match">
           <MatchScore value={Math.round(pet.score * 100)} animate={reveal} />
           <AnalysisMetricHelp title="매칭 점수 안내" description="분석한 장르 비중이 펫의 기준 장르 분포와 얼마나 비슷한지 나타내요. 성격을 평가하는 점수는 아니에요." />

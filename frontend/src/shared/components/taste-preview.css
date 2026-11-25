@@ -1,79 +1,101 @@
+/* A small result card: the pet on its own stage, then name and top genres on paper. */
 .taste-preview {
+  position: relative;
   display: grid;
-  gap: var(--seed-dimension-x5);
   min-width: 0;
-  padding: var(--seed-dimension-x6);
-  border: 1px solid var(--seed-color-stroke-neutral-muted);
-  border-radius: var(--seed-radius-r4);
+  overflow: hidden;
+  border-radius: var(--mp-radius-panel);
   background: var(--seed-color-bg-layer-default);
+  box-shadow: inset 0 0 0 1px var(--mp-hairline), var(--mp-elevation-raised);
   container-type: inline-size;
 }
 
+/* Status and controls float on the stage, frosted so they read on light and dark backdrops alike. */
 .preview-topline {
+  position: absolute;
+  z-index: 2;
+  inset: var(--seed-dimension-x4) var(--seed-dimension-x4) auto;
   display: flex;
-  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   gap: var(--seed-dimension-x2);
-  color: var(--seed-color-fg-neutral-muted);
-  font: var(--mp-type-label);
+  pointer-events: none;
+}
+.preview-topline > * { pointer-events: auto; }
+
+.preview-chip,
+.preview-carousel-controls {
+  border-radius: var(--seed-radius-full);
+  background: rgb(255 255 255 / 78%);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  backdrop-filter: blur(14px) saturate(1.4);
+  box-shadow: 0 1px 2px rgb(20 18 14 / 8%);
 }
 
-.preview-topline > span + span {
-  padding: var(--seed-dimension-x1) var(--seed-dimension-x2_5);
-  border-radius: var(--seed-radius-full);
-  background: var(--seed-color-bg-neutral-muted);
-  font: var(--mp-type-caption);
+.preview-chip {
+  min-width: 0;
+  padding: var(--seed-dimension-x1_5) var(--seed-dimension-x3);
+  color: var(--seed-color-fg-neutral);
+  font: var(--seed-font-weight-medium) var(--seed-font-size-t3)/var(--seed-line-height-t3) var(--seed-font-family);
+  white-space: nowrap;
 }
+
+.preview-carousel-controls {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: var(--seed-dimension-x0_5);
+  padding: var(--seed-dimension-x0_5);
+}
+.preview-carousel-controls button { color: var(--seed-color-fg-neutral); border-radius: var(--seed-radius-full); }
+.preview-carousel-controls svg { width: var(--seed-dimension-x4); height: var(--seed-dimension-x4); }
+
+.preview-content { display: grid; min-width: 0; }
 
 .preview-pet {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-  align-items: center;
-  gap: var(--seed-dimension-x5);
+  min-width: 0;
   animation: detail-in var(--seed-duration-d4) var(--seed-timing-function-easing);
 }
 
-.preview-content {
-  display: grid;
-  gap: var(--seed-dimension-x5);
-  min-width: 0;
-}
-
-.preview-pet > img {
-  width: 100%;
-  max-width: 224px;
-  aspect-ratio: 1;
-  object-fit: contain;
-  border-radius: var(--seed-radius-r4);
-  margin: 0;
-}
+.preview-stage { aspect-ratio: 16 / 11; }
 
 .preview-identity {
   min-width: 0;
+  padding: var(--seed-dimension-x5) var(--seed-dimension-x6) 0;
   overflow-wrap: anywhere;
 }
+.preview-pet-label { margin: 0 0 var(--seed-dimension-x1); color: var(--seed-color-fg-neutral-muted); font: var(--mp-type-caption); }
+.preview-name-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--seed-dimension-x1) var(--seed-dimension-x3); }
 
 .preview-identity h2, .preview-empty h2 {
   margin: 0;
   color: var(--seed-color-fg-neutral);
   font: var(--mp-type-screen-title);
+  letter-spacing: var(--mp-tracking-title);
 }
 
 .preview-identity p, .preview-empty p {
-  margin: var(--seed-dimension-x2) 0 0;
+  margin: 0;
   color: var(--seed-color-fg-neutral-muted);
   font: var(--mp-type-body);
   word-break: keep-all;
 }
+.preview-identity .preview-pet-description { font: var(--mp-type-label); }
 
-.preview-identity .preview-pet-description { margin-top: var(--seed-dimension-x1); font: var(--mp-type-label); }
+/* The score starts on its own line, at the name's left edge. */
+.preview-tag {
+  flex-basis: 100%;
+  color: var(--seed-color-fg-neutral);
+  font: var(--seed-font-weight-bold) var(--seed-font-size-t4)/var(--seed-line-height-t4) var(--seed-font-family);
+  font-variant-numeric: tabular-nums;
+}
 
 .preview-genres {
   display: grid;
-  gap: var(--seed-dimension-x2);
+  gap: var(--seed-dimension-x2_5);
   margin: 0;
-  padding: 0;
+  padding: var(--seed-dimension-x4) var(--seed-dimension-x6) var(--seed-dimension-x6);
   list-style: none;
   font: var(--mp-type-caption);
 }
@@ -82,62 +104,65 @@
   display: grid;
   grid-template-columns: 5.5em minmax(0, 1fr) 4ch;
   align-items: center;
-  gap: var(--seed-dimension-x2);
+  gap: var(--seed-dimension-x3);
 }
 
 .preview-genres li > span:last-child { text-align: right; font-variant-numeric: tabular-nums; color: var(--seed-color-fg-neutral-muted); }
-.preview-genre-track { height: 6px; border-radius: var(--seed-radius-full); background: color-mix(in srgb, var(--seed-color-fg-neutral) 10%, transparent); overflow: hidden; }
-.preview-genre-track > span { display: block; height: 100%; border-radius: inherit; background: var(--seed-color-fg-neutral); }
-
-.preview-tag {
-  display: inline-block;
-  margin-top: var(--seed-dimension-x4);
-  padding: 0;
-  color: var(--seed-color-fg-brand);
-  font: var(--mp-type-caption);
+.preview-genre-track { height: 6px; border-radius: var(--seed-radius-full); background: var(--mp-canvas-strong); overflow: hidden; }
+.preview-genre-track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--pet-accent);
+  transition: width var(--seed-duration-d6) var(--seed-timing-function-easing);
 }
 
-.preview-empty {
-  padding-block: var(--seed-dimension-x6);
-}
+.preview-empty { padding: var(--seed-dimension-x16) var(--seed-dimension-x6) var(--seed-dimension-x8); }
 
 .preview-summary {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
-  margin: 0;
+  /* Margins, not padding: line-clamp clips at the padding edge and would show a third line. */
+  margin: 0 var(--seed-dimension-x6) var(--seed-dimension-x6);
   color: var(--seed-color-fg-neutral);
-  font: var(--mp-type-article-body);
+  font: var(--mp-type-body);
   overflow-wrap: anywhere;
 }
 
-.preview-carousel-controls {
+/* A personal preview has no carousel, so its chips sit alone on the stage. */
+.preview-topline:not(:has(.preview-carousel-controls)) .preview-chip + .preview-chip { color: var(--seed-color-fg-neutral-muted); }
+
+.preview-pager {
   display: flex;
-  align-items: center;
-  flex-shrink: 0;
-  gap: var(--seed-dimension-x0_5);
+  gap: var(--seed-dimension-x2);
+  padding: var(--seed-dimension-x4) var(--seed-dimension-x6) var(--seed-dimension-x5);
+  border-top: 1px solid var(--mp-hairline);
 }
 
-.preview-carousel-controls button {
-  color: var(--seed-color-fg-neutral-muted);
+.preview-pager-item {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--seed-radius-r3);
+  background: var(--pet-stage);
+  opacity: .5;
+  transition: opacity var(--seed-duration-d3) var(--seed-timing-function-easing), box-shadow var(--seed-duration-d3) var(--seed-timing-function-easing);
 }
-
-.preview-carousel-controls svg {
-  width: var(--seed-dimension-x4);
-  height: var(--seed-dimension-x4);
-}
+.preview-pager-item img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.preview-pager-item:hover { opacity: .85; }
+.preview-pager-item[data-current] { opacity: 1; box-shadow: 0 0 0 2px var(--seed-color-bg-layer-default), 0 0 0 4px var(--seed-color-fg-neutral); }
 
 @container (max-width: 360px) {
-  .preview-pet {
-    grid-template-columns: minmax(0, 1fr);
-    justify-items: center;
-    gap: var(--seed-dimension-x4);
-  }
-  .preview-identity {
-    text-align: center;
-  }
-  .preview-pet > img {
-    max-width: 200px;
-  }
+  .preview-identity, .preview-genres, .preview-pager { padding-inline: var(--seed-dimension-x5); }
+  .preview-summary { margin-inline: var(--seed-dimension-x5); }
+  .preview-stage { aspect-ratio: 1; }
+  .preview-pager-item { width: 36px; height: 36px; }
 }
+
+/* Loading and error states keep the card's footprint, so the page does not jump when the result arrives. */
+.taste-preview-placeholder-lines { display: grid; justify-items: start; gap: var(--seed-dimension-x3); padding: var(--seed-dimension-x5) var(--seed-dimension-x6) var(--seed-dimension-x6); }
+.taste-preview-placeholder-lines p { margin: 0; color: var(--seed-color-fg-neutral-muted); font: var(--mp-type-body); }

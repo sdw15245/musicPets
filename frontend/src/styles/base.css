@@ -93,7 +93,7 @@ a {
   color: var(--ink);
   text-wrap: balance;
   font: var(--seed-font-weight-bold) var(--seed-font-size-t14)/var(--seed-line-height-t14) var(--seed-font-family);
-  letter-spacing: normal;
+  letter-spacing: var(--mp-tracking-display);
 }
 
 .wf-h3 {
@@ -310,6 +310,9 @@ button:disabled {
   text-underline-offset: 8px;
   text-decoration-thickness: 2px;
 }
+
+.site-nav-link:not([aria-current]) { color: var(--seed-color-fg-neutral-muted); }
+.site-nav-link:not([aria-current]):hover { color: var(--seed-color-fg-neutral); }
 
 .site-header {
   display: flex;

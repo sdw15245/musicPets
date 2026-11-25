@@ -1,0 +1,59 @@
+/*
+ * Pet themes. Each portrait was rendered on its own studio backdrop: a vertical gradient from the
+ * back wall to a lighter floor. A stage repeats that gradient (sampled from the images), so a pet
+ * stands in its own room instead of a pasted photo on a colour card. The accent comes from the
+ * pet's outfit or fur and marks that pet's data: genre bars, match meter, comparisons.
+ *
+ * Set data-pet="<slug>" on any element; everything inside reads the same variables.
+ * Registered as colours so a carousel can cross-fade between pets.
+ */
+@property --pet-stage-top { syntax: '<color>'; inherits: true; initial-value: #d9d6d0; }
+@property --pet-stage { syntax: '<color>'; inherits: true; initial-value: #e3e0db; }
+@property --pet-stage-floor { syntax: '<color>'; inherits: true; initial-value: #efede9; }
+@property --pet-accent { syntax: '<color>'; inherits: true; initial-value: #1a1c20; }
+
+[data-pet="mochi"] { --pet-stage-top: #848e95; --pet-stage: #8b959d; --pet-stage-floor: #a3adb5; --pet-accent: #4a5b70; }
+[data-pet="pip"] { --pet-stage-top: #6c5853; --pet-stage: #8a736b; --pet-stage-floor: #bdaca5; --pet-accent: #8f6a4e; }
+[data-pet="bongbong"] { --pet-stage-top: #aaa094; --pet-stage: #c0b6ae; --pet-stage-floor: #d5ccc7; --pet-accent: #d0602e; }
+[data-pet="yuze"] { --pet-stage-top: #c0bfbf; --pet-stage: #cfcfd0; --pet-stage-floor: #dddcdf; --pet-accent: #c9677a; }
+[data-pet="sulk-cat"] { --pet-stage-top: #aca388; --pet-stage: #b6ae94; --pet-stage-floor: #d5cfbc; --pet-accent: #5f6a3f; }
+
+/* Undiscovered pets: the whole stage is desaturated with the portrait, so backdrop and stage still meet. */
+.pet-stage[data-locked="true"] { filter: grayscale(1) brightness(1.1); }
+
+.pet-stage {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--pet-stage-top) 0%, var(--pet-stage) 55%, var(--pet-stage-floor) 100%);
+  isolation: isolate;
+}
+
+/*
+ * The portrait is a square standing on the stage floor. Sizing the element itself to the square (not the
+ * stage) puts the feathered mask on the photo's own edges, so its backdrop fades into the stage.
+ */
+.pet-photo {
+  position: absolute;
+  inset: auto 0 0;
+  display: block;
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  aspect-ratio: 1;
+  margin-inline: auto;
+  object-fit: contain;
+  object-position: center bottom;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 9%, #000 91%, transparent 100%), linear-gradient(180deg, transparent 0, #000 8%);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(90deg, transparent 0, #000 9%, #000 91%, transparent 100%), linear-gradient(180deg, transparent 0, #000 8%);
+  mask-composite: intersect;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pet-stage-animated {
+    transition: --pet-stage-top var(--seed-duration-d6) var(--seed-timing-function-easing),
+      --pet-stage var(--seed-duration-d6) var(--seed-timing-function-easing),
+      --pet-stage-floor var(--seed-duration-d6) var(--seed-timing-function-easing),
+      --pet-accent var(--seed-duration-d6) var(--seed-timing-function-easing);
+  }
+}

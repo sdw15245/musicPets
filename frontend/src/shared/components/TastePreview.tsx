@@ -1,4 +1,4 @@
-import { useEffect, useState, useSyncExternalStore, type CSSProperties } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 import { Icon } from '@seed-design/react'
 import { IconChevronLeftLine, IconChevronRightLine } from '@karrotmarket/react-monochrome-icon'
 import Button from './ui/Button'
@@ -36,9 +36,8 @@ export default function TastePreview({ analysis }: TastePreviewProps) {
   const selectedIndex = characters.findIndex(item => item.slug === selected)
   const example = characters.find(item => item.slug === selected) ?? characters[0]
   const pet = analysis ? analysis.character : example
-  // Previews read like a small result card: the pet's own colour and its three biggest genres.
+  // Previews read like a small result card: the pet on its own stage and its three biggest genres.
   const catalogPet = characters.find(item => item.slug === pet?.slug)
-  const color = catalogPet?.color
   const vector: Record<string, number> = analysis ? analysis.genres.vector : example.vector
   const genres = Object.entries(vector).filter(([, value]) => value > 0).sort(([, a], [, b]) => b - a).slice(0, 3)
 
@@ -54,7 +53,7 @@ export default function TastePreview({ analysis }: TastePreviewProps) {
     setSelected(characters[(selectedIndex + direction + characters.length) % characters.length].slug)
   }
 
-  return <section className="taste-preview" style={color ? { '--pet-color': color } as CSSProperties : undefined} aria-label={analysis ? '나의 음악 취향 요약' : '음악 펫 결과 예시'}
+  return <section className="taste-preview pet-stage-animated" data-pet={pet?.slug} aria-label={analysis ? '나의 음악 취향 요약' : '음악 펫 결과 예시'}
     aria-roledescription={showCarousel ? '캐러셀' : undefined}
     onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
     onFocusCapture={event => {
@@ -62,7 +61,7 @@ export default function TastePreview({ analysis }: TastePreviewProps) {
       if (showCarousel && event.target.matches(':focus-visible')) setPlaying(false)
     }}>
     <div className="preview-topline">
-      <span>{analysis ? '나의 음악 펫' : '음악 펫 결과 예시'}</span>
+      <span className="preview-chip">{analysis ? '나의 음악 펫' : '음악 펫 결과 예시'}</span>
       {showCarousel && <div className="preview-carousel-controls" role="group" aria-label="펫 예시 넘기기">
         {autoplayAllowed && <Button className="preview-playback" variant="ghost" size="small" layout="iconOnly"
           aria-label={playing ? '자동 전환 멈추기' : '자동 전환 시작하기'}
@@ -79,28 +78,34 @@ export default function TastePreview({ analysis }: TastePreviewProps) {
           <Icon svg={<IconChevronRightLine />} aria-hidden="true" />
         </Button>
       </div>}
-      {analysis && <span>최근 분석</span>}
+      {analysis && <span className="preview-chip">최근 분석</span>}
     </div>
     <div className="preview-content" aria-live={showCarousel ? rotating ? 'off' : 'polite' : undefined} aria-atomic={showCarousel ? true : undefined}
       role={showCarousel ? 'group' : undefined} aria-roledescription={showCarousel ? '슬라이드' : undefined}
       aria-label={showCarousel ? `${selectedIndex + 1} / ${characters.length}: ${example.name}` : undefined}>
     {pet ? <div key={pet.slug} className="preview-pet">
-      <img src={catalogPet?.imageUrl ?? pet.imageUrl} alt={pet.name} />
+      <div className="pet-stage preview-stage"><img className="pet-photo" src={catalogPet?.imageUrl ?? pet.imageUrl} alt={pet.name} width={640} height={640} /></div>
       <div className="preview-identity">
         {showCarousel && <p className="preview-pet-label">나를 닮은 음악 펫</p>}
-        <h2>{pet.name}</h2>
-        {showCarousel && <p className="preview-pet-description">{example.description}</p>}
-        {analysis?.character && <span className="preview-tag">{Math.round(analysis.character.score * 100)}% 매칭</span>}
+        <div className="preview-name-row">
+          <h2>{pet.name}</h2>
+          {showCarousel && <p className="preview-pet-description">{example.description}</p>}
+          {analysis?.character && <span className="preview-tag">{Math.round(analysis.character.score * 100)}% 매칭</span>}
+        </div>
       </div>
     </div> : <div className="preview-empty">
       <h2>아직 펫을 찾지 못했어요</h2>
       <p>청취 기록이나 장르 정보가 부족해요. 결과에서 자세한 내용을 확인해주세요.</p>
     </div>}
-    {/* Full width under the pet, so bars stay readable on phones too. */}
     {pet && genres.length > 0 && <ul className="preview-genres" aria-label={analysis ? '주요 장르' : '대표 장르'}>{genres.map(([genre, value]) => <li key={genre}>
       <span>{genreLabel(genre)}</span><span className="preview-genre-track" aria-hidden="true"><span style={{ width: value / genres[0][1] * 100 + '%' }} /></span><span>{Math.round(value * 100)}%</span>
     </li>)}</ul>}
     {analysis?.profile?.comment && <p className="preview-summary">{analysis.profile.comment}</p>}
     </div>
+    {/* Every pet at a glance; the arrows stay the keyboard path, so these are pointer shortcuts. */}
+    {showCarousel && <div className="preview-pager" aria-hidden="true">{characters.map(item => <button type="button" key={item.slug} tabIndex={-1}
+      className="preview-pager-item" data-pet={item.slug} data-current={item.slug === selected || undefined} onClick={() => setSelected(item.slug)}>
+      <img src={item.thumbUrl} alt="" width={40} height={40} />
+    </button>)}</div>}
   </section>
 }

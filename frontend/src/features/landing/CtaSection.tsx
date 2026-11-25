@@ -1,6 +1,7 @@
 import Button from '../../shared/components/ui/Button'
 // 랜딩 하단 CTA 섹션. 저장된 분석 유무에 맞는 다음 행동 안내.
 import { Link } from 'react-router-dom'
+import { characters } from '../../shared/characters'
 import type { LandingPresentation } from './useLandingPresentation'
 
 function CtaSection({ presentation }: { presentation: LandingPresentation }) {
@@ -9,6 +10,7 @@ function CtaSection({ presentation }: { presentation: LandingPresentation }) {
     <section className="cta-section">
       <div className="section-shell cta-inner">
         <div>
+          <div className="cta-pets" aria-hidden="true">{characters.map(pet => <span key={pet.slug} data-pet={pet.slug}><img src={pet.thumbUrl} alt="" width={48} height={48} loading="lazy" /></span>)}</div>
           <h2 className="wf-h2">
             {failed ? '내 음악 취향을 확인해보세요' : personal ? <>내 음악 취향과<br />나의 펫을 다시 만나보세요</> : <>지금 듣는 음악으로<br />나의 펫을 만나보세요</>}
           </h2>

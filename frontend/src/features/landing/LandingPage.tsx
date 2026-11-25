@@ -31,7 +31,7 @@ function LandingPage() {
         <Reveal><HowItWorksSection /></Reveal>
       </div>
       <div id="characters" ref={charactersRef}>
-        <Reveal><CharacterPreviewSection /></Reveal>
+        <Reveal><CharacterPreviewSection presentation={presentation} /></Reveal>
       </div>
       <Reveal><CtaSection presentation={presentation} /></Reveal>
       </main>

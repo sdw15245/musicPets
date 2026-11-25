@@ -41,7 +41,7 @@ function ResultContent({ data, onRestart }: { data: AnalysisResult; onRestart: (
   return <>
     <div className="result-toolbar"><time dateTime={data.analyzedAt}>{analysisDate(data.analyzedAt)} 분석</time><Button variant="neutralOutline" size="small" disabled={limit?.blocked} onClick={onRestart}>다시 분석하기</Button></div>
     <AnalysisOverview data={data} reveal={reveal} notices={notices} actions={<><ResultShareDialog data={data} /><CommunityBridge petSlug={data.character?.slug} petName={data.character?.name} /></>} />
-    <div className="result-details-grid">
+    <div className="result-details-grid" data-pet={data.character?.slug}>
       <RecommendationsSection data={data} retry={retry} save={save} limit={limit} onRestart={onRestart} />
       <div className="result-listening-details">
         <GenreExplorer vector={data.genres.vector} trackCount={data.genres.trackCount} previous={differentPeriod ? undefined : previous} differentPeriod={differentPeriod} />

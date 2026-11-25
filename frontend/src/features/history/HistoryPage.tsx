@@ -34,17 +34,27 @@ export default function HistoryPage() {
   const [comparing, setComparing] = useState(false)
   const [deleting, setDeleting] = useState<string | null>(null)
   const records = history.data ?? []
-  return <PersonalLayout taste title="분석 기록" description="최근 10회의 음악 취향을 보관해요. 새 기록이 쌓이면 가장 오래된 기록부터 정리돼요."
-    actions={records.length > 1 && <Button variant="neutralOutline" size="small" aria-expanded={comparing} onClick={() => setComparing(value => !value)}>{comparing ? '비교 닫기' : '취향 비교하기'}</Button>}>
+  // Oldest to newest, so the strip reads as the path your taste took.
+  const journey = records.slice(0, 5).reverse()
+  return <PersonalLayout taste title="분석 기록" description="최근 10회의 음악 취향을 보관해요. 새 기록이 쌓이면 가장 오래된 기록부터 정리돼요.">
     {history.isPending && <MusicListSkeleton label="분석 기록을 불러오고 있어요." />}
     {history.isError && <RequestErrorNotice error={history.error} action={blocked => <Button disabled={blocked} loading={history.isFetching} onClick={() => void history.refetch()}>다시 불러오기</Button>}>분석 기록을 불러오지 못했어요.</RequestErrorNotice>}
     {!history.isPending && !history.isError && !records.length && <ResultSection size="medium" title="아직 분석 기록이 없어요" description="음악 취향을 분석하고 나의 변화를 기록해보세요." actions={<Button asChild variant="brandSolid"><Link to="/analyze">음악 취향 분석하기</Link></Button>} />}
-    {records.length > 1 && comparing && <TasteComparison records={records} />}
+    {records.length > 1 && <div className="comparison-card">
+      <div className="comparison-teaser">
+        <ol className="comparison-journey" aria-hidden="true">{journey.map(record => <li key={record.id} className="pet-stage" data-pet={record.character?.slug}>
+          {record.character && <img src={resolveCharacter(record.character.slug)?.thumbUrl ?? record.character.imageUrl} alt="" width={48} height={48} />}
+        </li>)}</ol>
+        <div className="comparison-teaser-copy"><strong>취향이 어떻게 달라졌을까요?</strong><p>두 기록의 장르 비중과 만난 펫을 나란히 비교해요.</p></div>
+        <Button variant={comparing ? 'neutralWeak' : 'brandSolid'} size="medium" aria-expanded={comparing} onClick={() => setComparing(value => !value)}>{comparing ? '비교 닫기' : '취향 비교하기'}</Button>
+      </div>
+      {comparing && <TasteComparison records={records} />}
+    </div>}
     <ul className="history-list" aria-label="저장된 분석 기록">{records.map((record, index) => {
       const pet = resolveCharacter(record.character?.slug)
       return <li className="history-row" key={record.id}>
         <Link className="history-record-link" to={'/history/' + encodeURIComponent(record.id)} aria-label={analysisDate(record.analyzedAt) + ' 기록 자세히 보기'}>
-          {record.character ? <span className="history-record-image" style={{ backgroundColor: pet?.color }}><img src={pet?.thumbUrl ?? record.character.imageUrl} alt="" width={56} height={56} /></span> : <span className="history-record-placeholder" aria-hidden="true">—</span>}
+          {record.character ? <span className="history-record-image pet-stage" data-pet={record.character.slug}><img src={pet?.thumbUrl ?? record.character.imageUrl} alt="" width={56} height={56} /></span> : <span className="history-record-placeholder" aria-hidden="true">—</span>}
           <div className="history-record-main">
             <div className="history-record-title"><h2>{record.character?.name ?? '아직 만나지 못한 펫'}</h2>{index === 0 && <span className="history-latest">최근 기록</span>}</div>
             <p className="history-record-summary">{recordSummary(record)}</p>

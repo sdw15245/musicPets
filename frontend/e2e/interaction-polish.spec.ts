@@ -26,10 +26,14 @@ test('the landing flow shows three connected steps and readable examples at PC a
   expect(steps[0]).toBeLessThan(steps[1])
   expect(steps[1]).toBeLessThan(steps[2])
   await page.screenshot({ path: info.outputPath('how-it-works-desktop.png') })
+  // Phones swipe through the steps in their own row instead of stacking three tall cards.
   await page.setViewportSize({ width: 390, height: 844 })
   const narrowSteps = await flow.locator(':scope > li').evaluateAll(elements => elements.map(element => element.getBoundingClientRect().x))
-  expect(narrowSteps[0]).toBe(narrowSteps[1])
-  expect(narrowSteps[1]).toBe(narrowSteps[2])
+  expect(narrowSteps[0]).toBeLessThan(narrowSteps[1])
+  expect(narrowSteps[1]).toBeLessThan(narrowSteps[2])
+  expect(await flow.evaluate(element => element.scrollWidth > element.clientWidth)).toBe(true)
+  await flow.locator(':scope > li').nth(2).scrollIntoViewIfNeeded()
+  await expect(flow.getByText('결과 예시', { exact: true })).toBeInViewport()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
 })
 

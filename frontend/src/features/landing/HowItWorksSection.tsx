@@ -22,7 +22,7 @@ function HowItWorksSection() {
           </div>
         </div>
 
-        <ol className="how-flow" aria-label="음악 펫을 만나는 과정">
+        <ol className="how-flow" data-pet={example.slug} aria-label="음악 펫을 만나는 과정">
           {steps.map((s) => {
             const StepIcon = s.icon
             return <li key={s.n} className="how-step">
@@ -43,8 +43,8 @@ function HowItWorksSection() {
                   </li>)}</ul>
                 </> : <>
                   <div className="how-example-heading"><strong>나를 닮은 음악 펫</strong><span>결과 예시</span></div>
-                  <div className="how-pet-preview"><img src={example.thumbUrl} alt={example.name} width={64} height={64} loading="lazy" />
-                    <div><strong>{example.name}</strong></div>
+                  <div className="how-pet-preview"><span className="pet-stage"><img className="pet-photo" src={example.thumbUrl} alt={example.name} width={64} height={64} loading="lazy" /></span>
+                    <div><strong>{example.name}</strong><span>{example.description}</span></div>
                   </div>
                 </>}
               </div>
